@@ -9,6 +9,7 @@ import {
 export enum UserRole {
   ADMIN = 'admin',
   DRIVER = 'driver',
+  DISPATCHER = 'dispatcher',
 }
 
 @Entity('users')

@@ -19,6 +19,8 @@ import { VehiclesModule } from './vehicles/vehicles.module';
 import { DriversModule } from './drivers/drivers.module';
 import { OrdersModule } from './orders/orders.module';
 import { UploadModule } from './upload/upload.module';
+import { DispatchModule } from './dispatch/dispatch.module';
+import { TripsModule } from './trips/trips.module';
 
 @Module({
   imports: [
@@ -61,6 +63,8 @@ import { UploadModule } from './upload/upload.module';
     DriversModule,
     OrdersModule,
     UploadModule,
+    DispatchModule,
+    TripsModule,
 
     // Modules to be added in future phases
     // TripsModule will be added in Phase 04

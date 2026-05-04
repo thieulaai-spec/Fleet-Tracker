@@ -13,6 +13,7 @@ export enum OrderStatus {
   DELIVERING = 'delivering',
   DELIVERED = 'delivered',
   FAILED = 'failed',
+  CANCELLED = 'cancelled',
 }
 
 @Entity('orders')

@@ -16,6 +16,9 @@ import { Alert } from './entities/alert.entity';
 import { DriverKpi } from './entities/driver-kpi.entity';
 import { AuthModule } from './auth/auth.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
+import { DriversModule } from './drivers/drivers.module';
+import { OrdersModule } from './orders/orders.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -50,12 +53,13 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     // AuthModule added in Phase 02
     AuthModule,
 
-    // VehiclesModule added in Phase 03
+    // Phase 03 modules
     VehiclesModule,
+    DriversModule,
+    OrdersModule,
+    UploadModule,
 
     // Modules to be added in future phases
-    // DriversModule will be added in Phase 03
-    // OrdersModule will be added in Phase 03
     // TripsModule will be added in Phase 04
     // DispatchModule will be added in Phase 04
     // TrackingModule will be added in Phase 05

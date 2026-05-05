@@ -77,9 +77,9 @@ fleet-tracker/
 | Phase | Name | Status | Tasks | Ước tính |
 |-------|------|--------|-------|----------|
 | 01 | Setup & Infrastructure | ✅ Complete | 12 | 2-3 ngày |
-| 02 | Database & Authentication | ⬜ Pending | 15 | 3-4 ngày |
-| 03 | Backend — Core CRUD APIs | ⬜ Pending | 18 | 4-5 ngày |
-| 04 | Backend — Dispatch & Assignment | ⬜ Pending | 10 | 3-4 ngày |
+| 02 | Database & Authentication | ✅ Complete | 15 | 3-4 ngày |
+| 03 | Backend — Core CRUD APIs | ✅ Complete | 18 | 4-5 ngày |
+| 04 | Backend — Dispatch & Assignment | ✅ Complete | 10 | 3-4 ngày |
 | 05 | Backend — Real-time GPS & Alerts | ⬜ Pending | 14 | 5-7 ngày |
 | 06 | Backend — Reports & Optimization | ⬜ Pending | 12 | 4-5 ngày |
 | 07 | Admin Dashboard — Core UI | ⬜ Pending | 20 | 6-8 ngày |

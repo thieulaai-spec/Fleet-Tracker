@@ -86,6 +86,10 @@ export class DispatchService {
         throw new BadRequestException('Vehicle has no driver assigned');
       }
 
+      if (vehicle.driver.status !== DriverStatus.AVAILABLE) {
+        throw new BadRequestException('Driver is already on another trip');
+      }
+
       if (vehicle.maxCapacityKg - vehicle.currentLoadKg < order.weightKg) {
         throw new BadRequestException('Vehicle capacity exceeded');
       }
@@ -113,6 +117,96 @@ export class DispatchService {
       // Update Vehicle Status and Load
       vehicle.status = VehicleStatus.DELIVERING;
       vehicle.currentLoadKg = Number(vehicle.currentLoadKg) + Number(order.weightKg);
+      await queryRunner.manager.save(Vehicle, vehicle);
+
+      await queryRunner.commitTransaction();
+      return savedTrip;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async assignBulkOrders(orderIds: string[], vehicleId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const vehicle = await queryRunner.manager.findOne(Vehicle, {
+        where: { id: vehicleId },
+        relations: ['driver'],
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!vehicle) {
+        throw new NotFoundException(`Vehicle with ID ${vehicleId} not found`);
+      }
+
+      if (vehicle.status !== VehicleStatus.AVAILABLE) {
+        throw new BadRequestException('Vehicle is not available');
+      }
+
+      if (!vehicle.driver) {
+        throw new BadRequestException('Vehicle has no driver assigned');
+      }
+
+      if (vehicle.driver.status !== DriverStatus.AVAILABLE) {
+        throw new BadRequestException('Driver is already on another trip');
+      }
+
+      let totalWeight = 0;
+      const orders: Order[] = [];
+
+      for (const orderId of orderIds) {
+        const order = await queryRunner.manager.findOne(Order, {
+          where: { id: orderId },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!order) {
+          throw new NotFoundException(`Order with ID ${orderId} not found`);
+        }
+
+        if (order.status !== OrderStatus.PENDING) {
+          throw new BadRequestException(`Order ${orderId} is not in PENDING status`);
+        }
+
+        totalWeight += Number(order.weightKg);
+        orders.push(order);
+      }
+
+      if (vehicle.maxCapacityKg - vehicle.currentLoadKg < totalWeight) {
+        throw new BadRequestException('Vehicle capacity exceeded for this cluster');
+      }
+
+      // Create Trip
+      const trip = queryRunner.manager.create(Trip, {
+        vehicleId: vehicle.id,
+        driverId: vehicle.driverId,
+        status: TripStatus.PENDING,
+      });
+      const savedTrip = await queryRunner.manager.save(Trip, trip);
+
+      // Link Orders to Trip
+      for (let i = 0; i < orders.length; i++) {
+        const tripOrder = queryRunner.manager.create(TripOrder, {
+          tripId: savedTrip.id,
+          orderId: orders[i].id,
+          sequence: i + 1,
+        });
+        await queryRunner.manager.save(TripOrder, tripOrder);
+
+        // Update Order Status
+        orders[i].status = OrderStatus.ASSIGNED;
+        await queryRunner.manager.save(Order, orders[i]);
+      }
+
+      // Update Vehicle Status and Load
+      vehicle.status = VehicleStatus.DELIVERING;
+      vehicle.currentLoadKg = Number(vehicle.currentLoadKg) + totalWeight;
       await queryRunner.manager.save(Vehicle, vehicle);
 
       await queryRunner.commitTransaction();

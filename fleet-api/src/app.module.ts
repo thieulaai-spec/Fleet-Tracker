@@ -48,7 +48,8 @@ import { TripsModule } from './trips/trips.module';
           Alert,
           DriverKpi,
         ],
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+        synchronize: false,
+        logging: true,
         ssl: {
           rejectUnauthorized: false,
         },

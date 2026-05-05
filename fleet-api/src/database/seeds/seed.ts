@@ -77,6 +77,21 @@ async function seed() {
       }
     }
 
+    // 2.1 Seed Dispatcher
+    const dispatcherEmail = 'dispatcher@fleettracker.com';
+    let dispatcher = await userRepository.findOne({ where: { email: dispatcherEmail } });
+    if (!dispatcher) {
+      const salt = await bcrypt.genSalt();
+      const passwordHash = await bcrypt.hash('Dispatch@123', salt);
+      dispatcher = userRepository.create({
+        email: dispatcherEmail,
+        passwordHash,
+        role: UserRole.DISPATCHER,
+      });
+      await userRepository.save(dispatcher);
+      console.log('Dispatcher user seeded');
+    }
+
     // 3. Seed Vehicles
     const vehiclesData = [
       { plateNumber: '29A-12345', type: VehicleType.SMALL, maxCapacityKg: 1000 },
@@ -84,6 +99,8 @@ async function seed() {
       { plateNumber: '51C-11111', type: VehicleType.LARGE, maxCapacityKg: 15000 },
       { plateNumber: '51C-22222', type: VehicleType.MEDIUM, maxCapacityKg: 5000 },
       { plateNumber: '30E-33333', type: VehicleType.SMALL, maxCapacityKg: 1500 },
+      { plateNumber: '30E-44444', type: VehicleType.LARGE, maxCapacityKg: 12000 },
+      { plateNumber: '43A-55555', type: VehicleType.SMALL, maxCapacityKg: 800 },
     ];
 
     for (const data of vehiclesData) {
@@ -92,39 +109,38 @@ async function seed() {
         vehicle = vehicleRepository.create({
           ...data,
           status: VehicleStatus.AVAILABLE,
+          lastKnownLocation: { type: 'Point', coordinates: [106.660172, 10.762622] } as any, // Base location HCM
         });
         await vehicleRepository.save(vehicle);
         console.log(`Vehicle ${data.plateNumber} seeded`);
       }
     }
 
-    // 4. Seed Sample Orders (HCM area)
+    // 4. Seed Sample Orders (HCM area - 10 orders total)
     const ordersData = [
-      {
-        pickupAddress: 'Linh Trung, Thu Duc, HCM',
-        pickupLocation: { type: 'Point', coordinates: [106.78, 10.86] },
-        deliveryAddress: 'Ben Thanh Market, District 1, HCM',
-        deliveryLocation: { type: 'Point', coordinates: [106.69, 10.77] },
-        weightKg: 50,
-        description: 'Electronic parts',
-      },
-      {
-        pickupAddress: 'Tan Binh Industrial Park, HCM',
-        pickupLocation: { type: 'Point', coordinates: [106.63, 10.81] },
-        deliveryAddress: 'Cat Lai Port, District 2, HCM',
-        deliveryLocation: { type: 'Point', coordinates: [106.77, 10.76] },
-        weightKg: 2000,
-        description: 'Textile materials',
-      },
+      { pickupAddress: 'Linh Trung, Thu Duc, HCM', pickupLocation: { type: 'Point', coordinates: [106.78, 10.86] }, deliveryAddress: 'District 1, HCM', deliveryLocation: { type: 'Point', coordinates: [106.69, 10.77] }, weightKg: 50, description: 'Electronic parts' },
+      { pickupAddress: 'Tan Binh IP, HCM', pickupLocation: { type: 'Point', coordinates: [106.63, 10.81] }, deliveryAddress: 'Cat Lai Port, HCM', deliveryLocation: { type: 'Point', coordinates: [106.77, 10.76] }, weightKg: 2000, description: 'Textile materials' },
+      { pickupAddress: 'Go Vap, HCM', pickupLocation: { type: 'Point', coordinates: [106.67, 10.83] }, deliveryAddress: 'District 7, HCM', deliveryLocation: { type: 'Point', coordinates: [106.72, 10.73] }, weightKg: 300, description: 'Food supplies' },
+      { pickupAddress: 'Binh Thanh, HCM', pickupLocation: { type: 'Point', coordinates: [106.70, 10.80] }, deliveryAddress: 'District 3, HCM', deliveryLocation: { type: 'Point', coordinates: [106.68, 10.78] }, weightKg: 100, description: 'Office documents' },
+      { pickupAddress: 'Phu Nhuan, HCM', pickupLocation: { type: 'Point', coordinates: [106.68, 10.79] }, deliveryAddress: 'Tan Son Nhat Airport', deliveryLocation: { type: 'Point', coordinates: [106.66, 10.81] }, weightKg: 1500, description: 'Medical equipment' },
+      { pickupAddress: 'District 10, HCM', pickupLocation: { type: 'Point', coordinates: [106.66, 10.77] }, deliveryAddress: 'District 5, HCM', deliveryLocation: { type: 'Point', coordinates: [106.66, 10.75] }, weightKg: 800, description: 'Furniture' },
+      { pickupAddress: 'Cu Chi, HCM', pickupLocation: { type: 'Point', coordinates: [106.49, 10.98] }, deliveryAddress: 'District 1, HCM', deliveryLocation: { type: 'Point', coordinates: [106.69, 10.77] }, weightKg: 4000, description: 'Agricultural products' },
+      { pickupAddress: 'Hoc Mon, HCM', pickupLocation: { type: 'Point', coordinates: [106.59, 10.88] }, deliveryAddress: 'Binh Tan, HCM', deliveryLocation: { type: 'Point', coordinates: [106.60, 10.76] }, weightKg: 1200, description: 'Construction materials' },
+      { pickupAddress: 'District 12, HCM', pickupLocation: { type: 'Point', coordinates: [106.64, 10.86] }, deliveryAddress: 'District 2, HCM', deliveryLocation: { type: 'Point', coordinates: [106.74, 10.79] }, weightKg: 600, description: 'Retail goods' },
+      { pickupAddress: 'Nha Be, HCM', pickupLocation: { type: 'Point', coordinates: [106.72, 10.66] }, deliveryAddress: 'District 4, HCM', deliveryLocation: { type: 'Point', coordinates: [106.70, 10.75] }, weightKg: 200, description: 'Spare parts' },
     ];
 
     for (const data of ordersData) {
-      const order = orderRepository.create({
-        ...data,
-        status: OrderStatus.PENDING,
-      } as any);
-      await orderRepository.save(order);
-      console.log(`Order from ${data.pickupAddress} seeded`);
+      // Check if order already exists by description and pickup address (simple check)
+      const existing = await orderRepository.findOne({ where: { description: data.description, pickupAddress: data.pickupAddress } });
+      if (!existing) {
+        const order = orderRepository.create({
+          ...data,
+          status: OrderStatus.PENDING,
+        } as any);
+        await orderRepository.save(order);
+        console.log(`Order: ${data.description} seeded`);
+      }
     }
 
     console.log('Seeding completed successfully');
@@ -133,6 +149,7 @@ async function seed() {
   } finally {
     await dataSource.destroy();
   }
+
 }
 
 seed();

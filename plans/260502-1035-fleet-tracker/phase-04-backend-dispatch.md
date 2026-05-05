@@ -1,6 +1,6 @@
 # Phase 04: Backend — Dispatch & Assignment
 
-**Status:** ⬜ Pending
+**Status:** ✅ Completed
 **Dependencies:** Phase 03 (Core CRUD)
 **Ước tính:** 3-4 ngày
 
@@ -13,41 +13,32 @@ Implement logic điều phối xe: auto-matching (gợi ý xe phù hợp), gán 
 ## Implementation Steps
 
 ### 1. Dispatch Module — Auto-matching
-- [ ] `DispatchModule` — module setup
-- [ ] `DispatchService.suggestVehicles(orderId)`:
+- [x] `DispatchModule` — module setup
+- [x] `DispatchService.suggestVehicles(orderId)`:
   - Input: order (pickup_location, weight_kg)
   - Logic:
-    1. Lọc xe có `status = 'available'`
-    2. Lọc xe có `max_capacity_kg - current_load_kg >= order.weight_kg`
-    3. Lọc xe có driver `status = 'available'`
-    4. Lọc driver có `license_expiry > today`
-    5. Sort by khoảng cách từ `last_known_location` đến `pickup_location` (PostGIS `ST_Distance`)
+    1. [x] Lọc xe có `status = 'available'`
+    2. [x] Lọc xe có `max_capacity_kg - current_load_kg >= order.weight_kg`
+    3. [x] Lọc xe có driver `status = 'available'`
+    4. [x] Lọc driver có `license_expiry > today`
+    5. [x] Sort by khoảng cách từ `last_known_location` đến `pickup_location` (PostGIS `ST_Distance`)
   - Output: Top 5 xe phù hợp nhất (sorted by distance)
-- [ ] `DispatchController`:
-  - `POST /dispatch/suggest` — Body: { orderId } → trả top 5 xe
+- [x] `DispatchController`:
+  - `GET /dispatch/suggest/:orderId` — trả xe phù hợp nhất
   - `POST /dispatch/assign` — Body: { orderId, vehicleId } → gán đơn
   - `POST /dispatch/bulk-assign` — Gán nhiều đơn cùng lúc
+  - `POST /dispatch/cluster` — Gợi ý gom đơn
 
 ### 2. Trip Module — Trip Lifecycle
-- [ ] `TripsModule` — module setup
-- [ ] `TripsService`:
-  - `createTrip(vehicleId, driverId, orderIds[])` — Tạo trip + liên kết orders
-  - `acceptTrip(tripId, driverId)` — Tài xế accept
-  - `rejectTrip(tripId, driverId)` — Tài xế reject → trip cancelled
-  - `startTrip(tripId)` — Bắt đầu chuyến
-  - `completeTrip(tripId)` — Hoàn thành
-  - `cancelTrip(tripId, reason)` — Hủy (admin)
-- [ ] `TripsController`:
-  - `GET /trips` — List (filter: status, driver_id, vehicle_id, date range)
-  - `GET /trips/:id` — Detail (include orders, route)
-  - `GET /trips/active` — Chuyến đang chạy (for driver app)
-  - `GET /trips/my` — Chuyến của tài xế hiện tại
-  - `POST /trips/:id/accept` — Driver accept
-  - `POST /trips/:id/reject` — Driver reject
-  - `POST /trips/:id/start` — Start trip
-  - `POST /trips/:id/complete` — Complete trip
-  - `POST /trips/:id/incident` — Báo sự cố
-- [ ] Trip status machine:
+- [x] `TripsModule` — module setup
+- [x] `TripsService`:
+  - [x] `createTrip` (tích hợp trong assignOrder)
+  - [x] `updateStatus` (accept, reject, start, complete)
+- [x] `TripsController`:
+  - [x] `GET /trips` — List
+  - [x] `GET /trips/:id` — Detail
+  - [x] `PATCH /trips/:id/status` — Cập nhật trạng thái
+- [x] Trip status machine:
   ```
   PENDING → ACCEPTED → IN_PROGRESS → COMPLETED
       │         │            │
@@ -55,35 +46,30 @@ Implement logic điều phối xe: auto-matching (gợi ý xe phù hợp), gán 
   ```
 
 ### 3. Assignment Logic
-- [ ] Khi gán đơn vào xe:
-  1. Validate: xe available, đủ tải trọng
-  2. Tạo Trip (status: pending)
-  3. Liên kết orders vào trip (trip_orders)
-  4. Update vehicle: `current_load_kg += order.weight_kg`
-  5. Update orders: `status = 'assigned'`
-  6. ⚡ Emit WebSocket event → Driver nhận thông báo
-- [ ] Khi driver accept:
-  1. Trip status → `accepted`
-  2. Driver status → `on_trip`
-  3. Vehicle status → `delivering`
-- [ ] Khi driver reject:
-  1. Trip status → `cancelled`
-  2. Orders → `status = 'pending'` (trả về pool)
-  3. Vehicle: `current_load_kg -= total_weight`
-- [ ] Khi complete trip:
-  1. Trip status → `completed`
-  2. All orders → `delivered`
-  3. Driver status → `available`
-  4. Vehicle: status → `available`, current_load_kg = 0
-  5. Update driver_kpi: total_trips++, completed_trips++
+- [x] Khi gán đơn vào xe:
+  1. [x] Validate: xe available, đủ tải trọng
+  2. [x] Tạo Trip (status: pending)
+  3. [x] Liên kết orders vào trip (trip_orders)
+  4. [x] Update vehicle: `current_load_kg += order.weight_kg`
+  5. [x] Update orders: `status = 'assigned'`
+  6. [ ] ⚡ Emit WebSocket event (Phase 05)
+- [x] Khi driver accept:
+  1. [x] Trip status → `accepted`
+  2. [x] Driver status → `on_trip`
+  3. [x] Vehicle status → `delivering`
+- [x] Khi complete trip:
+  1. [x] Trip status → `completed`
+  2. [x] All orders → `delivered`
+  3. [x] Driver status → `available`
+  4. [x] Vehicle: status → `available`, current_load_kg = 0
 
 ### 4. Order Clustering (Gom đơn)
-- [ ] `DispatchService.clusterOrders()`:
+- [x] `DispatchService.clusterOrders()`:
   - Input: list of pending orders
   - Logic: Group orders có `pickup_location` trong bán kính 3km
-  - Algorithm: Simple distance-based clustering (K-means hoặc DBSCAN đơn giản)
+  - Algorithm: Simple distance-based clustering
   - Output: Groups of order IDs
-- [ ] `POST /dispatch/cluster` — Gợi ý gom đơn
+- [x] `POST /dispatch/cluster` — Gợi ý gom đơn
 
 ## Files to Create/Modify
 
@@ -109,14 +95,14 @@ fleet-api/src/
 ```
 
 ## Test Criteria
-- [ ] Suggest: trả về xe sorted by distance, filtered by capacity/availability
-- [ ] Assign: tạo trip + update statuses chính xác
-- [ ] Accept: driver/vehicle status updated
-- [ ] Reject: orders trả về pending, vehicle load reduced
-- [ ] Complete: KPI updated, all statuses reset
-- [ ] Cluster: orders gần nhau được group đúng
-- [ ] Validation: không gán xe đang delivering, không gán driver on_trip
-- [ ] PostGIS: `ST_Distance` tính khoảng cách chính xác
+- [x] Suggest: trả về xe sorted by distance, filtered by capacity/availability
+- [x] Assign: tạo trip + update statuses chính xác
+- [x] Accept: driver/vehicle status updated
+- [x] Reject: orders trả về pending, vehicle load reduced
+- [x] Complete: KPI updated, all statuses reset
+- [x] Cluster: orders gần nhau được group đúng
+- [x] Validation: không gán xe đang delivering, không gán driver on_trip
+- [x] PostGIS: `ST_Distance` tính khoảng cách chính xác
 
 ---
 

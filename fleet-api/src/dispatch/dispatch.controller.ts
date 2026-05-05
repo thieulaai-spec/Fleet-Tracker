@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { DispatchService } from './dispatch.service';
-import { AssignOrderDto } from './dto/dispatch.dto';
+import { AssignOrderDto, BulkAssignDto } from './dto/dispatch.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -28,6 +28,16 @@ export class DispatchController {
     return this.dispatchService.assignOrder(
       assignOrderDto.orderId,
       assignOrderDto.vehicleId,
+    );
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.DISPATCHER)
+  @ApiOperation({ summary: 'Assign multiple orders to a vehicle and create a single trip' })
+  @Post('bulk-assign')
+  assignBulkOrders(@Body() bulkAssignDto: BulkAssignDto) {
+    return this.dispatchService.assignBulkOrders(
+      bulkAssignDto.orderIds,
+      bulkAssignDto.vehicleId,
     );
   }
 

@@ -19,3 +19,15 @@ export class AssignOrderDto {
   @IsNotEmpty()
   vehicleId: string;
 }
+
+export class BulkAssignDto {
+  @ApiProperty({ type: [String] })
+  @IsUUID('all', { each: true })
+  @IsNotEmpty()
+  orderIds: string[];
+
+  @ApiProperty()
+  @IsUUID()
+  @IsNotEmpty()
+  vehicleId: string;
+}

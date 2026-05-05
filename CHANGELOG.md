@@ -11,3 +11,10 @@ Tất cả các thay đổi quan trọng đối với dự án FleetTracker sẽ
 
 ### Fixed
 - Lỗi thiếu tài liệu hướng dẫn tổng quan tại thư mục gốc.
+
+## [2026-05-05]
+### Added
+- Backend: Hoàn thiện Phase 04 - Điều phối và Gán đơn hàng.
+- Backend: Triển khai tính năng gán đơn hàng hàng loạt (`bulk-assign`).
+- Backend: Tích hợp tự động cập nhật KPI tài xế khi hoàn thành chuyến đi.
+- Backend: Thắt chặt logic validation trạng thái xe và tài xế trong quá trình gán đơn.

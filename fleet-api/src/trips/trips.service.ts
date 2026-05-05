@@ -6,7 +6,6 @@ import { TripOrder } from '../entities/trip-order.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
-import { DriverKpi } from '../entities/driver-kpi.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -72,21 +71,6 @@ export class TripsService {
             await queryRunner.manager.save(Driver, driver);
           }
 
-          // Update KPI: Increment total trips
-          let kpi = await queryRunner.manager.findOne(DriverKpi, { where: { driverId: trip.driverId } });
-          if (!kpi) {
-            kpi = queryRunner.manager.create(DriverKpi, { 
-              driverId: trip.driverId, 
-              totalTrips: 1,
-              completedTrips: 0,
-              completionRate: 0,
-              kpiScore: 100,
-            });
-          } else {
-            kpi.totalTrips = Number(kpi.totalTrips) + 1;
-            kpi.completionRate = (Number(kpi.completedTrips) / Number(kpi.totalTrips)) * 100;
-          }
-          await queryRunner.manager.save(DriverKpi, kpi);
         }
 
         // Ensure vehicle status is DELIVERING
@@ -142,13 +126,6 @@ export class TripsService {
             await queryRunner.manager.save(Driver, driver);
           }
 
-          // Update KPI: Increment completed trips
-          const kpi = await queryRunner.manager.findOne(DriverKpi, { where: { driverId: trip.driverId } });
-          if (kpi) {
-            kpi.completedTrips = Number(kpi.completedTrips) + 1;
-            kpi.completionRate = (Number(kpi.completedTrips) / Number(kpi.totalTrips)) * 100;
-            await queryRunner.manager.save(DriverKpi, kpi);
-          }
         }
       }
 

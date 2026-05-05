@@ -23,6 +23,9 @@ import { DispatchModule } from './dispatch/dispatch.module';
 import { TripsModule } from './trips/trips.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { AlertsModule } from './alerts/alerts.module';
+import { ReportsModule } from './reports/reports.module';
+import { OptimizationModule } from './optimization/optimization.module';
+
 
 @Module({
   imports: [
@@ -73,6 +76,9 @@ import { AlertsModule } from './alerts/alerts.module';
     TripsModule,
     TrackingModule,
     AlertsModule,
+    ReportsModule,
+    OptimizationModule,
+
 
     // Modules to be added in future phases
     // TripsModule will be added in Phase 04

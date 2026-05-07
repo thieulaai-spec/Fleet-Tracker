@@ -8,14 +8,10 @@ let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
-    socket = io(SOCKET_URL, {
+    socket = io(`${SOCKET_URL}/tracking`, {
       autoConnect: false,
       transports: ['websocket'],
-      auth: {
-        token: typeof window !== 'undefined'
-          ? localStorage.getItem('access_token')
-          : null,
-      },
+      withCredentials: true, // Send cookies with handshake
     });
   }
   return socket;

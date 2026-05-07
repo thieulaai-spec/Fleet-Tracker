@@ -63,7 +63,18 @@ export class TrackingGateway
 
   async handleConnection(client: Socket, ...args: any[]) {
     try {
-      const token = client.handshake.auth.token || client.handshake.query.token;
+      let token = client.handshake.auth.token || client.handshake.query.token;
+
+      // Try to get token from cookies (for Web Admin)
+      if (!token && client.handshake.headers.cookie) {
+        const cookies = client.handshake.headers.cookie.split(';').reduce((acc: any, curr) => {
+          const [key, value] = curr.trim().split('=');
+          acc[key] = value;
+          return acc;
+        }, {});
+        token = cookies['access_token'];
+      }
+
       if (!token) {
         this.logger.warn(`Client connection rejected: No token provided. ID: ${client.id}`);
         client.disconnect();

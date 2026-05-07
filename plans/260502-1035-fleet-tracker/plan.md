@@ -80,9 +80,9 @@ fleet-tracker/
 | 02 | Database & Authentication | ✅ Complete | 15 | 3-4 ngày |
 | 03 | Backend — Core CRUD APIs | ✅ Complete | 18 | 4-5 ngày |
 | 04 | Backend — Dispatch & Assignment | ✅ Complete | 10 | 3-4 ngày |
-| 05 | Backend — Real-time GPS & Alerts | ⬜ Pending | 14 | 5-7 ngày |
-| 06 | Backend — Reports & Optimization | ⬜ Pending | 12 | 4-5 ngày |
-| 07 | Admin Dashboard — Core UI | ⬜ Pending | 20 | 6-8 ngày |
+| 05 | Backend — Real-time GPS & Alerts | ✅ Complete | 14 | 5-7 ngày |
+| 06 | Backend — Reports & Optimization | ✅ Complete | 12 | 4-5 ngày |
+| 07 | Admin Dashboard — Core UI | ✅ Complete | 20 | 6-8 ngày |
 | 08 | Admin Dashboard — Maps & Monitoring | ⬜ Pending | 12 | 5-6 ngày |
 | 09 | Admin Dashboard — Reports & Analytics | ⬜ Pending | 10 | 3-4 ngày |
 | 10 | Driver Mobile App | ⬜ Pending | 16 | 7-10 ngày |

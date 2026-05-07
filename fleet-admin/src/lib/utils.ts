@@ -38,6 +38,7 @@ export const statusLabels = {
     delivering: 'Đang giao',
     delivered: 'Đã giao',
     failed: 'Thất bại',
+    cancelled: 'Đã hủy',
   } satisfies Record<OrderStatus, string>,
 
   trip: {

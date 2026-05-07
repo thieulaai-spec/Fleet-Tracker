@@ -58,8 +58,11 @@ import { OptimizationModule } from './optimization/optimization.module';
         ],
         synchronize: false,
         logging: true,
-        ssl: {
-          rejectUnauthorized: false,
+        ssl: true,
+        extra: {
+          ssl: {
+            rejectUnauthorized: false,
+          },
         },
       }),
     }),

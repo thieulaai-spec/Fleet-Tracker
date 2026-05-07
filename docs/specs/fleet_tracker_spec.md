@@ -4,6 +4,8 @@
 **Created:** 2026-05-02
 **Brief:** [BRIEF.md](../BRIEF.md)
 
+**Implementation status:** Phase 05 (Real-time GPS & Alerts) và Phase 06 (Reports & Optimization) đã được triển khai trong backend hiện tại.
+
 ---
 
 ## 1. Executive Summary

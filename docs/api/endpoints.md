@@ -1,7 +1,75 @@
-# API Documentation - Fleet Analytics & Optimization
+# API Documentation - Fleet Tracker
 
-Ngày cập nhật: 2026-05-05
-Base URL: `http://localhost:3000`
+Ngày cập nhật: 2026-05-06
+Base URL: `http://localhost:3001`
+
+---
+
+## 🔐 Authentication
+
+### POST `/auth/login`
+Đăng nhập vào hệ thống.
+
+**Request Body:**
+```json
+{
+  "email": "admin@fleettracker.com",
+  "password": "Password@123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "accessToken": "eyJ...",
+  "refreshToken": "eyJ...",
+  "user": {
+    "id": "uuid",
+    "email": "admin@fleettracker.com",
+    "role": "admin",
+    "isActive": true
+  }
+}
+```
+
+---
+
+## 🚚 Vehicles
+
+### GET `/vehicles`
+Lấy danh sách phương tiện.
+
+### POST `/vehicles`
+Tạo phương tiện mới.
+
+### PATCH `/vehicles/:id`
+Cập nhật thông tin phương tiện.
+
+### DELETE `/vehicles/:id`
+Xóa phương tiện.
+
+---
+
+## 👥 Drivers
+
+### GET `/drivers`
+Lấy danh sách tài xế.
+
+### POST `/drivers`
+Đăng ký tài xế mới (tự động tạo User).
+
+---
+
+## 📦 Orders
+
+### GET `/orders`
+Lấy danh sách đơn hàng.
+
+### POST `/orders`
+Tạo đơn hàng mới.
+
+### POST `/orders/:id/assign`
+Gán đơn hàng cho phương tiện.
 
 ---
 

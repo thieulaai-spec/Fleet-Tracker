@@ -60,7 +60,14 @@ class HttpClient {
       throw new Error(error?.error?.message || `HTTP ${response.status}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    
+    // Unwrap NestJS ResponseInterceptor format if present
+    if (result && typeof result === 'object' && 'data' in result && 'statusCode' in result) {
+      return result.data as T;
+    }
+
+    return result as T;
   }
 
   get<T>(endpoint: string) {
@@ -100,7 +107,14 @@ class HttpClient {
       throw new Error(error?.error?.message || `HTTP ${response.status}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    
+    // Unwrap NestJS ResponseInterceptor format if present
+    if (result && typeof result === 'object' && 'data' in result && 'statusCode' in result) {
+      return result.data as T;
+    }
+
+    return result as T;
   }
 }
 

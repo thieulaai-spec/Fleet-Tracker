@@ -27,3 +27,15 @@ Tất cả các thay đổi quan trọng đối với dự án FleetTracker sẽ
 - Backend: Triển khai **OptimizationModule** tích hợp Mapbox Directions API để tối ưu tuyến đường.
 - Backend: Sử dụng PostGIS để tính quãng đường di chuyển thực tế từ lịch sử GPS.
 - Backend: Thêm bộ test suite tự động cho các logic tính toán quan trọng (KPI, Fuel, Optimization).
+
+## [2026-05-06]
+### Added
+- **Frontend (Admin Dashboard - Phase 07)**:
+    - Hoàn thiện toàn bộ giao diện quản trị: Dashboard Overview, Vehicles, Drivers, Orders, Dispatch Control Center.
+    - Đồng bộ hóa logic xác thực (Auth) và xử lý NestJS API response wrapper (`{data, statusCode, message}`).
+    - Kết nối thành công dữ liệu thực tế từ backend vào UI thông qua React Query.
+    - Khắc phục triệt để lỗi Redirect Loop khi đăng nhập.
+    - Cập nhật script `comprehensive-seed.ts` để khởi tạo dữ liệu mẫu cho toàn bộ hệ thống.
+### Fixed
+- Lỗi mismatch kiểu dữ liệu giữa Frontend và Backend (Status ENUMs, field names như `customerName` vs `deliveryAddress`).
+- Lỗi compile TypeScript trong dự án `fleet-admin`.

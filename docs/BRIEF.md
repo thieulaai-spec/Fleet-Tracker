@@ -4,6 +4,8 @@
 **Loại dự án:** Dự án học tập (Full-feature)
 **Phạm vi:** Full feature — Không cắt MVP
 
+**Trạng thái hiện tại:** Phase 05 (Real-time GPS & Alerts) và Phase 06 (Reports & Optimization) đã hoàn tất trong `fleet-api`.
+
 ---
 
 ## 1. VẤN ĐỀ CẦN GIẢI QUYẾT

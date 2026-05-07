@@ -68,7 +68,7 @@ export interface Order {
   updatedAt: string;
 }
 
-export type OrderStatus = 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'failed';
+export type OrderStatus = 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'failed' | 'cancelled';
 
 // === Trip ===
 export interface Trip {

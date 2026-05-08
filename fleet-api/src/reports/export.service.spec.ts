@@ -16,6 +16,19 @@ describe('ExportService Logic', () => {
     expect(buffer.length).toBeGreaterThan(0);
   });
 
+  it('should generate an Excel buffer for a single object summary', async () => {
+    const data = {
+      totalTrips: 10,
+      completionRate: 85.5,
+      details: { region: 'North', active: true },
+    };
+
+    const buffer = await exportService.exportExcel(data, 'Summary');
+
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer.length).toBeGreaterThan(0);
+  });
+
   it('should generate a PDF buffer', async () => {
     const data = {
       totalTrips: 10,
@@ -26,6 +39,18 @@ describe('ExportService Logic', () => {
     };
 
     const buffer = await exportService.exportPdf(data, 'Fleet Performance');
+
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer.length).toBeGreaterThan(0);
+  });
+
+  it('should generate a PDF buffer for an array of items', async () => {
+    const data = [
+      { id: 1, type: 'Overspeed', driver: 'Alice' },
+      { id: 2, type: 'Late', driver: 'Bob' },
+    ];
+
+    const buffer = await exportService.exportPdf(data, 'Violations List');
 
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);

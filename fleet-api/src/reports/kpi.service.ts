@@ -14,7 +14,6 @@ export const KPI_PENALTIES = {
 
 @Injectable()
 export class KpiService {
-
   constructor(
     @InjectRepository(DriverKpi)
     private kpiRepository: Repository<DriverKpi>,
@@ -59,12 +58,20 @@ export class KpiService {
     await this.getOrCreateKpi(trip.driverId);
 
     if (payload.status === TripStatus.ACCEPTED) {
-      await this.kpiRepository.increment({ driverId: trip.driverId }, 'totalTrips', 1);
+      await this.kpiRepository.increment(
+        { driverId: trip.driverId },
+        'totalTrips',
+        1,
+      );
       await this.syncCompletionRate(trip.driverId);
     }
 
     if (payload.status === TripStatus.COMPLETED) {
-      await this.kpiRepository.increment({ driverId: trip.driverId }, 'completedTrips', 1);
+      await this.kpiRepository.increment(
+        { driverId: trip.driverId },
+        'completedTrips',
+        1,
+      );
       await this.syncCompletionRate(trip.driverId);
     }
   }
@@ -95,9 +102,10 @@ export class KpiService {
   private async syncCompletionRate(driverId: string) {
     await this.kpiRepository.update(
       { driverId },
-      { 
-        completionRate: () => 'CASE WHEN total_trips > 0 THEN (CAST(completed_trips AS FLOAT) / total_trips) * 100 ELSE 0 END' 
-      }
+      {
+        completionRate: () =>
+          'CASE WHEN total_trips > 0 THEN (CAST(completed_trips AS FLOAT) / total_trips) * 100 ELSE 0 END',
+      },
     );
   }
 
@@ -116,15 +124,18 @@ export class KpiService {
   // Helper to sync total trips if they get out of sync
   async syncTotalTrips(driverId: string) {
     const total = await this.tripRepository.count({ where: { driverId } });
-    const completed = await this.tripRepository.count({ 
-      where: { driverId, status: TripStatus.COMPLETED } 
+    const completed = await this.tripRepository.count({
+      where: { driverId, status: TripStatus.COMPLETED },
     });
-    
+
     await this.getOrCreateKpi(driverId);
-    await this.kpiRepository.update({ driverId }, { 
-      totalTrips: total,
-      completedTrips: completed
-    });
+    await this.kpiRepository.update(
+      { driverId },
+      {
+        totalTrips: total,
+        completedTrips: completed,
+      },
+    );
     await this.syncCompletionRate(driverId);
   }
 }

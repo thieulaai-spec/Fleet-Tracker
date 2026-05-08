@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Trip, TripStatus } from '../entities/trip.entity';
@@ -34,7 +39,12 @@ export class TripsService {
     return trip;
   }
 
-  async updateStatus(id: string, status: TripStatus, userId: string, role: string) {
+  async updateStatus(
+    id: string,
+    status: TripStatus,
+    userId: string,
+    role: string,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -65,17 +75,20 @@ export class TripsService {
 
       if (status === TripStatus.ACCEPTED) {
         if (trip.driverId) {
-          const driver = await queryRunner.manager.findOne(Driver, { where: { id: trip.driverId } });
+          const driver = await queryRunner.manager.findOne(Driver, {
+            where: { id: trip.driverId },
+          });
           if (driver) {
             driver.status = DriverStatus.ON_TRIP;
             await queryRunner.manager.save(Driver, driver);
           }
-
         }
 
         // Ensure vehicle status is DELIVERING
         if (trip.vehicleId) {
-          const vehicle = await queryRunner.manager.findOne(Vehicle, { where: { id: trip.vehicleId } });
+          const vehicle = await queryRunner.manager.findOne(Vehicle, {
+            where: { id: trip.vehicleId },
+          });
           if (vehicle) {
             vehicle.status = VehicleStatus.DELIVERING;
             await queryRunner.manager.save(Vehicle, vehicle);
@@ -98,7 +111,7 @@ export class TripsService {
 
       if (status === TripStatus.COMPLETED) {
         trip.completedAt = new Date();
-        
+
         // Update orders to DELIVERED
         if (trip.tripOrders) {
           for (const tripOrder of trip.tripOrders) {
@@ -111,7 +124,9 @@ export class TripsService {
 
         // Update Vehicle & Driver back to AVAILABLE
         if (trip.vehicleId) {
-          const vehicle = await queryRunner.manager.findOne(Vehicle, { where: { id: trip.vehicleId } });
+          const vehicle = await queryRunner.manager.findOne(Vehicle, {
+            where: { id: trip.vehicleId },
+          });
           if (vehicle) {
             vehicle.status = VehicleStatus.AVAILABLE;
             vehicle.currentLoadKg = 0;
@@ -120,12 +135,13 @@ export class TripsService {
         }
 
         if (trip.driverId) {
-          const driver = await queryRunner.manager.findOne(Driver, { where: { id: trip.driverId } });
+          const driver = await queryRunner.manager.findOne(Driver, {
+            where: { id: trip.driverId },
+          });
           if (driver) {
             driver.status = DriverStatus.AVAILABLE;
             await queryRunner.manager.save(Driver, driver);
           }
-
         }
       }
 
@@ -142,7 +158,9 @@ export class TripsService {
 
         // Update Vehicle & Driver back to AVAILABLE
         if (trip.vehicleId) {
-          const vehicle = await queryRunner.manager.findOne(Vehicle, { where: { id: trip.vehicleId } });
+          const vehicle = await queryRunner.manager.findOne(Vehicle, {
+            where: { id: trip.vehicleId },
+          });
           if (vehicle) {
             vehicle.status = VehicleStatus.AVAILABLE;
             vehicle.currentLoadKg = 0;
@@ -151,7 +169,9 @@ export class TripsService {
         }
 
         if (trip.driverId) {
-          const driver = await queryRunner.manager.findOne(Driver, { where: { id: trip.driverId } });
+          const driver = await queryRunner.manager.findOne(Driver, {
+            where: { id: trip.driverId },
+          });
           if (driver) {
             driver.status = DriverStatus.AVAILABLE;
             await queryRunner.manager.save(Driver, driver);
@@ -189,7 +209,9 @@ export class TripsService {
     };
 
     if (!allowed[current].includes(next)) {
-      throw new BadRequestException(`Invalid transition from ${current} to ${next}`);
+      throw new BadRequestException(
+        `Invalid transition from ${current} to ${next}`,
+      );
     }
   }
 }

@@ -78,9 +78,9 @@ describe('VehiclesController (e2e)', () => {
 
   describe('GET /vehicles/available', () => {
     it('should return 200 OK and available vehicles', async () => {
-      mockVehicleRepository.createQueryBuilder().getMany.mockResolvedValue([
-        { id: 'v1', status: 'available' },
-      ]);
+      mockVehicleRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue([{ id: 'v1', status: 'available' }]);
 
       const response = await request(app.getHttpServer())
         .get('/vehicles/available')
@@ -95,10 +95,11 @@ describe('VehiclesController (e2e)', () => {
         .get('/vehicles/available?capacity=100')
         .expect(200);
 
-      expect(mockVehicleRepository.createQueryBuilder().andWhere).toHaveBeenCalledWith(
-        'vehicle.maxCapacityKg >= :capacity',
-        { capacity: 100 },
-      );
+      expect(
+        mockVehicleRepository.createQueryBuilder().andWhere,
+      ).toHaveBeenCalledWith('vehicle.maxCapacityKg >= :capacity', {
+        capacity: 100,
+      });
     });
   });
 });

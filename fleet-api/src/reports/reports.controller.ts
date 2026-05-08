@@ -1,4 +1,11 @@
-import { Controller, Get, Query, Param, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Param,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -34,7 +41,9 @@ export class ReportsController {
     const to = new Date(query.to);
 
     if (from > to) {
-      throw new BadRequestException('From date must be before or equal to To date');
+      throw new BadRequestException(
+        'From date must be before or equal to To date',
+      );
     }
 
     return this.reportsService.getFleetPerformance(from, to);
@@ -62,7 +71,9 @@ export class ReportsController {
     const to = new Date(query.to);
 
     if (from > to) {
-      throw new BadRequestException('From date must be before or equal to To date');
+      throw new BadRequestException(
+        'From date must be before or equal to To date',
+      );
     }
 
     return this.reportsService.getFuelCostReport(from, to);
@@ -84,7 +95,9 @@ export class ReportsController {
     const to = query.to ? new Date(query.to) : new Date();
 
     if (from > to) {
-      throw new BadRequestException('From date must be before or equal to To date');
+      throw new BadRequestException(
+        'From date must be before or equal to To date',
+      );
     }
 
     if (query.report_name === ReportName.FLEET_PERFORMANCE) {
@@ -94,7 +107,9 @@ export class ReportsController {
     } else if (query.report_name === ReportName.KPI_LEADERBOARD) {
       data = await this.kpiService.getKpiLeaderboard();
     } else {
-      throw new BadRequestException(`Unknown report name: ${query.report_name}`);
+      throw new BadRequestException(
+        `Unknown report name: ${query.report_name}`,
+      );
     }
 
     if (!data) {

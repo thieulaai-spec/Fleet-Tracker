@@ -22,7 +22,10 @@ export class UploadService {
     this.supabase = createClient(url, key);
   }
 
-  async uploadFile(file: Express.Multer.File, folder = 'general'): Promise<string> {
+  async uploadFile(
+    file: Express.Multer.File,
+    folder = 'general',
+  ): Promise<string> {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }

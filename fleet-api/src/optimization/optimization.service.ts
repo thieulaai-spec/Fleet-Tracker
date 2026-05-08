@@ -7,7 +7,6 @@ import { OrderStatus } from '../entities/order.entity';
 
 @Injectable()
 export class OptimizationService {
-
   constructor(
     @InjectRepository(Trip)
     private tripRepository: Repository<Trip>,

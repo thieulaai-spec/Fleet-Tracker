@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TripsService } from './trips.service';
 import { UpdateTripStatusDto } from './dto/trip.dto';

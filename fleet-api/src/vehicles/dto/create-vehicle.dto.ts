@@ -1,4 +1,11 @@
-import { IsString, IsNotEmpty, IsEnum, IsNumber, IsOptional, IsPositive } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { VehicleType } from '../../entities/vehicle.entity';
 

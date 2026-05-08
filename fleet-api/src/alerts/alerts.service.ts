@@ -40,7 +40,7 @@ export class AlertsService {
     });
 
     const savedAlert = await this.alertRepository.save(alert);
-    
+
     // Emit event for real-time notification
     this.eventEmitter.emit('alert.new', savedAlert);
 
@@ -61,7 +61,7 @@ export class AlertsService {
     });
 
     const resolvedAlert = await this.alertRepository.findOne({ where: { id } });
-    
+
     // Emit resolved event
     this.eventEmitter.emit('alert.resolved', resolvedAlert);
 

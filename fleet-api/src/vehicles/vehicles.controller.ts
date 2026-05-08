@@ -1,5 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, UseInterceptors, UploadedFile, ParseFloatPipe, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFloatPipe,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
@@ -32,7 +52,10 @@ export class VehiclesController {
 
   @Get('available')
   @ApiOperation({ summary: 'Get available vehicles for assignment' })
-  findAvailable(@Query('capacity', new ParseFloatPipe({ optional: true })) capacity?: number) {
+  findAvailable(
+    @Query('capacity', new ParseFloatPipe({ optional: true }))
+    capacity?: number,
+  ) {
     return this.vehiclesService.findAvailable(capacity);
   }
 
@@ -51,17 +74,22 @@ export class VehiclesController {
 
   @Post(':id/image')
   @Roles(UserRole.ADMIN)
-  @UseInterceptors(FileInterceptor('file', {
-    limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB
-    },
-    fileFilter: (req, file, callback) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-        return callback(new BadRequestException('Only image files are allowed!'), false);
-      }
-      callback(null, true);
-    },
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+      },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return callback(
+            new BadRequestException('Only image files are allowed!'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {

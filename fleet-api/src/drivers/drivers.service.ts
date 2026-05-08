@@ -108,7 +108,7 @@ export class DriversService {
 
   async remove(id: string): Promise<void> {
     const driver = await this.findOne(id);
-    
+
     if (driver.status === DriverStatus.ON_TRIP) {
       throw new ConflictException('Cannot delete driver while on a trip');
     }

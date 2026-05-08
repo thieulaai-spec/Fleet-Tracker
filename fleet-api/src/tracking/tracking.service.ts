@@ -101,8 +101,7 @@ export class TrackingService implements OnModuleDestroy {
       .createQueryBuilder()
       .update(Vehicle)
       .set({
-        lastKnownLocation: () =>
-          `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
+        lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
       })
       .where('id = :vehicleId', { vehicleId })
       .setParameters({ lng: longitude, lat: latitude })
@@ -158,14 +157,18 @@ export class TrackingService implements OnModuleDestroy {
     return this.tripRepository.findOne({ where: { id: tripId } });
   }
 
-  async validateDriverTrip(driverId: string, tripId: string, vehicleId: string): Promise<boolean> {
-    const trip = await this.tripRepository.findOne({ 
-      where: { 
-        id: tripId, 
+  async validateDriverTrip(
+    driverId: string,
+    tripId: string,
+    vehicleId: string,
+  ): Promise<boolean> {
+    const trip = await this.tripRepository.findOne({
+      where: {
+        id: tripId,
         driverId,
         vehicleId,
-        status: TripStatus.IN_PROGRESS 
-      } 
+        status: TripStatus.IN_PROGRESS,
+      },
     });
 
     return !!trip;

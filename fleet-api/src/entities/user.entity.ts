@@ -30,7 +30,12 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ type: 'text', name: 'refresh_token_hash', nullable: true, select: false })
+  @Column({
+    type: 'text',
+    name: 'refresh_token_hash',
+    nullable: true,
+    select: false,
+  })
   refreshTokenHash?: string | null;
 
   @Column({ name: 'is_active', default: true })

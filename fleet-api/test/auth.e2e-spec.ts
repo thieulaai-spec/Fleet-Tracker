@@ -38,11 +38,11 @@ describe('AuthModule (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send(adminCredentials);
-      
+
       if (response.status !== 200) {
         console.log('Login failed body:', response.body);
       }
-      
+
       expect(response.status).toBe(200);
 
       expect(response.body).toHaveProperty('accessToken');
@@ -52,8 +52,8 @@ describe('AuthModule (e2e)', () => {
       // Check cookies
       const cookies = response.get('Set-Cookie') as string[];
       expect(cookies).toBeDefined();
-      expect(cookies.some(c => c.includes('access_token'))).toBeTruthy();
-      expect(cookies.some(c => c.includes('refresh_token'))).toBeTruthy();
+      expect(cookies.some((c) => c.includes('access_token'))).toBeTruthy();
+      expect(cookies.some((c) => c.includes('refresh_token'))).toBeTruthy();
     });
 
     it('should return 401 with invalid credentials', async () => {
@@ -114,9 +114,7 @@ describe('AuthModule (e2e)', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      await request(app.getHttpServer())
-        .get('/auth/me')
-        .expect(401);
+      await request(app.getHttpServer()).get('/auth/me').expect(401);
     });
   });
 
@@ -152,11 +150,11 @@ describe('AuthModule (e2e)', () => {
           email: newUser.email,
           password: newUser.password,
         });
-      
+
       if (loginRes.status !== 200) {
         console.log('Driver login failed body:', loginRes.body);
       }
-      
+
       expect(loginRes.status).toBe(200);
 
       const token = loginRes.body.accessToken;
@@ -164,10 +162,10 @@ describe('AuthModule (e2e)', () => {
       await request(app.getHttpServer())
         .post('/auth/register')
         .set('Authorization', `Bearer ${token}`)
-        .send({ 
+        .send({
           email: 'another@example.com',
           password: 'Password@123',
-          role: 'driver'
+          role: 'driver',
         })
         .expect(403); // Forbidden
     });
@@ -227,8 +225,10 @@ describe('AuthModule (e2e)', () => {
 
       const setCookies = response.get('Set-Cookie') as string[];
       expect(setCookies).toBeDefined();
-      expect(setCookies.some(c => c.includes('access_token=;'))).toBeTruthy();
-      expect(setCookies.some(c => c.includes('refresh_token=;'))).toBeTruthy();
+      expect(setCookies.some((c) => c.includes('access_token=;'))).toBeTruthy();
+      expect(
+        setCookies.some((c) => c.includes('refresh_token=;')),
+      ).toBeTruthy();
     });
   });
 });

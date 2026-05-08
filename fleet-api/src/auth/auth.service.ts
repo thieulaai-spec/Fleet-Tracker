@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,7 +24,9 @@ export class AuthService {
   async register(registerDto: RegisterDto): Promise<User> {
     const { email, password, role } = registerDto;
 
-    const existingUser = await this.userRepository.findOne({ where: { email } });
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
     if (existingUser) {
       throw new ConflictException('Email already exists');
     }
@@ -46,7 +52,11 @@ export class AuthService {
       select: ['id', 'email', 'passwordHash', 'role'],
     });
 
-    if (user && user.passwordHash && (await bcrypt.compare(password, user.passwordHash))) {
+    if (
+      user &&
+      user.passwordHash &&
+      (await bcrypt.compare(password, user.passwordHash))
+    ) {
       const tokens = await this.getTokens(user.id, user.email, user.role);
       await this.updateRefreshToken(user.id, tokens.refreshToken);
       return {
@@ -67,7 +77,7 @@ export class AuthService {
       const payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-      
+
       const userId = payload.sub;
       const user = await this.userRepository.findOne({
         where: { id: userId, isActive: true },
@@ -82,7 +92,8 @@ export class AuthService {
         refreshToken,
         user.refreshTokenHash,
       );
-      if (!refreshTokenMatches) throw new UnauthorizedException('Access Denied');
+      if (!refreshTokenMatches)
+        throw new UnauthorizedException('Access Denied');
 
       const tokens = await this.getTokens(user.id, user.email, user.role);
       await this.updateRefreshToken(user.id, tokens.refreshToken);
@@ -118,11 +129,13 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: (this.configService.get<string>('JWT_ACCESS_EXPIRY') as any) || '1h',
+        expiresIn:
+          (this.configService.get<string>('JWT_ACCESS_EXPIRY') as any) || '1h',
       }),
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRY') as any) || '7d',
+        expiresIn:
+          (this.configService.get<string>('JWT_REFRESH_EXPIRY') as any) || '7d',
       }),
     ]);
 

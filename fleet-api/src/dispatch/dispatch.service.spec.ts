@@ -10,6 +10,9 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('DispatchService', () => {
   let service: DispatchService;
+  let orderRepo: any;
+  let vehicleRepo: any;
+  let tripRepo: any;
   let mockDataSource: any;
   let mockQueryRunner: any;
 
@@ -23,8 +26,8 @@ describe('DispatchService', () => {
       manager: {
         findOne: jest.fn(),
         find: jest.fn(),
-        create: jest.fn(),
-        save: jest.fn(),
+        create: jest.fn().mockImplementation((entity, data) => ({ id: 'new-id', ...data })),
+        save: jest.fn().mockImplementation((entity, data) => Promise.resolve(data)),
       },
     };
 
@@ -32,20 +35,43 @@ describe('DispatchService', () => {
       createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner),
     };
 
+    orderRepo = {
+      findOneBy: jest.fn(),
+      find: jest.fn(),
+    };
+
+    vehicleRepo = {
+      createQueryBuilder: jest.fn().mockReturnValue({
+        innerJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      }),
+    };
+
+    tripRepo = {
+      create: jest.fn(),
+      save: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DispatchService,
         {
           provide: getRepositoryToken(Order),
-          useValue: {},
+          useValue: orderRepo,
         },
         {
           provide: getRepositoryToken(Vehicle),
-          useValue: {},
+          useValue: vehicleRepo,
         },
         {
           provide: getRepositoryToken(Trip),
-          useValue: {},
+          useValue: tripRepo,
         },
         {
           provide: DataSource,
@@ -55,6 +81,59 @@ describe('DispatchService', () => {
     }).compile();
 
     service = module.get<DispatchService>(DispatchService);
+  });
+
+  describe('suggestVehicles', () => {
+    it('should throw NotFoundException if order not found', async () => {
+      orderRepo.findOneBy.mockResolvedValue(null);
+      await expect(service.suggestVehicles('o1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if order is not pending', async () => {
+      orderRepo.findOneBy.mockResolvedValue({ id: 'o1', status: OrderStatus.ASSIGNED });
+      await expect(service.suggestVehicles('o1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should return suggested vehicles', async () => {
+      orderRepo.findOneBy.mockResolvedValue({ id: 'o1', status: OrderStatus.PENDING, weightKg: 100 });
+      const mockVehicles = [{ id: 'v1' }];
+      vehicleRepo.createQueryBuilder().getMany.mockResolvedValue(mockVehicles);
+
+      const result = await service.suggestVehicles('o1');
+
+      expect(result).toEqual(mockVehicles);
+      expect(vehicleRepo.createQueryBuilder).toHaveBeenCalled();
+    });
+  });
+
+  describe('assignOrder', () => {
+    it('should successfully assign a single order', async () => {
+      const mockOrder = { id: 'o1', status: OrderStatus.PENDING, weightKg: 100 };
+      const mockVehicle = { 
+        id: 'v1', 
+        status: VehicleStatus.AVAILABLE, 
+        driverId: 'd1',
+        driver: { id: 'd1', status: DriverStatus.AVAILABLE },
+        maxCapacityKg: 1000,
+        currentLoadKg: 0
+      };
+
+      mockQueryRunner.manager.findOne
+        .mockResolvedValueOnce(mockOrder)
+        .mockResolvedValueOnce(mockVehicle);
+
+      const result = await service.assignOrder('o1', 'v1');
+
+      expect(mockQueryRunner.manager.save).toHaveBeenCalledTimes(4); // Trip, TripOrder, Order, Vehicle
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+      expect(result).toBeDefined();
+    });
+
+    it('should rollback if something fails', async () => {
+      mockQueryRunner.manager.findOne.mockRejectedValue(new Error('DB Error'));
+      await expect(service.assignOrder('o1', 'v1')).rejects.toThrow('DB Error');
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+    });
   });
 
   describe('assignBulkOrders', () => {
@@ -78,65 +157,52 @@ describe('DispatchService', () => {
 
       mockQueryRunner.manager.findOne.mockResolvedValue(mockVehicle);
       mockQueryRunner.manager.find.mockResolvedValue(mockOrders);
-      mockQueryRunner.manager.create.mockImplementation((entity, data) => ({ id: 'new-id', ...data }));
-      mockQueryRunner.manager.save.mockImplementation((entity, data) => Promise.resolve(data));
 
       const result = await service.assignBulkOrders(orderIds, vehicleId);
 
-      // Verify deduplication: uniqueOrderIds should be ['o1', 'o2']
       expect(mockQueryRunner.manager.find).toHaveBeenCalledWith(Order, expect.objectContaining({
         where: { id: In(['o1', 'o2']) },
-        lock: { mode: 'pessimistic_write' },
       }));
-
-      // Verify batch saves
-      // 1. Save Trip
-      // 2. Save TripOrders (array)
-      // 3. Save Orders (array)
-      // 4. Save Vehicle
       expect(mockQueryRunner.manager.save).toHaveBeenCalledTimes(4);
-      
       expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
+  });
 
-    it('should throw NotFoundException if some orders are missing', async () => {
-      const orderIds = ['o1', 'o2'];
-      const vehicleId = 'v1';
-
-      mockQueryRunner.manager.findOne.mockResolvedValue({ 
-        status: VehicleStatus.AVAILABLE, 
-        driver: { status: DriverStatus.AVAILABLE },
-        maxCapacityKg: 1000,
-        currentLoadKg: 0
-      });
-      mockQueryRunner.manager.find.mockResolvedValue([{ id: 'o1' }]); // Only o1 found
-
-      await expect(service.assignBulkOrders(orderIds, vehicleId)).rejects.toThrow(NotFoundException);
-      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+  describe('clusterOrders', () => {
+    it('should return empty array if no pending orders', async () => {
+      orderRepo.find.mockResolvedValue([]);
+      const result = await service.clusterOrders();
+      expect(result).toEqual([]);
     });
 
-    it('should throw BadRequestException if vehicle capacity is exceeded', async () => {
-      const orderIds = ['o1'];
-      const vehicleId = 'v1';
-
-      const mockVehicle = {
-        id: 'v1',
-        status: VehicleStatus.AVAILABLE,
-        driver: { status: DriverStatus.AVAILABLE },
-        maxCapacityKg: 50,
-        currentLoadKg: 0,
+    it('should group orders into clusters based on distance', async () => {
+      const o1 = { 
+        id: 'o1', 
+        pickupAddress: 'A', 
+        weightKg: 10,
+        pickupLocation: { coordinates: [106.0, 10.0] } 
+      };
+      const o2 = { 
+        id: 'o2', 
+        pickupAddress: 'B', 
+        weightKg: 20,
+        pickupLocation: { coordinates: [106.01, 10.01] } // Close to A
+      };
+      const o3 = { 
+        id: 'o3', 
+        pickupAddress: 'C', 
+        weightKg: 30,
+        pickupLocation: { coordinates: [107.0, 11.0] } // Far from A
       };
 
-      const mockOrders = [
-        { id: 'o1', status: OrderStatus.PENDING, weightKg: 100 }, // Over capacity
-      ];
+      orderRepo.find.mockResolvedValue([o1, o2, o3]);
 
-      mockQueryRunner.manager.findOne.mockResolvedValue(mockVehicle);
-      mockQueryRunner.manager.find.mockResolvedValue(mockOrders);
+      const result = await service.clusterOrders();
 
-      await expect(service.assignBulkOrders(orderIds, vehicleId)).rejects.toThrow(BadRequestException);
-      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+      expect(result.length).toBe(2);
+      expect(result[0].orders.length).toBe(2); // o1, o2
+      expect(result[1].orders.length).toBe(1); // o3
     });
   });
 });

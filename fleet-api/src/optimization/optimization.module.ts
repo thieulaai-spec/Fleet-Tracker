@@ -14,5 +14,4 @@ import { OptimizationController } from './optimization.controller';
   providers: [RouteService, OptimizationService],
   exports: [RouteService, OptimizationService],
 })
-
 export class OptimizationModule {}

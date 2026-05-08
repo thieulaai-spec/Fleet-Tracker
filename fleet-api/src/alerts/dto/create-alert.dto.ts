@@ -1,4 +1,11 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, IsObject } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsObject,
+} from 'class-validator';
 import { AlertType, AlertSeverity } from '../../entities/alert.entity';
 
 export class CreateAlertDto {

@@ -57,7 +57,7 @@ describe('OrdersModule (e2e)', () => {
         email: testDriver.email,
         password: testDriver.password,
       });
-    
+
     if (driverLogin.status !== 200) {
       console.log('Driver login failed:', driverLogin.body);
     }
@@ -121,7 +121,9 @@ describe('OrdersModule (e2e)', () => {
         .expect(200);
 
       expect(Array.isArray(response.body)).toBeTruthy();
-      expect(response.body.every(o => o.status === OrderStatus.PENDING)).toBeTruthy();
+      expect(
+        response.body.every((o) => o.status === OrderStatus.PENDING),
+      ).toBeTruthy();
     });
   });
 

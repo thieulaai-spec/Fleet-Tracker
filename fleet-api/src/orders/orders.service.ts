@@ -101,13 +101,8 @@ export class OrdersService {
       throw new BadRequestException('Can only update orders in PENDING status');
     }
 
-    const {
-      pickupLat,
-      pickupLng,
-      deliveryLat,
-      deliveryLng,
-      ...orderData
-    } = updateOrderDto;
+    const { pickupLat, pickupLng, deliveryLat, deliveryLng, ...orderData } =
+      updateOrderDto;
 
     if (pickupLat !== undefined && pickupLng !== undefined) {
       order.pickupLocation = {
@@ -130,7 +125,7 @@ export class OrdersService {
 
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
     const order = await this.findOne(id);
-    
+
     // Status transition validation
     const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
       [OrderStatus.PENDING]: [OrderStatus.ASSIGNED, OrderStatus.CANCELLED],

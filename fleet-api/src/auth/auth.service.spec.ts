@@ -84,8 +84,14 @@ describe('AuthService', () => {
 
     it('should register a new user successfully', async () => {
       mockUserRepository.findOne.mockResolvedValue(null);
-      mockUserRepository.create.mockReturnValue({ ...registerDto, passwordHash: 'hashed' });
-      mockUserRepository.save.mockResolvedValue({ ...registerDto, id: 'new-id' });
+      mockUserRepository.create.mockReturnValue({
+        ...registerDto,
+        passwordHash: 'hashed',
+      });
+      mockUserRepository.save.mockResolvedValue({
+        ...registerDto,
+        id: 'new-id',
+      });
 
       const result = await service.register(registerDto);
 
@@ -97,7 +103,9 @@ describe('AuthService', () => {
     it('should throw ConflictException if email exists', async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
 
-      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
+      await expect(service.register(registerDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -108,7 +116,9 @@ describe('AuthService', () => {
     };
 
     it('should return tokens on valid credentials', async () => {
-      const bcryptCompareSpy = jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(true));
+      const bcryptCompareSpy = jest
+        .spyOn(bcrypt, 'compare')
+        .mockImplementation(() => Promise.resolve(true));
       mockUserRepository.findOne.mockResolvedValue(mockUser);
       mockJwtService.signAsync.mockResolvedValue('token');
 
@@ -121,17 +131,23 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException on invalid password', async () => {
-      const bcryptCompareSpy = jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(false));
+      const bcryptCompareSpy = jest
+        .spyOn(bcrypt, 'compare')
+        .mockImplementation(() => Promise.resolve(false));
       mockUserRepository.findOne.mockResolvedValue(mockUser);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
       bcryptCompareSpy.mockRestore();
     });
 
     it('should throw UnauthorizedException if user not found', async () => {
       mockUserRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -141,7 +157,9 @@ describe('AuthService', () => {
     it('should return new tokens on valid refresh token', async () => {
       mockJwtService.verifyAsync.mockResolvedValue({ sub: mockUser.id });
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      const bcryptCompareSpy = jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(true));
+      const bcryptCompareSpy = jest
+        .spyOn(bcrypt, 'compare')
+        .mockImplementation(() => Promise.resolve(true));
       mockJwtService.signAsync.mockResolvedValue('new-token');
 
       const result = await service.refreshTokens(refreshToken);
@@ -154,23 +172,31 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if hash mismatch', async () => {
       mockJwtService.verifyAsync.mockResolvedValue({ sub: mockUser.id });
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      const bcryptCompareSpy = jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(false));
+      const bcryptCompareSpy = jest
+        .spyOn(bcrypt, 'compare')
+        .mockImplementation(() => Promise.resolve(false));
 
-      await expect(service.refreshTokens(refreshToken)).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
       bcryptCompareSpy.mockRestore();
     });
 
     it('should throw UnauthorizedException on verification failure', async () => {
       mockJwtService.verifyAsync.mockRejectedValue(new Error());
 
-      await expect(service.refreshTokens(refreshToken)).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
   describe('updateRefreshToken', () => {
     it('should hash and save refresh token', async () => {
-      const bcryptHashSpy = jest.spyOn(bcrypt, 'hash').mockImplementation(() => Promise.resolve('new-hash'));
-      
+      const bcryptHashSpy = jest
+        .spyOn(bcrypt, 'hash')
+        .mockImplementation(() => Promise.resolve('new-hash'));
+
       await service.updateRefreshToken(mockUser.id, 'new-token');
 
       expect(mockUserRepository.update).toHaveBeenCalledWith(mockUser.id, {
@@ -190,9 +216,15 @@ describe('AuthService', () => {
 
   describe('getTokens', () => {
     it('should return access and refresh tokens', async () => {
-      mockJwtService.signAsync.mockResolvedValueOnce('access').mockResolvedValueOnce('refresh');
+      mockJwtService.signAsync
+        .mockResolvedValueOnce('access')
+        .mockResolvedValueOnce('refresh');
 
-      const result = await service.getTokens(mockUser.id, mockUser.email, mockUser.role);
+      const result = await service.getTokens(
+        mockUser.id,
+        mockUser.email,
+        mockUser.role,
+      );
 
       expect(result).toEqual({
         accessToken: 'access',

@@ -7,7 +7,7 @@ import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { TripStatus } from '../entities/trip.entity';
 
 export const FUEL_RATES = {
-  small: 8,  // L/100km
+  small: 8, // L/100km
   medium: 12,
   large: 16,
 };
@@ -26,14 +26,22 @@ export class ReportsService {
   ) {}
 
   async getFleetPerformance(from: Date, to: Date) {
-    const stats = await this.tripRepository.createQueryBuilder('trip')
+    const stats = await this.tripRepository
+      .createQueryBuilder('trip')
       .leftJoin('trip.vehicle', 'vehicle')
       .select('COUNT(*)', 'total')
-      .addSelect("COUNT(CASE WHEN trip.status = :completed THEN 1 END)", 'completed')
-      .addSelect("COUNT(CASE WHEN trip.status = :cancelled THEN 1 END)", 'failed')
+      .addSelect(
+        'COUNT(CASE WHEN trip.status = :completed THEN 1 END)',
+        'completed',
+      )
+      .addSelect(
+        'COUNT(CASE WHEN trip.status = :cancelled THEN 1 END)',
+        'failed',
+      )
       .addSelect('SUM(trip.totalDistanceKm)', 'totalDistance')
       // Aggregate estimated fuel cost using a simple weighted average or per-trip calculation in SQL
-      .addSelect(`
+      .addSelect(
+        `
         SUM(
           (trip.totalDistanceKm / 100) * 
           CASE 
@@ -42,9 +50,12 @@ export class ReportsService {
             ELSE ${FUEL_RATES.medium}
           END * ${DEFAULT_FUEL_PRICE}
         )
-      `, 'estimatedFuelCost')
+      `,
+        'estimatedFuelCost',
+      )
       // Aggregate duration for completed trips
-      .addSelect(`
+      .addSelect(
+        `
         AVG(
           CASE 
             WHEN trip.status = :completed AND trip.startedAt IS NOT NULL AND trip.completedAt IS NOT NULL 
@@ -52,20 +63,27 @@ export class ReportsService {
             ELSE NULL 
           END
         )
-      `, 'avgDurationMinutes')
+      `,
+        'avgDurationMinutes',
+      )
       .where('trip.createdAt BETWEEN :from AND :to', { from, to })
-      .setParameters({ completed: TripStatus.COMPLETED, cancelled: TripStatus.CANCELLED })
+      .setParameters({
+        completed: TripStatus.COMPLETED,
+        cancelled: TripStatus.CANCELLED,
+      })
       .getRawOne();
 
     const totalTrips = parseInt(stats.total || 0);
     const completedTrips = parseInt(stats.completed || 0);
     const failedTrips = parseInt(stats.failed || 0);
     const totalDistanceKm = parseFloat(stats.totalDistance || 0);
-    const completionRate = totalTrips > 0 ? (completedTrips / totalTrips) * 100 : 0;
+    const completionRate =
+      totalTrips > 0 ? (completedTrips / totalTrips) * 100 : 0;
     const estimatedFuelCost = parseFloat(stats.estimatedFuelCost || 0);
     const averageTripDuration = parseFloat(stats.avgDurationMinutes || 0);
 
-    const alertStats = await this.alertRepository.createQueryBuilder('alert')
+    const alertStats = await this.alertRepository
+      .createQueryBuilder('alert')
       .select('type')
       .addSelect('COUNT(*)', 'count')
       .where('alert.createdAt BETWEEN :from AND :to', { from, to })
@@ -73,13 +91,16 @@ export class ReportsService {
       .getRawMany();
 
     const alertsByType = {
-      speed: alertStats.find(a => a.type === 'speed_violation')?.count || 0,
-      route: alertStats.find(a => a.type === 'route_deviation')?.count || 0,
-      stop: alertStats.find(a => a.type === 'abnormal_stop')?.count || 0,
-      incident: alertStats.find(a => a.type === 'incident')?.count || 0,
+      speed: alertStats.find((a) => a.type === 'speed_violation')?.count || 0,
+      route: alertStats.find((a) => a.type === 'route_deviation')?.count || 0,
+      stop: alertStats.find((a) => a.type === 'abnormal_stop')?.count || 0,
+      incident: alertStats.find((a) => a.type === 'incident')?.count || 0,
     };
 
-    const totalAlerts = alertStats.reduce((sum, a) => sum + parseInt(a.count), 0);
+    const totalAlerts = alertStats.reduce(
+      (sum, a) => sum + parseInt(a.count),
+      0,
+    );
 
     return {
       totalTrips,
@@ -95,7 +116,8 @@ export class ReportsService {
   }
 
   async getFuelCostReport(from: Date, to: Date) {
-    const stats = await this.tripRepository.createQueryBuilder('trip')
+    const stats = await this.tripRepository
+      .createQueryBuilder('trip')
       .leftJoin('trip.vehicle', 'vehicle')
       .select('vehicle.plateNumber', 'plate')
       .addSelect('vehicle.type', 'type')
@@ -134,7 +156,8 @@ export class ReportsService {
     return {
       totalVehicles,
       busyVehicles,
-      utilizationRate: totalVehicles > 0 ? (busyVehicles / totalVehicles) * 100 : 0,
+      utilizationRate:
+        totalVehicles > 0 ? (busyVehicles / totalVehicles) * 100 : 0,
     };
   }
 }

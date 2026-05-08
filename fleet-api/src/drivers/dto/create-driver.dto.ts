@@ -31,7 +31,8 @@ export class CreateDriverDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^(03|05|07|08|09)+([0-9]{8})$/, {
-    message: 'Invalid Vietnam phone number format (10 digits starting with 03, 05, 07, 08, 09)',
+    message:
+      'Invalid Vietnam phone number format (10 digits starting with 03, 05, 07, 08, 09)',
   })
   phone: string;
 

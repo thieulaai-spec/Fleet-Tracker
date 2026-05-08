@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
 import { Order, OrderStatus } from '../entities/order.entity';
@@ -36,10 +40,13 @@ export class DispatchService {
       .where('vehicle.status = :vStatus', { vStatus: VehicleStatus.AVAILABLE })
       .andWhere('driver.status = :dStatus', { dStatus: DriverStatus.AVAILABLE })
       .andWhere('driver.license_expiry > :today', { today: new Date() })
-      .andWhere('vehicle.max_capacity_kg - vehicle.current_load_kg >= :weight', { weight: order.weightKg })
+      .andWhere(
+        'vehicle.max_capacity_kg - vehicle.current_load_kg >= :weight',
+        { weight: order.weightKg },
+      )
       .addSelect(
         'ST_Distance(vehicle.last_known_location, order.pickup_location)',
-        'distance'
+        'distance',
       )
       .innerJoin('orders', 'order', 'order.id = :orderId', { orderId })
       .orderBy('distance', 'ASC')
@@ -116,7 +123,8 @@ export class DispatchService {
 
       // Update Vehicle Status and Load
       vehicle.status = VehicleStatus.DELIVERING;
-      vehicle.currentLoadKg = Number(vehicle.currentLoadKg) + Number(order.weightKg);
+      vehicle.currentLoadKg =
+        Number(vehicle.currentLoadKg) + Number(order.weightKg);
       await queryRunner.manager.save(Vehicle, vehicle);
 
       await queryRunner.commitTransaction();
@@ -167,24 +175,34 @@ export class DispatchService {
       });
 
       // Sort fetched orders to match the input orderIds sequence
-      const orders = uniqueOrderIds.map(id => fetchedOrders.find(o => o.id === id)).filter(Boolean) as Order[];
+      const orders = uniqueOrderIds
+        .map((id) => fetchedOrders.find((o) => o.id === id))
+        .filter(Boolean) as Order[];
 
       if (orders.length !== uniqueOrderIds.length) {
-        const foundIds = orders.map(o => o.id);
-        const missingIds = uniqueOrderIds.filter(id => !foundIds.includes(id));
-        throw new NotFoundException(`Orders not found: ${missingIds.join(', ')}`);
+        const foundIds = orders.map((o) => o.id);
+        const missingIds = uniqueOrderIds.filter(
+          (id) => !foundIds.includes(id),
+        );
+        throw new NotFoundException(
+          `Orders not found: ${missingIds.join(', ')}`,
+        );
       }
 
       let totalWeight = 0;
       for (const order of orders) {
         if (order.status !== OrderStatus.PENDING) {
-          throw new BadRequestException(`Order ${order.id} is not in PENDING status`);
+          throw new BadRequestException(
+            `Order ${order.id} is not in PENDING status`,
+          );
         }
         totalWeight += Number(order.weightKg);
       }
 
       if (vehicle.maxCapacityKg - vehicle.currentLoadKg < totalWeight) {
-        throw new BadRequestException('Vehicle capacity exceeded for this cluster');
+        throw new BadRequestException(
+          'Vehicle capacity exceeded for this cluster',
+        );
       }
 
       // 3. Create Trip
@@ -257,7 +275,8 @@ export class DispatchService {
           other.pickupLocation.coordinates[0],
         );
 
-        if (distance <= 3) { // 3km radius
+        if (distance <= 3) {
+          // 3km radius
           cluster.push(other);
           processed.add(other.id);
         }
@@ -272,14 +291,21 @@ export class DispatchService {
     return clusters;
   }
 
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
     const R = 6371; // Radius of the earth in km
     const dLat = this.deg2rad(lat2 - lat1);
     const dLon = this.deg2rad(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(this.deg2rad(lat1)) *
+        Math.cos(this.deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const d = R * c; // Distance in km
     return d;

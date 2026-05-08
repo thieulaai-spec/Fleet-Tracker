@@ -34,7 +34,8 @@ export class ViolationDetectorService implements OnModuleInit {
       if (!this.stopStartTimeMap.has(vehicleId)) {
         this.stopStartTimeMap.set(vehicleId, Date.now());
       } else {
-        const stopDuration = Date.now() - (this.stopStartTimeMap.get(vehicleId) || Date.now());
+        const stopDuration =
+          Date.now() - (this.stopStartTimeMap.get(vehicleId) || Date.now());
         if (stopDuration > this.IDLE_THRESHOLD) {
           const alertKey = `${tripId || vehicleId}:${AlertType.ABNORMAL_STOP}`;
           if (this.shouldAlert(alertKey)) {
@@ -74,13 +75,20 @@ export class ViolationDetectorService implements OnModuleInit {
     if (tripId) {
       let plannedRoute = this.routeCache.get(tripId);
       if (plannedRoute === undefined) {
-        const trip = await this.tripRepository.findOne({ where: { id: tripId }, select: ['id', 'plannedRoute'] });
+        const trip = await this.tripRepository.findOne({
+          where: { id: tripId },
+          select: ['id', 'plannedRoute'],
+        });
         plannedRoute = trip?.plannedRoute || null;
         this.routeCache.set(tripId, plannedRoute);
       }
 
       if (plannedRoute) {
-        const distance = await this.calculateDistanceFromRoute(latitude, longitude, tripId);
+        const distance = await this.calculateDistanceFromRoute(
+          latitude,
+          longitude,
+          tripId,
+        );
         if (distance > this.ROUTE_DEVIATION_THRESHOLD) {
           const alertKey = `${tripId}:${AlertType.ROUTE_DEVIATION}`;
           if (this.shouldAlert(alertKey)) {
@@ -153,7 +161,7 @@ export class ViolationDetectorService implements OnModuleInit {
 
   private shouldAlert(key: string): boolean {
     const lastAlert = this.lastAlertMap.get(key);
-    return !lastAlert || (Date.now() - lastAlert > this.ALERT_COOLDOWN);
+    return !lastAlert || Date.now() - lastAlert > this.ALERT_COOLDOWN;
   }
 
   private async calculateDistanceFromRoute(

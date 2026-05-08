@@ -84,7 +84,9 @@ export class TrackingGateway
         client.join('admin');
         this.logger.log(`Admin/Dispatcher connected: ${client.id}`);
       } else if (payload.role === 'driver') {
-        const driver = await this.trackingService.getDriverByUserId(payload.sub);
+        const driver = await this.trackingService.getDriverByUserId(
+          payload.sub,
+        );
         if (driver) {
           client.join(`driver:${driver.id}`);
           client.data.driverId = driver.id; // Store driverId for convenience
@@ -102,7 +104,7 @@ export class TrackingGateway
 
       this.logger.log(`Client connected: ${client.id}`);
     } catch (error) {
-      this.logger.error(
+      this.logger.warn(
         `Connection error for client ${client.id}: ${error.message}`,
       );
       client.disconnect();
@@ -133,7 +135,9 @@ export class TrackingGateway
         data.vehicleId,
       );
       if (!isAuthorized) {
-        this.logger.warn(`Driver ${client.data.driverId} attempted unauthorized GPS update for trip ${data.tripId}`);
+        this.logger.warn(
+          `Driver ${client.data.driverId} attempted unauthorized GPS update for trip ${data.tripId}`,
+        );
         return { event: 'error', data: 'Unauthorized for this trip/vehicle' };
       }
     }
@@ -176,7 +180,7 @@ export class TrackingGateway
     if (user.role === 'driver') {
       const driverId = client.data.driverId;
       const trip = await this.trackingService.getTripById(data.tripId);
-      
+
       if (trip && trip.driverId === driverId) {
         client.join(`trip:${data.tripId}`);
         return { event: 'subscribed', data: { room: `trip:${data.tripId}` } };
@@ -198,14 +202,13 @@ export class TrackingGateway
       return authHeader.split(' ')[1];
     }
 
-
-    // 4. Try Cookies (for Web Admin with HttpOnly cookies)
+    // 3. Try Cookies (for Web Admin with HttpOnly cookies)
     if (client.handshake.headers.cookie) {
       try {
         const cookies = cookie.parse(client.handshake.headers.cookie);
         return cookies['access_token'];
       } catch (e) {
-        this.logger.error(
+        this.logger.warn(
           `Error parsing cookies for client ${client.id}: ${e.message}`,
         );
       }

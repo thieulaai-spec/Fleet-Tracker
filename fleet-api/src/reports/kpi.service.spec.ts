@@ -51,7 +51,7 @@ describe('KpiService Logic', () => {
         kpiScore: expect.any(Function),
       }),
     );
-    
+
     // Verify the score reduction logic
     const updateObj = mockKpiRepository.update.mock.calls[0][1];
     expect(updateObj.kpiScore()).toContain('GREATEST(0, kpi_score - 10)');
@@ -123,5 +123,91 @@ describe('KpiService Logic', () => {
       }),
     );
     expect(result).toEqual(mockLeaderboard);
+  });
+
+  describe('getOrCreateKpi', () => {
+    it('should return existing KPI if found', async () => {
+      const mockKpi = { driverId: 'd1', kpiScore: 100 };
+      mockKpiRepository.findOne.mockResolvedValue(mockKpi);
+
+      const result = await kpiService.getOrCreateKpi('d1');
+      expect(result).toEqual(mockKpi);
+    });
+
+    it('should create and save new KPI if not found', async () => {
+      mockKpiRepository.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ driverId: 'd1' });
+      mockKpiRepository.create.mockReturnValue({ driverId: 'd1' });
+
+      await kpiService.getOrCreateKpi('d1');
+      expect(mockKpiRepository.create).toHaveBeenCalled();
+      expect(mockKpiRepository.save).toHaveBeenCalled();
+    });
+
+    it('should handle race condition during creation', async () => {
+      mockKpiRepository.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ driverId: 'd1' });
+      mockKpiRepository.create.mockReturnValue({ driverId: 'd1' });
+      mockKpiRepository.save.mockRejectedValue(new Error('Conflict'));
+
+      const result = await kpiService.getOrCreateKpi('d1');
+      expect(result).toEqual({ driverId: 'd1' });
+    });
+  });
+
+  describe('syncTotalTrips', () => {
+    it('should sync totals and completion rate', async () => {
+      mockTripRepository.count
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(8);
+      mockKpiRepository.findOne.mockResolvedValue({ driverId: 'd1' });
+
+      await kpiService.syncTotalTrips('d1');
+
+      expect(mockKpiRepository.update).toHaveBeenCalledWith(
+        { driverId: 'd1' },
+        { totalTrips: 10, completedTrips: 8 },
+      );
+      expect(mockKpiRepository.update).toHaveBeenCalledWith(
+        { driverId: 'd1' },
+        expect.objectContaining({ completionRate: expect.any(Function) }),
+      );
+    });
+  });
+
+  describe('event edge cases', () => {
+    it('should return early in handleTripStatusChange if trip or driverId is missing', async () => {
+      mockTripRepository.findOne.mockResolvedValue(null);
+      await kpiService.handleTripStatusChange({
+        id: 'invalid',
+        status: TripStatus.ACCEPTED,
+      });
+      expect(mockKpiRepository.increment).not.toHaveBeenCalled();
+
+      mockTripRepository.findOne.mockResolvedValue({
+        id: 't1',
+        driverId: null,
+      });
+      await kpiService.handleTripStatusChange({
+        id: 't1',
+        status: TripStatus.ACCEPTED,
+      });
+      expect(mockKpiRepository.increment).not.toHaveBeenCalled();
+    });
+
+    it('should return early in handleViolation if driverId is missing', async () => {
+      await kpiService.handleViolation({ type: 'speed_violation' });
+      expect(mockKpiRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should use 0 penalty for unknown violation type', async () => {
+      mockKpiRepository.findOne.mockResolvedValue({ driverId: 'd1' });
+      await kpiService.handleViolation({ driverId: 'd1', type: 'unknown' });
+
+      const updateObj = mockKpiRepository.update.mock.calls[0][1];
+      expect(updateObj.kpiScore()).toContain('GREATEST(0, kpi_score - 0)');
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum, IsNumber, Min, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsNumber, IsOptional, IsPositive } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { VehicleType } from '../../entities/vehicle.entity';
 
@@ -15,7 +15,7 @@ export class CreateVehicleDto {
 
   @ApiProperty({ example: 2500 })
   @IsNumber()
-  @Min(0)
+  @IsPositive()
   maxCapacityKg: number;
 
   @ApiProperty({ example: 'Hino 500 Series' })

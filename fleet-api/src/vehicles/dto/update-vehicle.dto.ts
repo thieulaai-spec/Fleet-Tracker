@@ -12,5 +12,5 @@ export class UpdateVehicleDto extends PartialType(CreateVehicleDto) {
   @ApiPropertyOptional({ example: 'uuid-of-driver' })
   @IsUUID()
   @IsOptional()
-  currentDriverId?: string;
+  driverId?: string;
 }

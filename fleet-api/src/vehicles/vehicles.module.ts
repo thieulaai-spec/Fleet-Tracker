@@ -7,10 +7,7 @@ import { Vehicle } from '../entities/vehicle.entity';
 import { UploadModule } from '../upload/upload.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Vehicle]),
-    UploadModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Vehicle]), UploadModule],
   controllers: [VehiclesController],
   providers: [VehiclesService],
   exports: [VehiclesService],

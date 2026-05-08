@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
+import * as path from 'path';
 
 @Injectable()
 export class UploadService {
@@ -9,10 +10,16 @@ export class UploadService {
   private readonly bucketName = 'fleet-assets';
 
   constructor(private readonly configService: ConfigService) {
-    this.supabase = createClient(
-      this.configService.get<string>('SUPABASE_URL') || '',
-      this.configService.get<string>('SUPABASE_ANON_KEY') || '',
-    );
+    const url = this.configService.get<string>('SUPABASE_URL');
+    const key = this.configService.get<string>('SUPABASE_ANON_KEY');
+
+    if (!url || !key) {
+      throw new Error(
+        'SUPABASE_URL and SUPABASE_ANON_KEY must be defined in the configuration',
+      );
+    }
+
+    this.supabase = createClient(url, key);
   }
 
   async uploadFile(file: Express.Multer.File, folder = 'general'): Promise<string> {
@@ -20,8 +27,8 @@ export class UploadService {
       throw new BadRequestException('No file uploaded');
     }
 
-    const fileExt = file.originalname.split('.').pop();
-    const fileName = `${folder}/${uuidv4()}.${fileExt}`;
+    const fileExt = path.extname(file.originalname);
+    const fileName = `${folder}/${uuidv4()}${fileExt}`;
     const filePath = fileName;
 
     const { data, error } = await this.supabase.storage

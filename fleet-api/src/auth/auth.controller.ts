@@ -1,6 +1,22 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Res, Req, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Get,
+  UseGuards,
+  Res,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { Response, Request } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -31,32 +47,41 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ status: 200, type: TokenResponseDto, description: 'Successfully logged in' })
+  @ApiResponse({
+    status: 200,
+    type: TokenResponseDto,
+    description: 'Successfully logged in',
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
   ) {
-    const { accessToken, refreshToken, user } = await this.authService.login(loginDto);
-    
+    const { accessToken, refreshToken, user } =
+      await this.authService.login(loginDto);
+
     // Set cookies
     this.setCookies(response, accessToken, refreshToken);
-    
+
     // For web clients (identified by x-client-type: web), return only user info
     // to prevent token exposure via XSS. For others (mobile, legacy), return full DTO.
     const clientType = request.headers['x-client-type'];
     if (clientType === 'web') {
       return { user };
     }
-    
+
     return { accessToken, refreshToken, user };
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
-  @ApiResponse({ status: 200, type: TokenResponseDto, description: 'Successfully refreshed token' })
+  @ApiResponse({
+    status: 200,
+    type: TokenResponseDto,
+    description: 'Successfully refreshed token',
+  })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
@@ -64,23 +89,28 @@ export class AuthController {
     @Req() request: Request,
   ) {
     // Try to get refresh token from cookie if not in body
-    const refreshToken = refreshTokenDto.refreshToken || request.cookies?.refresh_token;
-    
+    const refreshToken =
+      refreshTokenDto.refreshToken || request.cookies?.refresh_token;
+
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token missing');
     }
 
-    const { accessToken, refreshToken: newRefreshToken, user } = await this.authService.refreshTokens(refreshToken);
-    
+    const {
+      accessToken,
+      refreshToken: newRefreshToken,
+      user,
+    } = await this.authService.refreshTokens(refreshToken);
+
     // Update cookies
     this.setCookies(response, accessToken, newRefreshToken);
-    
+
     // For web clients (identified by x-client-type: web), return only user info
     const clientType = request.headers['x-client-type'];
     if (clientType === 'web') {
       return { user };
     }
-    
+
     return { accessToken, refreshToken: newRefreshToken, user };
   }
 
@@ -96,17 +126,21 @@ export class AuthController {
   ) {
     // Invalidate refresh token in DB
     await this.authService.updateRefreshToken(user.id, null);
-    
+
     // Clear cookies
     response.clearCookie('access_token');
     response.clearCookie('refresh_token');
-    
+
     return { message: 'Logged out successfully' };
   }
 
-  private setCookies(response: Response, accessToken: string, refreshToken: string) {
+  private setCookies(
+    response: Response,
+    accessToken: string,
+    refreshToken: string,
+  ) {
     const isProduction = process.env.NODE_ENV === 'production';
-    
+
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: isProduction,

@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   Min,
 } from 'class-validator';
@@ -40,7 +41,7 @@ export class CreateOrderDto {
 
   @ApiProperty({ example: 500 })
   @IsNumber()
-  @Min(0)
+  @IsPositive()
   @IsNotEmpty()
   weightKg: number;
 

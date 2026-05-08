@@ -1,6 +1,6 @@
 # API Documentation - Fleet Tracker
 
-Ngày cập nhật: 2026-05-06
+Ngày cập nhật: 2026-05-07
 Base URL: `http://localhost:3001`
 
 ---
@@ -9,6 +9,7 @@ Base URL: `http://localhost:3001`
 
 ### POST `/auth/login`
 Đăng nhập vào hệ thống.
+**Header khuyên dùng:** `x-client-type: web` (để nhận token qua cookie).
 
 **Request Body:**
 ```json
@@ -19,18 +20,29 @@ Base URL: `http://localhost:3001`
 ```
 
 **Response (200):**
+*Nếu là web client:*
+```json
+{
+  "user": { "id": "uuid", "email": "...", "role": "admin" }
+}
+```
+*Nếu là mobile client:*
 ```json
 {
   "accessToken": "eyJ...",
   "refreshToken": "eyJ...",
-  "user": {
-    "id": "uuid",
-    "email": "admin@fleettracker.com",
-    "role": "admin",
-    "isActive": true
-  }
+  "user": { ... }
 }
 ```
+
+### POST `/auth/refresh`
+Làm mới access token bằng refresh token (từ body hoặc cookie).
+
+### POST `/auth/logout`
+Đăng xuất và hủy refresh token trong database.
+
+### GET `/auth/me`
+Lấy thông tin profile người dùng hiện tại.
 
 ---
 
@@ -39,14 +51,12 @@ Base URL: `http://localhost:3001`
 ### GET `/vehicles`
 Lấy danh sách phương tiện.
 
+### GET `/vehicles/available`
+Lấy danh sách phương tiện đang rảnh (không trong chuyến đi nào).
+**Roles:** Admin, Dispatcher.
+
 ### POST `/vehicles`
 Tạo phương tiện mới.
-
-### PATCH `/vehicles/:id`
-Cập nhật thông tin phương tiện.
-
-### DELETE `/vehicles/:id`
-Xóa phương tiện.
 
 ---
 
@@ -55,96 +65,137 @@ Xóa phương tiện.
 ### GET `/drivers`
 Lấy danh sách tài xế.
 
-### POST `/drivers`
-Đăng ký tài xế mới (tự động tạo User).
-
 ---
 
 ## 📦 Orders
 
 ### GET `/orders`
-Lấy danh sách đơn hàng.
+Lấy danh sách đơn hàng. Hỗ trợ phân trang và lọc qua Query Params.
 
 ### POST `/orders`
-Tạo đơn hàng mới.
+Tạo đơn hàng mới (Admin).
 
-### POST `/orders/:id/assign`
-Gán đơn hàng cho phương tiện.
+---
+
+## 🏗️ Dispatch & Assignment
+
+### POST `/dispatch/assign`
+Gán một đơn hàng cho phương tiện và tạo chuyến đi.
+
+### POST `/dispatch/bulk-assign`
+Gán nhiều đơn hàng cho cùng một phương tiện trong một chuyến đi duy nhất.
+**Request Body:**
+```json
+{
+  "vehicleId": "uuid",
+  "orderIds": ["uuid-1", "uuid-2"]
+}
+```
+
+### GET `/dispatch/suggest/:orderId`
+Gợi ý danh sách xe khả dụng cho một đơn hàng dựa trên khoảng cách và tải trọng.
+
+### POST `/dispatch/cluster`
+Tự động nhóm các đơn hàng chờ xử lý dựa trên vị trí lấy hàng (bán kính 3km).
 
 ---
 
 ## 📊 Reports & Analytics
 
 ### GET `/reports/fleet-performance`
-Lấy thông tin tổng quan hiệu suất đội xe trong một khoảng thời gian.
+Lấy thông tin tổng quan hiệu suất đội xe.
+**Query Params:** `from`, `to` (ISO Date).
 
-**Query Parameters:**
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| from | date | Yes | Ngày bắt đầu (ISO) |
-| to | date | Yes | Ngày kết thúc (ISO) |
+### GET `/reports/driver-kpi/:driverId`
+Lấy chi tiết KPI của một tài xế (Số chuyến đi, tỷ lệ hoàn thành, số sự cố).
 
-**Response (200):**
-```json
-{
-  "totalTrips": 10,
-  "completedTrips": 8,
-  "failedTrips": 2,
-  "completionRate": 80,
-  "totalDistanceKm": 450.5,
-  "estimatedFuelCost": 1200000,
-  "averageTripDuration": 120,
-  "totalAlerts": 5,
-  "alertsByType": { "speed": 2, "route": 1, "stop": 1, "incident": 1 }
-}
-```
-
----
+### GET `/reports/kpi-leaderboard`
+Bảng xếp hạng tài xế dựa trên điểm KPI.
 
 ### GET `/reports/fuel-cost`
-Báo cáo chi phí nhiên liệu chi tiết từng xe.
+Báo cáo chi phí nhiên liệu dựa trên quãng đường thực tế.
 
-**Response (200):**
-```json
-{
-  "29A-12345": { "distance": 150, "fuel": 12, "cost": 300000 },
-  "30B-67890": { "distance": 200, "fuel": 24, "cost": 600000 }
-}
-```
-
----
+### GET `/reports/vehicle-utilization`
+Thống kê hiệu suất sử dụng xe (xe nào đang chạy, xe nào rảnh).
 
 ### GET `/reports/export`
-Xuất báo cáo dưới dạng file Excel hoặc PDF.
-
-**Query Parameters:**
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| type | string | Yes | `fleet-performance` \| `fuel-cost` |
-| format | string | Yes | `xlsx` \| `pdf` |
-| from | date | Yes | Ngày bắt đầu |
-| to | date | Yes | Ngày kết thúc |
-
-**Response:** File stream (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` hoặc `application/pdf`).
+Xuất báo cáo (XLSX/PDF).
+**Report Names:** `fleet-performance`, `fuel-cost`, `kpi-leaderboard`.
 
 ---
 
 ## 🗺️ Route Optimization
 
 ### GET `/optimization/trip/:id/eta`
-Dự đoán thời gian đến (ETA) của một chuyến đi dựa trên vị trí hiện tại của tài xế.
+Dự đoán thời gian đến (ETA) dựa trên vị trí hiện tại.
+**Query Params:** `lat`, `lng`.
 
-**Query Parameters:**
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| lat | number | Yes | Vĩ độ hiện tại |
-| lng | number | Yes | Kinh độ hiện tại |
+### POST `/optimization/trip/:id/optimize`
+Yêu cầu hệ thống tính toán lại tuyến đường tối ưu cho chuyến đi (Mapbox integration).
 
-**Response (200):**
+---
+
+## 📡 Tracking (WebSocket)
+**Endpoint:** `ws://localhost:3001/tracking`
+
+**Authentication:** 
+Token phải được gửi qua `auth.token` trong handshake.
+
+### Events Emitted (Client -> Server):
+
+#### `gps:update`
+Cập nhật GPS. Server thực hiện debouncing (5s) và kiểm tra tính hợp lệ của trip/vehicle.
+**Payload:**
 ```json
 {
-  "estimatedArrival": "2026-05-05T16:00:00.000Z",
-  "remainingDistanceKm": 15.2,
-  "remainingDurationMin": 45
+  "vehicleId": "uuid",
+  "tripId": "uuid",
+  "latitude": 10.123,
+  "longitude": 106.456,
+  "speed": 50,
+  "heading": 90,
+  "timestamp": 1651854000000
 }
 ```
+
+#### `subscribe:trip`
+Đăng ký nhận cập nhật cho một chuyến đi cụ thể.
+**Payload:**
+```json
+{
+  "tripId": "uuid"
+}
+```
+
+---
+
+## 🔔 Alerts
+
+### GET `/alerts/active`
+Lấy danh sách các cảnh báo chưa xử lý.
+**Roles:** Admin, Dispatcher.
+
+### GET `/alerts/stats`
+Thống kê số lượng cảnh báo theo loại.
+**Roles:** Admin.
+
+### POST `/alerts/report-incident`
+Tài xế báo cáo sự cố. Cảnh báo sẽ được tự động debouncing nếu trùng vị trí/thời gian.
+**Roles:** Driver.
+
+**Request Body (ReportIncidentDto):**
+```json
+{
+  "tripId": "uuid",
+  "vehicleId": "uuid",
+  "message": "Chi tiết sự cố...",
+  "location": {
+    "type": "Point",
+    "coordinates": [106.660172, 10.762622]
+  }
+}
+```
+
+### PUT `/alerts/:id/resolve`
+Đánh dấu cảnh báo đã xử lý.
+**Roles:** Admin, Dispatcher.

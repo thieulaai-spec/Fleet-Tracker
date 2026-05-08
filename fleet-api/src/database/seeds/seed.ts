@@ -2,7 +2,7 @@ import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import { User, UserRole } from '../../entities/user.entity';
-import { Driver } from '../../entities/driver.entity';
+import { Driver, DriverStatus } from '../../entities/driver.entity';
 import { Vehicle, VehicleType, VehicleStatus } from '../../entities/vehicle.entity';
 import { Order, OrderStatus } from '../../entities/order.entity';
 
@@ -33,7 +33,8 @@ async function seed() {
     let admin = await userRepository.findOne({ where: { email: adminEmail } });
     if (!admin) {
       const salt = await bcrypt.genSalt();
-      const passwordHash = await bcrypt.hash('Admin@123', salt);
+      const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
+      const passwordHash = await bcrypt.hash(adminPassword, salt);
       admin = userRepository.create({
         email: adminEmail,
         passwordHash,
@@ -56,10 +57,10 @@ async function seed() {
       let user = await userRepository.findOne({ where: { email: data.email } });
       if (!user) {
         const salt = await bcrypt.genSalt();
-        const passwordHash = await bcrypt.hash('Driver@123', salt);
+        const driverPassword = process.env.DRIVER_PASSWORD || 'Driver@123';
         user = userRepository.create({
           email: data.email,
-          passwordHash,
+          passwordHash: await bcrypt.hash(driverPassword, salt),
           role: UserRole.DRIVER,
         });
         user = await userRepository.save(user);
@@ -70,7 +71,7 @@ async function seed() {
           phone: data.phone,
           licenseClass: data.licenseClass,
           licenseExpiry: new Date('2030-01-01'),
-          status: 'available' as any,
+          status: DriverStatus.AVAILABLE,
         });
         await driverRepository.save(driver);
         console.log(`Driver ${data.fullName} seeded`);
@@ -82,7 +83,8 @@ async function seed() {
     let dispatcher = await userRepository.findOne({ where: { email: dispatcherEmail } });
     if (!dispatcher) {
       const salt = await bcrypt.genSalt();
-      const passwordHash = await bcrypt.hash('Dispatch@123', salt);
+      const dispatcherPassword = process.env.DISPATCHER_PASSWORD || 'Dispatch@123';
+      const passwordHash = await bcrypt.hash(dispatcherPassword, salt);
       dispatcher = userRepository.create({
         email: dispatcherEmail,
         passwordHash,

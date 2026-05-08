@@ -27,7 +27,6 @@ import { AlertsModule } from './alerts/alerts.module';
 import { ReportsModule } from './reports/reports.module';
 import { OptimizationModule } from './optimization/optimization.module';
 
-
 @Module({
   imports: [
     // Environment variables
@@ -43,10 +42,12 @@ import { OptimizationModule } from './optimization/optimization.module';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => [{
-        ttl: config.get<number>('THROTTLE_TTL', 60000), // TTL is in milliseconds for Throttler v6
-        limit: config.get<number>('THROTTLE_LIMIT', 100),
-      }],
+      useFactory: (config: ConfigService) => [
+        {
+          ttl: config.get<number>('THROTTLE_TTL', 60000), // TTL is in milliseconds for Throttler v6
+          limit: config.get<number>('THROTTLE_LIMIT', 100),
+        },
+      ],
     }),
 
     // Database connection
@@ -67,13 +68,18 @@ import { OptimizationModule } from './optimization/optimization.module';
           Alert,
           DriverKpi,
         ],
-        synchronize: false,
+        synchronize: configService.get<string>('NODE_ENV') === 'development',
         logging: true,
         ssl: configService.get<string>('DB_SSL') === 'true',
         extra: {
-          ssl: configService.get<string>('DB_SSL') === 'true' ? {
-            rejectUnauthorized: configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true',
-          } : null,
+          ssl:
+            configService.get<string>('DB_SSL') === 'true'
+              ? {
+                  rejectUnauthorized:
+                    configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') ===
+                    'true',
+                }
+              : null,
         },
       }),
     }),
@@ -92,7 +98,6 @@ import { OptimizationModule } from './optimization/optimization.module';
     AlertsModule,
     ReportsModule,
     OptimizationModule,
-
 
     // Modules to be added in future phases
     // TripsModule will be added in Phase 04

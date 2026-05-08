@@ -34,7 +34,7 @@ export class Alert {
   trip: Trip;
 
   @Column({ name: 'trip_id', nullable: true })
-  tripId: string;
+  tripId: string | null;
 
   @ManyToOne(() => Vehicle, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'vehicle_id' })
@@ -47,8 +47,8 @@ export class Alert {
   @JoinColumn({ name: 'driver_id' })
   driver: Driver;
 
-  @Column({ name: 'driver_id' })
-  driverId: string;
+  @Column({ name: 'driver_id', nullable: true })
+  driverId: string | null;
 
   @Column({
     type: 'enum',

@@ -34,7 +34,7 @@ export class TripsService {
     return trip;
   }
 
-  async updateStatus(id: string, status: TripStatus, userId: string, roles: string[]) {
+  async updateStatus(id: string, status: TripStatus, userId: string, role: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -51,8 +51,8 @@ export class TripsService {
       }
 
       // Check if user is the assigned driver or admin
-      const isDriver = roles.includes('driver');
-      const isAdmin = roles.includes('admin') || roles.includes('dispatcher');
+      const isDriver = role === 'driver';
+      const isAdmin = role === 'admin' || role === 'dispatcher';
 
       if (isDriver && trip.driver && trip.driver.userId !== userId) {
         throw new ForbiddenException('You are not assigned to this trip');

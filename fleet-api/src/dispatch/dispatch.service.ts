@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Trip, TripStatus } from '../entities/trip.entity';
@@ -135,6 +135,9 @@ export class DispatchService {
     await queryRunner.startTransaction();
 
     try {
+      // 1. Deduplicate order IDs
+      const uniqueOrderIds = [...new Set(orderIds)];
+
       const vehicle = await queryRunner.manager.findOne(Vehicle, {
         where: { id: vehicleId },
         relations: ['driver'],
@@ -157,32 +160,34 @@ export class DispatchService {
         throw new BadRequestException('Driver is already on another trip');
       }
 
+      // 2. Batch fetch orders
+      const fetchedOrders = await queryRunner.manager.find(Order, {
+        where: { id: In(uniqueOrderIds) },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      // Sort fetched orders to match the input orderIds sequence
+      const orders = uniqueOrderIds.map(id => fetchedOrders.find(o => o.id === id)).filter(Boolean) as Order[];
+
+      if (orders.length !== uniqueOrderIds.length) {
+        const foundIds = orders.map(o => o.id);
+        const missingIds = uniqueOrderIds.filter(id => !foundIds.includes(id));
+        throw new NotFoundException(`Orders not found: ${missingIds.join(', ')}`);
+      }
+
       let totalWeight = 0;
-      const orders: Order[] = [];
-
-      for (const orderId of orderIds) {
-        const order = await queryRunner.manager.findOne(Order, {
-          where: { id: orderId },
-          lock: { mode: 'pessimistic_write' },
-        });
-
-        if (!order) {
-          throw new NotFoundException(`Order with ID ${orderId} not found`);
-        }
-
+      for (const order of orders) {
         if (order.status !== OrderStatus.PENDING) {
-          throw new BadRequestException(`Order ${orderId} is not in PENDING status`);
+          throw new BadRequestException(`Order ${order.id} is not in PENDING status`);
         }
-
         totalWeight += Number(order.weightKg);
-        orders.push(order);
       }
 
       if (vehicle.maxCapacityKg - vehicle.currentLoadKg < totalWeight) {
         throw new BadRequestException('Vehicle capacity exceeded for this cluster');
       }
 
-      // Create Trip
+      // 3. Create Trip
       const trip = queryRunner.manager.create(Trip, {
         vehicleId: vehicle.id,
         driverId: vehicle.driverId,
@@ -190,19 +195,22 @@ export class DispatchService {
       });
       const savedTrip = await queryRunner.manager.save(Trip, trip);
 
-      // Link Orders to Trip
+      // 4. Batch link Orders to Trip and update statuses
+      const tripOrders: TripOrder[] = [];
       for (let i = 0; i < orders.length; i++) {
         const tripOrder = queryRunner.manager.create(TripOrder, {
           tripId: savedTrip.id,
           orderId: orders[i].id,
           sequence: i + 1,
         });
-        await queryRunner.manager.save(TripOrder, tripOrder);
+        tripOrders.push(tripOrder);
 
-        // Update Order Status
         orders[i].status = OrderStatus.ASSIGNED;
-        await queryRunner.manager.save(Order, orders[i]);
       }
+
+      // Batch save TripOrders and updated Orders
+      await queryRunner.manager.save(TripOrder, tripOrders);
+      await queryRunner.manager.save(Order, orders);
 
       // Update Vehicle Status and Load
       vehicle.status = VehicleStatus.DELIVERING;

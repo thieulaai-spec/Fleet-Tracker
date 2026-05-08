@@ -23,11 +23,21 @@ export class OrdersService {
       pickupLng,
       deliveryLat,
       deliveryLng,
+      pickupAddress,
+      deliveryAddress,
       ...orderData
     } = createOrderDto;
 
+    if (pickupAddress === deliveryAddress) {
+      throw new BadRequestException(
+        'Pickup address and delivery address cannot be the same',
+      );
+    }
+
     const order = this.ordersRepository.create({
       ...orderData,
+      pickupAddress,
+      deliveryAddress,
       pickupLocation: {
         type: 'Point',
         coordinates: [pickupLng, pickupLat],

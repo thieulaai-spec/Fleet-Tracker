@@ -43,6 +43,6 @@ export class GpsLocation {
   @Column({ type: 'decimal', nullable: true })
   heading: number;
 
-  @CreateDateColumn({ name: 'recorded_at' })
+  @Column({ name: 'recorded_at', type: 'timestamptz' })
   recordedAt: Date;
 }

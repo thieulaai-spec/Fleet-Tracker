@@ -4,8 +4,7 @@ import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Alert, AlertType, AlertSeverity } from '../entities/alert.entity';
 import { Trip } from '../entities/trip.entity';
-import { Vehicle } from '../entities/vehicle.entity';
-import { Driver } from '../entities/driver.entity';
+import { CreateAlertDto } from './dto/create-alert.dto';
 
 @Injectable()
 export class AlertsService {
@@ -19,12 +18,15 @@ export class AlertsService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async createAlert(data: any) {
+  async createAlert(data: CreateAlertDto) {
     const { tripId, vehicleId, type, severity, message, location } = data;
 
-    // Get driverId from trip
-    const trip = await this.tripRepository.findOne({ where: { id: tripId } });
-    const driverId = trip ? trip.driverId : undefined;
+    let driverId: string | undefined = undefined;
+
+    if (tripId) {
+      const trip = await this.tripRepository.findOne({ where: { id: tripId } });
+      driverId = trip ? trip.driverId : undefined;
+    }
 
     const alert = this.alertRepository.create({
       tripId,
@@ -47,6 +49,12 @@ export class AlertsService {
   }
 
   async resolveAlert(id: string) {
+    const alert = await this.alertRepository.findOne({ where: { id } });
+    if (!alert) {
+      this.logger.warn(`Attempted to resolve non-existent alert: ${id}`);
+      return null;
+    }
+
     await this.alertRepository.update(id, {
       isResolved: true,
       resolvedAt: new Date(),

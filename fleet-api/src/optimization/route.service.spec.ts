@@ -21,17 +21,26 @@ describe('RouteService Logic', () => {
         code: 'Ok',
         routes: [
           {
-            geometry: { type: 'LineString', coordinates: [[106, 10], [106.1, 10.1]] },
+            geometry: {
+              type: 'LineString',
+              coordinates: [
+                [106, 10],
+                [106.1, 10.1],
+              ],
+            },
             distance: 15000,
             duration: 1800,
-          }
+          },
         ],
-        waypoints: []
-      }
+        waypoints: [],
+      },
     };
     mockedAxios.get.mockResolvedValue(mockResponse);
 
-    const waypoints = [{ lat: 10, lng: 106 }, { lat: 10.1, lng: 106.1 }];
+    const waypoints = [
+      { lat: 10, lng: 106 },
+      { lat: 10.1, lng: 106.1 },
+    ];
     const result = await routeService.getOptimalRoute(waypoints);
 
     expect(mockedAxios.get).toHaveBeenCalled();
@@ -41,6 +50,8 @@ describe('RouteService Logic', () => {
   });
 
   it('should throw error if less than 2 waypoints', async () => {
-    await expect(routeService.getOptimalRoute([{ lat: 10, lng: 106 }])).rejects.toThrow('At least 2 waypoints are required');
+    await expect(
+      routeService.getOptimalRoute([{ lat: 10, lng: 106 }]),
+    ).rejects.toThrow('At least 2 waypoints are required');
   });
 });

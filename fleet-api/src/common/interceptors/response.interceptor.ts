@@ -14,22 +14,25 @@ export interface ApiResponse<T> {
 }
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
+export class ResponseInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<ApiResponse<T>> {
     const statusCode = context.switchToHttp().getResponse().statusCode;
-    
+
     return next.handle().pipe(
       map((data) => {
         // If the data is already formatted as a paginated response or similar, handle it
         if (data && data.data && data.total !== undefined) {
-           return {
-             statusCode,
-             message: 'Success',
-             ...data,
-           };
+          return {
+            statusCode,
+            message: 'Success',
+            ...data,
+          };
         }
 
         return {

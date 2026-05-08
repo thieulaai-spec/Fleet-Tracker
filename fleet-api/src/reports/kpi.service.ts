@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DriverKpi } from '../entities/driver-kpi.entity';
@@ -35,7 +35,13 @@ export class KpiService {
         routeViolations: 0,
         kpiScore: 100,
       });
-      await this.kpiRepository.save(kpi);
+      try {
+        await this.kpiRepository.save(kpi);
+      } catch (e) {
+        const kpi = await this.kpiRepository.findOne({ where: { driverId } });
+        if (!kpi) throw new Error('Failed to create or retrieve KPI record');
+        return kpi;
+      }
     }
     return kpi;
   }
@@ -47,20 +53,19 @@ export class KpiService {
       relations: ['driver'],
     });
 
-    if (!trip || !trip.driver) return;
+    if (!trip || !trip.driverId) return;
 
-    const kpi = await this.getOrCreateKpi(trip.driver.id);
+    // Ensure KPI record exists
+    await this.getOrCreateKpi(trip.driverId);
 
     if (payload.status === TripStatus.ACCEPTED) {
-      kpi.totalTrips += 1;
-      this.updateCompletionRate(kpi);
-      await this.kpiRepository.save(kpi);
+      await this.kpiRepository.increment({ driverId: trip.driverId }, 'totalTrips', 1);
+      await this.syncCompletionRate(trip.driverId);
     }
 
     if (payload.status === TripStatus.COMPLETED) {
-      kpi.completedTrips += 1;
-      this.updateCompletionRate(kpi);
-      await this.kpiRepository.save(kpi);
+      await this.kpiRepository.increment({ driverId: trip.driverId }, 'completedTrips', 1);
+      await this.syncCompletionRate(trip.driverId);
     }
   }
 
@@ -68,24 +73,32 @@ export class KpiService {
   async handleViolation(alert: any) {
     if (!alert.driverId) return;
 
-    const kpi = await this.getOrCreateKpi(alert.driverId);
+    // Ensure KPI record exists
+    await this.getOrCreateKpi(alert.driverId);
     const penalty = KPI_PENALTIES[alert.type] || 0;
 
-    kpi.totalViolations += 1;
-    if (alert.type === 'speed_violation') kpi.speedViolations += 1;
-    if (alert.type === 'route_deviation') kpi.routeViolations += 1;
+    const updateObj: any = {
+      totalViolations: () => 'total_violations + 1',
+      kpiScore: () => `GREATEST(0, kpi_score - ${penalty})`,
+    };
 
-    // TypeORM decimal comes back as string, need to convert
-    kpi.kpiScore = Math.max(0, Number(kpi.kpiScore) - penalty);
-    await this.kpiRepository.save(kpi);
+    if (alert.type === 'speed_violation') {
+      updateObj.speedViolations = () => 'speed_violations + 1';
+    }
+    if (alert.type === 'route_deviation') {
+      updateObj.routeViolations = () => 'route_violations + 1';
+    }
+
+    await this.kpiRepository.update({ driverId: alert.driverId }, updateObj);
   }
 
-  private updateCompletionRate(kpi: DriverKpi) {
-    if (kpi.totalTrips > 0) {
-      kpi.completionRate = (kpi.completedTrips / kpi.totalTrips) * 100;
-    } else {
-      kpi.completionRate = 0;
-    }
+  private async syncCompletionRate(driverId: string) {
+    await this.kpiRepository.update(
+      { driverId },
+      { 
+        completionRate: () => 'CASE WHEN total_trips > 0 THEN (CAST(completed_trips AS FLOAT) / total_trips) * 100 ELSE 0 END' 
+      }
+    );
   }
 
   async getDriverKpiSummary(driverId: string) {
@@ -103,9 +116,15 @@ export class KpiService {
   // Helper to sync total trips if they get out of sync
   async syncTotalTrips(driverId: string) {
     const total = await this.tripRepository.count({ where: { driverId } });
-    const kpi = await this.getOrCreateKpi(driverId);
-    kpi.totalTrips = total;
-    this.updateCompletionRate(kpi);
-    await this.kpiRepository.save(kpi);
+    const completed = await this.tripRepository.count({ 
+      where: { driverId, status: TripStatus.COMPLETED } 
+    });
+    
+    await this.getOrCreateKpi(driverId);
+    await this.kpiRepository.update({ driverId }, { 
+      totalTrips: total,
+      completedTrips: completed
+    });
+    await this.syncCompletionRate(driverId);
   }
 }

@@ -15,7 +15,9 @@ export class DispatchController {
   constructor(private readonly dispatchService: DispatchService) {}
 
   @Roles(UserRole.ADMIN, UserRole.DISPATCHER)
-  @ApiOperation({ summary: 'Suggest vehicles for an order based on distance and capacity' })
+  @ApiOperation({
+    summary: 'Suggest vehicles for an order based on distance and capacity',
+  })
   @Get('suggest/:orderId')
   suggestVehicles(@Param('orderId') orderId: string) {
     return this.dispatchService.suggestVehicles(orderId);
@@ -32,7 +34,9 @@ export class DispatchController {
   }
 
   @Roles(UserRole.ADMIN, UserRole.DISPATCHER)
-  @ApiOperation({ summary: 'Assign multiple orders to a vehicle and create a single trip' })
+  @ApiOperation({
+    summary: 'Assign multiple orders to a vehicle and create a single trip',
+  })
   @Post('bulk-assign')
   assignBulkOrders(@Body() bulkAssignDto: BulkAssignDto) {
     return this.dispatchService.assignBulkOrders(

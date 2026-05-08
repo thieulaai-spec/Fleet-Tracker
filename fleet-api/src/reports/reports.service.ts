@@ -26,17 +26,33 @@ export class ReportsService {
   ) {}
 
   async getFleetPerformance(from: Date, to: Date) {
-    const qb = this.tripRepository.createQueryBuilder('trip')
-      .leftJoinAndSelect('trip.vehicle', 'vehicle')
-      .where('trip.createdAt BETWEEN :from AND :to', { from, to });
-
-    const trips = await qb.getMany();
-
     const stats = await this.tripRepository.createQueryBuilder('trip')
+      .leftJoin('trip.vehicle', 'vehicle')
       .select('COUNT(*)', 'total')
       .addSelect("COUNT(CASE WHEN trip.status = :completed THEN 1 END)", 'completed')
       .addSelect("COUNT(CASE WHEN trip.status = :cancelled THEN 1 END)", 'failed')
       .addSelect('SUM(trip.totalDistanceKm)', 'totalDistance')
+      // Aggregate estimated fuel cost using a simple weighted average or per-trip calculation in SQL
+      .addSelect(`
+        SUM(
+          (trip.totalDistanceKm / 100) * 
+          CASE 
+            WHEN vehicle.type = 'small' THEN ${FUEL_RATES.small}
+            WHEN vehicle.type = 'large' THEN ${FUEL_RATES.large}
+            ELSE ${FUEL_RATES.medium}
+          END * ${DEFAULT_FUEL_PRICE}
+        )
+      `, 'estimatedFuelCost')
+      // Aggregate duration for completed trips
+      .addSelect(`
+        AVG(
+          CASE 
+            WHEN trip.status = :completed AND trip.startedAt IS NOT NULL AND trip.completedAt IS NOT NULL 
+            THEN EXTRACT(EPOCH FROM (trip.completedAt - trip.startedAt)) / 60 
+            ELSE NULL 
+          END
+        )
+      `, 'avgDurationMinutes')
       .where('trip.createdAt BETWEEN :from AND :to', { from, to })
       .setParameters({ completed: TripStatus.COMPLETED, cancelled: TripStatus.CANCELLED })
       .getRawOne();
@@ -46,22 +62,8 @@ export class ReportsService {
     const failedTrips = parseInt(stats.failed || 0);
     const totalDistanceKm = parseFloat(stats.totalDistance || 0);
     const completionRate = totalTrips > 0 ? (completedTrips / totalTrips) * 100 : 0;
-
-    let estimatedFuelCost = 0;
-    let totalDurationMinutes = 0;
-
-    trips.forEach((trip) => {
-      const fuelRate = FUEL_RATES[trip.vehicle?.type] || FUEL_RATES.medium;
-      const tripFuel = (Number(trip.totalDistanceKm || 0) / 100) * fuelRate;
-      estimatedFuelCost += tripFuel * DEFAULT_FUEL_PRICE;
-
-      if (trip.status === TripStatus.COMPLETED && trip.startedAt && trip.completedAt) {
-        const duration = (trip.completedAt.getTime() - trip.startedAt.getTime()) / (1000 * 60);
-        totalDurationMinutes += duration;
-      }
-    });
-
-    const averageTripDuration = completedTrips > 0 ? totalDurationMinutes / completedTrips : 0;
+    const estimatedFuelCost = parseFloat(stats.estimatedFuelCost || 0);
+    const averageTripDuration = parseFloat(stats.avgDurationMinutes || 0);
 
     const alertStats = await this.alertRepository.createQueryBuilder('alert')
       .select('type')

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
@@ -21,7 +26,9 @@ export class VehiclesService {
       where: { plateNumber: createVehicleDto.plateNumber },
     });
     if (existing) {
-      throw new ConflictException('Vehicle with this plate number already exists');
+      throw new ConflictException(
+        'Vehicle with this plate number already exists',
+      );
     }
 
     const vehicle = this.vehicleRepository.create(createVehicleDto);
@@ -30,7 +37,7 @@ export class VehiclesService {
 
   async findAll(query: VehicleQueryDto): Promise<PaginatedResponse<Vehicle>> {
     const { page, limit, skip, type, status, search } = query;
-    
+
     const where: any = {};
     if (type) where.type = type;
     if (status) where.status = status;
@@ -41,7 +48,7 @@ export class VehiclesService {
       order: { createdAt: 'DESC' },
       take: limit,
       skip: skip,
-      relations: ['currentDriver'],
+      relations: ['driver'],
     });
 
     return {
@@ -56,7 +63,7 @@ export class VehiclesService {
   async findOne(id: string): Promise<Vehicle> {
     const vehicle = await this.vehicleRepository.findOne({
       where: { id },
-      relations: ['currentDriver'],
+      relations: ['driver'],
     });
     if (!vehicle) {
       throw new NotFoundException(`Vehicle with ID ${id} not found`);
@@ -64,16 +71,24 @@ export class VehiclesService {
     return vehicle;
   }
 
-  async update(id: string, updateVehicleDto: UpdateVehicleDto): Promise<Vehicle> {
+  async update(
+    id: string,
+    updateVehicleDto: UpdateVehicleDto,
+  ): Promise<Vehicle> {
     const vehicle = await this.findOne(id);
-    
-    if (updateVehicleDto.plateNumber && updateVehicleDto.plateNumber !== vehicle.plateNumber) {
-        const existing = await this.vehicleRepository.findOne({
-            where: { plateNumber: updateVehicleDto.plateNumber },
-        });
-        if (existing) {
-            throw new ConflictException('Vehicle with this plate number already exists');
-        }
+
+    if (
+      updateVehicleDto.plateNumber &&
+      updateVehicleDto.plateNumber !== vehicle.plateNumber
+    ) {
+      const existing = await this.vehicleRepository.findOne({
+        where: { plateNumber: updateVehicleDto.plateNumber },
+      });
+      if (existing) {
+        throw new ConflictException(
+          'Vehicle with this plate number already exists',
+        );
+      }
     }
 
     Object.assign(vehicle, updateVehicleDto);
@@ -90,20 +105,23 @@ export class VehiclesService {
   async remove(id: string): Promise<void> {
     const vehicle = await this.findOne(id);
     if (vehicle.status === VehicleStatus.DELIVERING) {
-      throw new BadRequestException('Cannot delete vehicle while it is delivering');
+      throw new BadRequestException(
+        'Cannot delete vehicle while it is delivering',
+      );
     }
     // We use soft remove or delete depending on requirements. Here we'll do a real remove as per plan soft delete note
     await this.vehicleRepository.remove(vehicle);
   }
 
   async findAvailable(capacity?: number): Promise<Vehicle[]> {
-      const query = this.vehicleRepository.createQueryBuilder('vehicle')
-        .where('vehicle.status = :status', { status: VehicleStatus.AVAILABLE });
-      
-      if (capacity) {
-          query.andWhere('vehicle.maxCapacityKg >= :capacity', { capacity });
-      }
+    const query = this.vehicleRepository
+      .createQueryBuilder('vehicle')
+      .where('vehicle.status = :status', { status: VehicleStatus.AVAILABLE });
 
-      return await query.getMany();
+    if (capacity) {
+      query.andWhere('vehicle.maxCapacityKg >= :capacity', { capacity });
+    }
+
+    return await query.getMany();
   }
 }

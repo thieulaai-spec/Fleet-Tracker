@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Driver, DriverStatus } from '../entities/driver.entity';
 import { User, UserRole } from '../entities/user.entity';
@@ -19,6 +19,7 @@ export class DriversService {
     private readonly driversRepository: Repository<Driver>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createDriverDto: CreateDriverDto): Promise<Driver> {
@@ -108,19 +109,24 @@ export class DriversService {
   async remove(id: string): Promise<void> {
     const driver = await this.findOne(id);
     
-    // In a real system, we might want to check if driver is on a trip
     if (driver.status === DriverStatus.ON_TRIP) {
       throw new ConflictException('Cannot delete driver while on a trip');
     }
 
-    // Since we have cascade delete on user-driver relationship, 
-    // we delete the user and it should delete the driver (if configured correctly)
-    // Actually our entity has OneToOne(User, { cascade: true, onDelete: 'CASCADE' }) on user field in Driver
-    // So deleting Driver will not delete User unless we delete User.
-    // Better delete Driver and then User, or just User.
-    
-    await this.driversRepository.remove(driver);
-    await this.usersRepository.delete(driver.userId);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.remove(Driver, driver);
+      await queryRunner.manager.delete(User, { id: driver.userId });
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getKpi(id: string) {

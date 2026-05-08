@@ -54,7 +54,9 @@ export class OrdersController {
 
   @Patch(':id')
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Update order details (Admin only, PENDING status only)' })
+  @ApiOperation({
+    summary: 'Update order details (Admin only, PENDING status only)',
+  })
   update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
     return this.ordersService.update(id, updateOrderDto);
   }
@@ -71,7 +73,9 @@ export class OrdersController {
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Cancel/Delete an order (Admin only, PENDING status only)' })
+  @ApiOperation({
+    summary: 'Cancel/Delete an order (Admin only, PENDING status only)',
+  })
   remove(@Param('id') id: string) {
     return this.ordersService.remove(id);
   }

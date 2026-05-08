@@ -1,4 +1,11 @@
-import { IsNumber, IsString, IsISO8601, IsUUID, Min, Max } from 'class-validator';
+import {
+  IsNumber,
+  IsString,
+  IsISO8601,
+  IsUUID,
+  Min,
+  Max,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GpsUpdateDto {

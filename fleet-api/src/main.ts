@@ -12,7 +12,7 @@ async function bootstrap() {
 
   // Security Headers
   app.use(helmet());
-  
+
   // Cookie Parser
   app.use(cookieParser());
 

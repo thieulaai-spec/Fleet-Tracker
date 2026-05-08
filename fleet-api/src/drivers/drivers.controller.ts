@@ -35,7 +35,9 @@ export class DriversController {
 
   @Get()
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get all drivers with pagination and filters (Admin only)' })
+  @ApiOperation({
+    summary: 'Get all drivers with pagination and filters (Admin only)',
+  })
   findAll(@Query() queryDto: DriverQueryDto) {
     return this.driversService.findAll(queryDto);
   }
@@ -77,7 +79,9 @@ export class DriversController {
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Delete a driver and their user account (Admin only)' })
+  @ApiOperation({
+    summary: 'Delete a driver and their user account (Admin only)',
+  })
   remove(@Param('id') id: string) {
     return this.driversService.remove(id);
   }

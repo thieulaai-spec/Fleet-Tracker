@@ -8,11 +8,12 @@ import { TrackingGateway } from './tracking.gateway';
 import { GpsLocation } from '../entities/gps-location.entity';
 import { Vehicle } from '../entities/vehicle.entity';
 import { Trip } from '../entities/trip.entity';
+import { Driver } from '../entities/driver.entity';
 import { AlertsModule } from '../alerts/alerts.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([GpsLocation, Vehicle, Trip]),
+    TypeOrmModule.forFeature([GpsLocation, Vehicle, Trip, Driver]),
     AlertsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -20,7 +21,8 @@ import { AlertsModule } from '../alerts/alerts.module';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: (configService.get<string>('JWT_EXPIRES_IN') || '24h') as any,
+          expiresIn: (configService.get<string>('JWT_EXPIRES_IN') ||
+            '24h') as any,
         },
       }),
     }),

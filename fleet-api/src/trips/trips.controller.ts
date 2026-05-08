@@ -37,8 +37,8 @@ export class TripsController {
     return this.tripsService.updateStatus(
       id,
       updateTripStatusDto.status,
-      req.user.userId,
-      req.user.roles,
+      req.user.id,
+      req.user.role,
     );
   }
 }

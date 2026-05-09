@@ -12,7 +12,7 @@ describe('TripsController', () => {
 
   const mockTrip = {
     id: 't1',
-    status: TripStatus.PLANNED,
+    status: TripStatus.PENDING,
   };
 
   const mockTripsService = {
@@ -61,13 +61,13 @@ describe('TripsController', () => {
 
   describe('updateStatus', () => {
     it('should update trip status', async () => {
-      const dto = { status: TripStatus.ON_TRIP };
+      const dto = { status: TripStatus.IN_PROGRESS };
       const req = { user: { id: 'u1', role: UserRole.DRIVER } };
 
       expect(await controller.updateStatus('t1', dto, req)).toEqual(mockTrip);
       expect(service.updateStatus).toHaveBeenCalledWith(
         't1',
-        TripStatus.ON_TRIP,
+        TripStatus.IN_PROGRESS,
         'u1',
         UserRole.DRIVER,
       );

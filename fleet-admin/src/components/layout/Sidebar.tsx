@@ -12,7 +12,8 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Signal
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -21,6 +22,7 @@ const navItems = [
   { name: 'Vehicles', href: '/vehicles', icon: Truck },
   { name: 'Drivers', href: '/drivers', icon: Users },
   { name: 'Orders', href: '/orders', icon: ClipboardList },
+  { name: 'Live Tracking', href: '/tracking', icon: Signal },
   { name: 'Dispatch Center', href: '/dispatch', icon: MapIcon },
 ];
 

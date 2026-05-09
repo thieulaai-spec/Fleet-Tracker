@@ -67,6 +67,10 @@ export default function DispatchPage() {
       />
 
       <DispatchMapPanel
+        orders={pendingOrders}
+        vehicles={availableVehicles}
+        selectedOrderId={selectedOrder}
+        onSelectOrder={setSelectedOrder}
         clusterView={clusterView}
         onToggleClusterView={() => setClusterView((value) => !value)}
       />

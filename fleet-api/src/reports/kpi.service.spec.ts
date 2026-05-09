@@ -1,5 +1,6 @@
 import { KpiService, KPI_PENALTIES } from './kpi.service';
 import { TripStatus } from '../entities/trip.entity';
+import { AlertType } from '../entities/alert.entity';
 
 describe('KpiService Logic', () => {
   let kpiService: KpiService;
@@ -27,7 +28,7 @@ describe('KpiService Logic', () => {
 
     await kpiService.handleViolation({
       driverId: 'd1',
-      type: 'speed_violation',
+      type: AlertType.SPEED_VIOLATION,
     });
 
     expect(mockKpiRepository.update).toHaveBeenCalledWith(
@@ -43,7 +44,7 @@ describe('KpiService Logic', () => {
   it('should not let score go below 0', async () => {
     mockKpiRepository.findOne.mockResolvedValue({ driverId: 'd1' });
 
-    await kpiService.handleViolation({ driverId: 'd1', type: 'incident' });
+    await kpiService.handleViolation({ driverId: 'd1', type: AlertType.INCIDENT });
 
     expect(mockKpiRepository.update).toHaveBeenCalledWith(
       { driverId: 'd1' },
@@ -198,7 +199,7 @@ describe('KpiService Logic', () => {
     });
 
     it('should return early in handleViolation if driverId is missing', async () => {
-      await kpiService.handleViolation({ type: 'speed_violation' });
+      await kpiService.handleViolation({ type: AlertType.SPEED_VIOLATION });
       expect(mockKpiRepository.update).not.toHaveBeenCalled();
     });
 

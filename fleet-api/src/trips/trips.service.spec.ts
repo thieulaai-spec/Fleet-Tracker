@@ -12,6 +12,7 @@ import { Trip, TripStatus } from '../entities/trip.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
+import { UserRole } from '../entities/user.entity';
 
 describe('TripsService', () => {
   let service: TripsService;
@@ -129,7 +130,7 @@ describe('TripsService', () => {
         'trip-1',
         TripStatus.ACCEPTED,
         'user-1',
-        'driver',
+        UserRole.DRIVER,
       );
 
       expect(result.status).toBe(TripStatus.ACCEPTED);
@@ -148,7 +149,7 @@ describe('TripsService', () => {
           'trip-1',
           TripStatus.ACCEPTED,
           'other-user',
-          'driver',
+          UserRole.DRIVER,
         ),
       ).rejects.toThrow(ForbiddenException);
     });
@@ -160,7 +161,7 @@ describe('TripsService', () => {
       });
 
       await expect(
-        service.updateStatus('trip-1', TripStatus.ACCEPTED, 'user-1', 'admin'),
+        service.updateStatus('trip-1', TripStatus.ACCEPTED, 'user-1', UserRole.ADMIN),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -168,7 +169,7 @@ describe('TripsService', () => {
       mockQueryRunner.manager.findOne.mockRejectedValue(new Error('DB Error'));
 
       await expect(
-        service.updateStatus('trip-1', TripStatus.ACCEPTED, 'user-1', 'admin'),
+        service.updateStatus('trip-1', TripStatus.ACCEPTED, 'user-1', UserRole.ADMIN),
       ).rejects.toThrow('DB Error');
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
     });
@@ -189,7 +190,7 @@ describe('TripsService', () => {
         'trip-1',
         TripStatus.IN_PROGRESS,
         'user-1',
-        'driver',
+        UserRole.DRIVER,
       );
 
       expect(result.status).toBe(TripStatus.IN_PROGRESS);
@@ -218,7 +219,7 @@ describe('TripsService', () => {
         'trip-1',
         TripStatus.COMPLETED,
         'user-1',
-        'driver',
+        UserRole.DRIVER,
       );
 
       expect(driver.status).toBe(DriverStatus.AVAILABLE);
@@ -246,7 +247,7 @@ describe('TripsService', () => {
         'trip-1',
         TripStatus.CANCELLED,
         'user-1',
-        'admin',
+        UserRole.ADMIN,
       );
 
       expect(driver.status).toBe(DriverStatus.AVAILABLE);
@@ -257,7 +258,7 @@ describe('TripsService', () => {
     it('should throw NotFoundException if trip not found during updateStatus', async () => {
       mockQueryRunner.manager.findOne.mockResolvedValue(null);
       await expect(
-        service.updateStatus('none', TripStatus.ACCEPTED, 'user-1', 'admin'),
+        service.updateStatus('none', TripStatus.ACCEPTED, 'user-1', UserRole.ADMIN),
       ).rejects.toThrow(NotFoundException);
     });
   });

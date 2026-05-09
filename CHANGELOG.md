@@ -2,7 +2,26 @@
 
 Tất cả các thay đổi quan trọng đối với dự án FleetTracker sẽ được ghi nhận tại đây.
 
-## [2026-05-02]
+## [2026-05-09] - Admin Maps & Monitoring (Phase 08)
+### Added
+- **Frontend (Admin Dashboard)**:
+    - Triển khai toàn bộ module **Real-time Fleet Tracking**:
+        - Bản đồ vệ tinh với markers xe di chuyển mượt mà (smooth animation).
+        - Hiển thị trail (lịch sử di chuyển ngắn hạn) với màu sắc theo tốc độ.
+        - Visualization hành lang địa giới (Geofence Corridor) 500m quanh tuyến đường dự kiến.
+    - Hoàn thiện module **Route Replay** (`/tracking/replay`):
+        - Hỗ trợ chọn xe và ngày để xem lại hành trình.
+        - Bộ điều khiển playback (Play/Pause/Speed) và thanh timeline slider.
+    - Cải tiến **Alerts Panel**:
+        - Tích hợp âm thanh thông báo và click để focus bản đồ vào vị trí sự cố.
+        - Hỗ trợ lọc cảnh báo theo loại và trạng thái xử lý.
+    - Tích hợp bản đồ vào **Dispatch Center** để hỗ trợ điều phối trực quan.
+### Fixed
+- Frontend: Khắc phục lỗi TypeScript trong component `MapBox` và trang `tracking`.
+- Frontend: Sửa lỗi hiển thị sai tên tài xế (mismatch `fullName` vs `name`) trên tooltip.
+- Frontend: Xử lý triệt để lỗi crash bản đồ khi dữ liệu GPS nhận về giá trị `NaN`.
+
+## [2026-05-08] - Final API Hardening & Testing Completion (PR #8)
 ### Added
 - Khởi tạo cấu trúc monorepo: `fleet-api`, `fleet-admin`, `fleet-driver`.
 - Thêm file `README.md` gốc với đầy đủ thông tin dự án và hướng dẫn khởi chạy.
@@ -38,6 +57,17 @@ Tất cả các thay đổi quan trọng đối với dự án FleetTracker sẽ
     - Cập nhật script `comprehensive-seed.ts` để khởi tạo dữ liệu mẫu cho toàn bộ hệ thống.
 ### Fixed
 - Lỗi mismatch kiểu dữ liệu giữa Frontend và Backend (Status ENUMs, field names như `customerName` vs `deliveryAddress`).
+## [2026-05-08] - Final API Hardening & Testing Completion (PR #8)
+### Added
+- Backend: Đạt độ phủ test >95% cho các service quan trọng (`Alerts`, `ViolationDetector`, `Dispatch`).
+- Backend: Hoàn thiện bộ unit test cho `TrackingGateway`, `AuthController`, `JwtStrategy`, và `RolesGuard`.
+- Backend: Triển khai kiểm tra quyền sở hữu (Ownership validation) cho WebSocket rooms.
+- Documentation: Tạo `walkthrough.md` tổng kết toàn bộ quá trình hardening.
+
+### Fixed
+- Backend: Khắc phục lỗi rò rỉ mock (mock leakage) giữa các bài test trong `JwtStrategy`.
+- Backend: Sửa lỗi trích xuất token từ nhiều nguồn (Cookies, Headers, Auth object) trong WebSocket gateway.
+
 ## [2026-05-07] - Testing & API Docs
 ### Added
 - Backend: Triển khai bộ Unit Test toàn diện cho `AuthService` (13/13 tests pass).

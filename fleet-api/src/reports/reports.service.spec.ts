@@ -4,7 +4,7 @@ import {
   DEFAULT_FUEL_PRICE,
 } from './reports.service';
 import { TripStatus } from '../entities/trip.entity';
-import { VehicleStatus } from '../entities/vehicle.entity';
+import { VehicleStatus, VehicleType } from '../entities/vehicle.entity';
 
 describe('ReportsService Logic', () => {
   let reportsService: ReportsService;
@@ -92,7 +92,7 @@ describe('ReportsService Logic', () => {
 
   it('should calculate fuel cost report correctly', async () => {
     const mockStats = [
-      { plate: '29A-12345', type: 'small', totalDistance: 100 },
+      { plate: '29A-12345', type: VehicleType.SMALL, totalDistance: 100 },
     ];
 
     mockTripRepo.createQueryBuilder.mockReturnValue(

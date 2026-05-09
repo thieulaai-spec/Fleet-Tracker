@@ -541,12 +541,17 @@ App
         │   ├── VehicleSuggestList
         │   └── DispatchMap
         ├── TrackingPage
-        │   ├── FleetMap (Mapbox)
-        │   │   ├── VehicleMarkers
-        │   │   ├── RouteOverlay
-        │   │   └── GeofenceOverlay
-        │   ├── VehicleSidebar
-        │   └── AlertsPanel
+        │   ├── FleetMap (MapBox component)
+        │   │   ├── Marker (Vehicle/Order with dynamic color)
+        │   │   ├── NavigationControl
+        │   │   ├── Source/Layer (Route trails, Speed-based segments)
+        │   │   └── GeofenceCorridor (Buffer visualization)
+        │   ├── TrackingSidebar (Real-time vehicle status)
+        │   ├── ReplayControls (Play, Pause, Timeline slider)
+        │   └── AlertsList (Integrated with map focus)
+        ├── ReplayPage (/tracking/replay)
+        │   ├── HistoricalMap
+        │   └── ReplayTimeline
         └── ReportsPage
             ├── DateRangePicker
             ├── FleetPerformanceCharts
@@ -754,6 +759,24 @@ export const CONFIG = {
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
 };
 ```
+
+---
+
+## 9. Phase 08 - Maps & Monitoring (Technical Implementation)
+
+### 9.1. MapBox Component Hardening
+- **Prop Logic**: `MapBox` sử dụng `dynamic import` (`next/dynamic`) với `ssr: false` để tránh lỗi `window is not defined`.
+- **Coordinate Sanitation**: Toàn bộ tọa độ được kiểm tra `isNaN()` trước khi truyền vào `Marker`. Tránh lỗi "Invalid LngLat object: (NaN, NaN)".
+- **Marker Props**: Hỗ trợ `onClick` để truyền event từ bản đồ ra ngoài (vd: chọn xe để xem chi tiết).
+
+### 9.2. Real-time Visualization
+- **Trails**: Sử dụng `Source` type `geojson` với `LineString` để vẽ lịch sử di chuyển ngắn hạn.
+- **Speed Segments**: Áp dụng `match` expressions trong `paint` property của layer để đổi màu tuyến đường theo tốc độ thực tế (Xanh: <40, Vàng: 40-70, Đỏ: >70).
+- **Geofence Corridor**: Buffer 500m xung quanh `planned_route` được hiển thị bằng layer bán trong suốt để nhận diện xe đi lệch tuyến trực quan.
+
+### 9.3. Route Replay Logic
+- **Playback Engine**: Sử dụng `setInterval` nội bộ trong component để tịnh tiến `currentTime` của timeline.
+- **Interpolation**: Tọa độ được nội suy giữa các điểm GPS thực tế để marker di chuyển mượt mà ngay cả khi dữ liệu thưa thớt.
 
 ---
 

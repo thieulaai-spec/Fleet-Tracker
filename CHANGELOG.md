@@ -2,6 +2,23 @@
 
 Tất cả các thay đổi quan trọng đối với dự án FleetTracker sẽ được ghi nhận tại đây.
 
+## [2026-05-09] - Admin Reports & Analytics (Phase 09)
+### Added
+- **Frontend (Admin Dashboard)**:
+    - Triển khai toàn bộ module **Reports & Analytics**:
+        - **Fuel Report**: Biểu đồ phân tích chi phí nhiên liệu theo xe và thời gian.
+        - **KPI Report**: Theo dõi chỉ số hoàn thành chuyến đi và điểm an toàn.
+        - **Trips Report**: Thống kê số lượng chuyến đi và quãng đường.
+        - **Utilization Report**: Biểu đồ đo lường hiệu suất sử dụng đội xe.
+    - Tích hợp tính năng lọc (Filtering) và phân trang cho các bảng dữ liệu báo cáo.
+- **Documentation**:
+    - Cập nhật tiến độ dự án cho Phase 10 (Driver App).
+    - Tạo PR #12 hoàn tất Phase 09.
+
+### Fixed
+- Frontend: Khắc phục lỗi TypeScript nghiêm trọng trong component `DataTable` gây lỗi build production.
+- Frontend: Đồng bộ hóa kiểu dữ liệu cho các cột báo cáo để đảm bảo type-safety.
+
 ## [2026-05-09] - Admin Maps & Monitoring (Phase 08)
 ### Added
 - **Frontend (Admin Dashboard)**:

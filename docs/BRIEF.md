@@ -152,17 +152,17 @@ Xây dựng **FleetTracker** — hệ thống quản lý đội xe gồm 2 phầ
          ┌───────────▼───────────┐
          │    Backend API        │
          │    (NestJS)           │
-         │                       │
-         │  ┌───────────────────┐│
-         │  │ WebSocket Server  ││
-         │  │ (GPS Streaming)   ││
-         │  └───────────────────┘│
-         └───────────┬───────────┘
+         │                      │
+         │  ┌─────────────────┐ │
+         │  │ WebSocket Server│ │
+         │  │ (GPS Streaming) │ │
+         │  └─────────────────┘ │
+         └───────────┬──────────┘
                      │
          ┌───────────▼───────────┐
          │  PostgreSQL + PostGIS │
-         │  (Supabase hosted)    │
-         └───────────────────────┘
+         │  (Supabase hosted)   │
+         └──────────────────────┘
 ```
 
 ### Data Flow — GPS Real-time:

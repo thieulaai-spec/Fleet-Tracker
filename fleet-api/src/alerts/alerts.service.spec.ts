@@ -46,7 +46,7 @@ describe('AlertsService', () => {
               select: jest.fn().mockReturnThis(),
               addSelect: jest.fn().mockReturnThis(),
               groupBy: jest.fn().mockReturnThis(),
-              getRawMany: jest.fn().mockResolvedValue([{ type: AlertType.SPEED_VIOLATION, count: '1' }]),
+              getRawMany: jest.fn().mockResolvedValue([{ type: 'SPEED_VIOLATION', count: '1' }]),
             }),
           },
         },
@@ -157,7 +157,7 @@ describe('AlertsService', () => {
       const result = await service.getAlertStats();
 
       expect(alertRepo.createQueryBuilder).toHaveBeenCalled();
-      expect(result).toEqual([{ type: AlertType.SPEED_VIOLATION, count: '1' }]);
+      expect(result).toEqual([{ type: 'SPEED_VIOLATION', count: '1' }]);
     });
   });
 });

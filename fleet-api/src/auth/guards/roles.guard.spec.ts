@@ -55,7 +55,7 @@ describe('RolesGuard', () => {
   it('should return false if user does not have required role', () => {
     mockReflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
     (mockExecutionContext.switchToHttp().getRequest as jest.Mock).mockReturnValue({
-      user: { role: UserRole.DISPATCHER },
+      user: { role: UserRole.OPERATOR },
     });
     expect(guard.canActivate(mockExecutionContext)).toBe(false);
   });

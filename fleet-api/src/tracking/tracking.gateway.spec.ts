@@ -4,8 +4,6 @@ import { TrackingService } from './tracking.service';
 import { JwtService } from '@nestjs/jwt';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { UserRole } from '../entities/user.entity';
-import { TripStatus } from '../entities/trip.entity';
 
 describe('TrackingGateway', () => {
   let gateway: TrackingGateway;
@@ -84,12 +82,12 @@ describe('TrackingGateway', () => {
         ...mockSocket,
         handshake: { auth: { token: 'valid-token' }, headers: {} },
       } as any;
-      mockJwtService.verify.mockReturnValue({ role: UserRole.ADMIN, sub: 'user-1' });
+      mockJwtService.verify.mockReturnValue({ role: 'admin', sub: 'user-1' });
 
       await gateway.handleConnection(socket);
 
       expect(jwtService.verify).toHaveBeenCalledWith('valid-token');
-      expect(socket.join).toHaveBeenCalledWith(UserRole.ADMIN);
+      expect(socket.join).toHaveBeenCalledWith('admin');
       expect(socket.data.user).toBeDefined();
     });
 
@@ -98,7 +96,7 @@ describe('TrackingGateway', () => {
         ...mockSocket,
         handshake: { auth: { token: 'valid-token' }, headers: {} },
       } as any;
-      mockJwtService.verify.mockReturnValue({ role: UserRole.DRIVER, sub: 'user-1' });
+      mockJwtService.verify.mockReturnValue({ role: 'driver', sub: 'user-1' });
       mockTrackingService.getDriverByUserId.mockResolvedValue({ id: 'driver-1' });
 
       await gateway.handleConnection(socket);
@@ -112,7 +110,7 @@ describe('TrackingGateway', () => {
         ...mockSocket,
         handshake: { auth: { token: 'valid-token' }, headers: {} },
       } as any;
-      mockJwtService.verify.mockReturnValue({ role: UserRole.DRIVER, sub: 'user-1' });
+      mockJwtService.verify.mockReturnValue({ role: 'driver', sub: 'user-1' });
       mockTrackingService.getDriverByUserId.mockResolvedValue(null);
 
       await gateway.handleConnection(socket);
@@ -125,7 +123,7 @@ describe('TrackingGateway', () => {
         ...mockSocket,
         handshake: { auth: {}, headers: { authorization: 'Bearer header-token' } },
       } as any;
-      mockJwtService.verify.mockReturnValue({ role: UserRole.ADMIN, sub: 'user-1' });
+      mockJwtService.verify.mockReturnValue({ role: 'admin', sub: 'user-1' });
 
       await gateway.handleConnection(socket);
 
@@ -137,7 +135,7 @@ describe('TrackingGateway', () => {
         ...mockSocket,
         handshake: { auth: {}, headers: { cookie: 'access_token=cookie-token' } },
       } as any;
-      mockJwtService.verify.mockReturnValue({ role: UserRole.ADMIN, sub: 'user-1' });
+      mockJwtService.verify.mockReturnValue({ role: 'admin', sub: 'user-1' });
 
       await gateway.handleConnection(socket);
 
@@ -187,7 +185,7 @@ describe('TrackingGateway', () => {
     it('should allow admins to update GPS', async () => {
       const socket = {
         ...mockSocket,
-        data: { user: { role: UserRole.ADMIN } },
+        data: { user: { role: 'admin' } },
       } as any;
       const data = { tripId: 'trip-1', vehicleId: 'v-1', latitude: 1, longitude: 1 };
       mockTrackingService.processGpsUpdate.mockResolvedValue({ id: 'res-1' });
@@ -201,7 +199,7 @@ describe('TrackingGateway', () => {
     it('should return error if unauthorized for trip', async () => {
       const socket = {
         ...mockSocket,
-        data: { user: { role: UserRole.DRIVER }, driverId: 'driver-1' },
+        data: { user: { role: 'driver' }, driverId: 'driver-1' },
       } as any;
       const data = { tripId: 'trip-1', vehicleId: 'v-1', latitude: 1, longitude: 1 };
       mockTrackingService.validateDriverTrip.mockResolvedValue(false);
@@ -215,7 +213,7 @@ describe('TrackingGateway', () => {
     it('should handle processing errors', async () => {
       const socket = {
         ...mockSocket,
-        data: { user: { role: UserRole.ADMIN } },
+        data: { user: { role: 'admin' } },
       } as any;
       const data = { tripId: 'trip-1', vehicleId: 'v-1', latitude: 1, longitude: 1 };
       mockTrackingService.processGpsUpdate.mockRejectedValue(new Error('DB Error'));
@@ -234,7 +232,7 @@ describe('TrackingGateway', () => {
     });
 
     it('should allow admin to subscribe', async () => {
-      const socket = { ...mockSocket, data: { user: { role: UserRole.ADMIN } } } as any;
+      const socket = { ...mockSocket, data: { user: { role: 'admin' } } } as any;
       const result = await gateway.handleSubscribeTrip(socket, { tripId: 'trip-1' });
       expect(result.event).toBe('subscribed');
       expect(socket.join).toHaveBeenCalledWith('trip:trip-1');
@@ -243,7 +241,7 @@ describe('TrackingGateway', () => {
     it('should allow driver to subscribe to their own trip', async () => {
       const socket = {
         ...mockSocket,
-        data: { user: { role: UserRole.DRIVER }, driverId: 'driver-1' },
+        data: { user: { role: 'driver' }, driverId: 'driver-1' },
       } as any;
       mockTrackingService.getTripById.mockResolvedValue({ driverId: 'driver-1' });
 
@@ -254,7 +252,7 @@ describe('TrackingGateway', () => {
     it('should deny driver from subscribing to others trips', async () => {
       const socket = {
         ...mockSocket,
-        data: { user: { role: UserRole.DRIVER }, driverId: 'driver-1' },
+        data: { user: { role: 'driver' }, driverId: 'driver-1' },
       } as any;
       mockTrackingService.getTripById.mockResolvedValue({ driverId: 'driver-2' });
 
@@ -268,16 +266,16 @@ describe('TrackingGateway', () => {
       const payload = { type: 'SPEEDING', driverId: 'driver-1' };
       gateway.handleNewAlert(payload);
 
-      expect(mockServer.to).toHaveBeenCalledWith(UserRole.ADMIN);
+      expect(mockServer.to).toHaveBeenCalledWith('admin');
       expect(mockServer.to).toHaveBeenCalledWith('driver:driver-1');
       expect(mockServer.emit).toHaveBeenCalledTimes(2);
     });
 
     it('handleTripStatusChange should broadcast to admin and trip room', () => {
-      const payload = { id: 'trip-1', status: TripStatus.COMPLETED };
+      const payload = { id: 'trip-1', status: 'COMPLETED' };
       gateway.handleTripStatusChange(payload);
 
-      expect(mockServer.to).toHaveBeenCalledWith(UserRole.ADMIN);
+      expect(mockServer.to).toHaveBeenCalledWith('admin');
       expect(mockServer.to).toHaveBeenCalledWith('trip:trip-1');
       expect(mockServer.emit).toHaveBeenCalledTimes(2);
     });
@@ -286,7 +284,7 @@ describe('TrackingGateway', () => {
       const payload = { id: 'alert-1' };
       gateway.handleAlertResolved(payload);
 
-      expect(mockServer.to).toHaveBeenCalledWith(UserRole.ADMIN);
+      expect(mockServer.to).toHaveBeenCalledWith('admin');
       expect(mockServer.emit).toHaveBeenCalledWith('alert:resolved', payload);
     });
   });

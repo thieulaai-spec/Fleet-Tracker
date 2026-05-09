@@ -55,7 +55,7 @@ describe('AuthController', () => {
         email: 'test@example.com',
         password: 'password123',
         fullName: 'Test User',
-        role: UserRole.DISPATCHER,
+        role: UserRole.OPERATOR,
       };
       mockAuthService.register.mockResolvedValue({ id: '1', ...registerDto });
 

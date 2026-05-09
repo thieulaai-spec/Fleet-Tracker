@@ -3,93 +3,16 @@
 import React from 'react';
 import { Package, Truck, Users, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { MapBox, MapMarker } from '@/components/ui/MapBox';
-import { Order, Vehicle } from '@/types';
 
 interface DispatchMapPanelProps {
   clusterView: boolean;
   onToggleClusterView: () => void;
-  orders: Order[];
-  vehicles: Vehicle[];
-  selectedOrderId: string | null;
-  onSelectOrder: (id: string | null) => void;
 }
 
-export function DispatchMapPanel({ 
-  clusterView, 
-  onToggleClusterView,
-  orders,
-  vehicles,
-  selectedOrderId,
-  onSelectOrder
-}: DispatchMapPanelProps) {
-  const mapMarkers = React.useMemo<MapMarker[]>(() => {
-    const markers: MapMarker[] = [];
-    
-    // Add Order markers
-    orders.forEach((order) => {
-      const isSelected = selectedOrderId === order.id;
-      const lat = Number(order.pickupLocation?.lat);
-      const lng = Number(order.pickupLocation?.lng);
-
-      if (!isNaN(lat) && !isNaN(lng)) {
-        markers.push({
-          id: `order-${order.id}`,
-          lat,
-          lng,
-          label: `Order ${order.id.split('-')[0]}`,
-          icon: <Package size={isSelected ? 18 : 14} />,
-          color: isSelected ? '#3b82f6' : 'var(--color-warning)',
-          onClick: () => onSelectOrder(order.id),
-        });
-      }
-    });
-
-    // Add Vehicle markers
-    vehicles.forEach((vehicle) => {
-      if (vehicle.lastKnownLocation) {
-        const lat = Number(vehicle.lastKnownLocation.lat);
-        const lng = Number(vehicle.lastKnownLocation.lng);
-
-        if (!isNaN(lat) && !isNaN(lng)) {
-          markers.push({
-            id: `vehicle-${vehicle.id}`,
-            lat,
-            lng,
-            label: vehicle.plateNumber,
-            icon: <Truck size={14} />,
-            color: 'var(--color-primary-light)',
-          });
-        }
-      }
-    });
-
-    return markers;
-  }, [orders, vehicles, selectedOrderId, onSelectOrder]);
-
-  const suggestionLines = React.useMemo(() => {
-    if (!selectedOrderId) return [];
-    
-    const order = orders.find(o => o.id === selectedOrderId);
-    if (!order || !order.pickupLocation) return [];
-
-    // Simple suggestion: lines to top 3 closest available vehicles
-    const orderLoc = order.pickupLocation;
-    return vehicles
-      .filter(v => v.status === 'available' && v.lastKnownLocation)
-      .map(v => ({
-        id: v.id,
-        path: [
-          { lat: orderLoc.lat, lng: orderLoc.lng },
-          { lat: v.lastKnownLocation!.lat, lng: v.lastKnownLocation!.lng }
-        ]
-      }))
-      .slice(0, 3);
-  }, [selectedOrderId, orders, vehicles]);
-
+export function DispatchMapPanel({ clusterView, onToggleClusterView }: DispatchMapPanelProps) {
   return (
     <main className="dispatch-map-area">
-      <div className="map-container">
+      <div className="map-placeholder">
         <div className="map-overlay-top">
           <div className="map-search card">
             <Navigation size={18} />
@@ -97,11 +20,16 @@ export function DispatchMapPanel({
           </div>
         </div>
 
-        <div className="real-map">
-          <MapBox 
-            markers={mapMarkers} 
-            path={suggestionLines.length > 0 ? suggestionLines[0].path : []} // Just show closest for now
-          />
+        <div className="mock-map">
+          <div className="map-pin vehicle-pin" style={{ top: '30%', left: '40%' }}>
+            <Truck size={20} />
+            <div className="pin-label">VN-102</div>
+          </div>
+          <div className="map-pin order-pin" style={{ top: '50%', left: '60%' }}>
+            <Package size={20} />
+            <div className="pin-label">ORD-8289</div>
+          </div>
+          <div className="map-grid-pattern" />
         </div>
 
         <div className="map-overlay-bottom">
@@ -127,7 +55,7 @@ export function DispatchMapPanel({
           border: 1px solid var(--color-border);
         }
 
-        .map-container {
+        .map-placeholder {
           width: 100%;
           height: 100%;
           display: flex;
@@ -160,9 +88,39 @@ export function DispatchMapPanel({
           font-size: 14px;
         }
 
-        .real-map {
+        .mock-map {
           flex: 1;
           position: relative;
+          background: radial-gradient(circle, #1a1a1a 1px, transparent 1px);
+          background-size: 30px 30px;
+        }
+
+        .map-pin {
+          position: absolute;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          animation: pulse-glow 2s infinite;
+        }
+
+        .vehicle-pin { color: var(--color-primary-light); }
+        .order-pin { color: var(--color-warning); }
+
+        .pin-label {
+          background: rgba(0, 0, 0, 0.8);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-size: 10px;
+          font-weight: 700;
+          color: white;
+          white-space: nowrap;
+        }
+
+        @keyframes pulse-glow {
+          0% { filter: drop-shadow(0 0 2px currentColor); }
+          50% { filter: drop-shadow(0 0 10px currentColor); }
+          100% { filter: drop-shadow(0 0 2px currentColor); }
         }
 
         .map-overlay-bottom {

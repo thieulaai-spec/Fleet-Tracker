@@ -68,7 +68,7 @@ import { OptimizationModule } from './optimization/optimization.module';
           Alert,
           DriverKpi,
         ],
-        synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true',
+        synchronize: configService.get<string>('NODE_ENV') === 'development',
         logging: true,
         ssl: configService.get<string>('DB_SSL') === 'true',
         extra: {

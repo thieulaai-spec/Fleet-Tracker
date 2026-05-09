@@ -48,7 +48,7 @@ describe('ViolationDetectorService', () => {
       longitude: 106.0,
       speed: 60,
       heading: 0,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
     };
 
     it('should detect speed violations', async () => {

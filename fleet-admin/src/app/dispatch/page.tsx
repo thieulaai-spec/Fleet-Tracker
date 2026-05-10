@@ -54,7 +54,7 @@ export default function DispatchPage() {
   };
 
   return (
-    <div className="grid grid-cols-[320px_1fr_320px] h-[calc(100vh-var(--header-height)-var(--space-xl)*2)] gap-(--space-md) -m-(--space-md) p-(--space-md) overflow-hidden">
+    <div className="dispatch-container">
       <DispatchOrdersSidebar
         pendingOrderCount={pendingOrders.length}
         isLoading={isLoading}
@@ -69,8 +69,6 @@ export default function DispatchPage() {
       <DispatchMapPanel
         clusterView={clusterView}
         onToggleClusterView={() => setClusterView((value) => !value)}
-        pendingOrders={filteredPendingOrders}
-        availableVehicles={availableVehicles}
       />
 
       <DispatchVehiclesSidebar
@@ -80,6 +78,18 @@ export default function DispatchPage() {
         selectedOrder={selectedOrder}
         onAssignVehicle={handleAssign}
       />
+
+      <style jsx>{`
+        .dispatch-container {
+          display: grid;
+          grid-template-columns: 320px 1fr 320px;
+          height: calc(100vh - var(--header-height) - var(--space-xl) * 2);
+          gap: var(--space-md);
+          margin: -var(--space-md);
+          padding: var(--space-md);
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 }

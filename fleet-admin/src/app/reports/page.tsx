@@ -53,13 +53,13 @@ export default function FleetPerformancePage() {
   }, [dateRange]);
 
   return (
-    <div className="flex flex-col gap-(--space-xl)">
-      <div className="flex justify-between items-center">
+    <div className="reports-overview">
+      <div className="action-bar">
         <DateRangeFilter onRangeChange={setDateRange} />
         <ExportActions reportName="fleet_performance" params={dateRange} />
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-(--space-lg)">
+      <div className="stats-grid">
         <StatCard 
           label="Total Trips" 
           value={data?.totalTrips || 0} 
@@ -86,7 +86,7 @@ export default function FleetPerformancePage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-(--space-lg)">
+      <div className="charts-grid">
         <div className="chart-large">
           <ReportChartWrapper 
             title="Performance Trend" 
@@ -155,7 +155,7 @@ export default function FleetPerformancePage() {
           </ReportChartWrapper>
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="chart-full">
           <ReportChartWrapper 
             title="Trips by Vehicle" 
             subtitle="Volume of trips per vehicle plate"
@@ -181,6 +181,45 @@ export default function FleetPerformancePage() {
           </ReportChartWrapper>
         </div>
       </div>
+
+      <style jsx>{`
+        .reports-overview {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xl);
+        }
+
+        .action-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: var(--space-lg);
+        }
+
+        .charts-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: var(--space-lg);
+        }
+
+        .chart-full {
+          grid-column: span 2;
+        }
+
+        @media (max-width: 1024px) {
+          .charts-grid {
+            grid-template-columns: 1fr;
+          }
+          .chart-full {
+            grid-column: span 1;
+          }
+        }
+      `}</style>
     </div>
   );
 }

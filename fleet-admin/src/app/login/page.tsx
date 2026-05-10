@@ -28,34 +28,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[radial-gradient(circle_at_top_right,#1e1b4b,#020617)] p-8">
-      <div className="w-full max-w-[420px] bg-surface-low/50 backdrop-blur-2xl border border-white/10 rounded-xl p-12 shadow-lg">
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="w-14 h-14 bg-linear-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-glow">
-              <Truck size={28} className="text-white" />
-            </div>
-            <h1 className="text-3xl font-extrabold text-text tracking-tight m-0 leading-none">Fleet Tracker</h1>
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-header">
+          <div className="logo-container">
+            <Truck size={32} className="logo-icon" />
           </div>
-          <p className="text-text-dim text-[11px] font-bold uppercase tracking-[0.2em]">Admin Control Center</p>
+          <h1>Fleet Tracker</h1>
+          <p>Admin Control Center</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="login-form">
           {error && (
-            <div className="flex items-center gap-2 p-4 bg-danger/10 border border-danger/20 rounded-lg text-danger text-[13px]">
+            <div className="error-alert">
               <AlertCircle size={18} />
               <span>{error}</span>
             </div>
           )}
 
-          <div className="flex flex-col gap-2.5">
-            <label htmlFor="email" className="text-[11px] font-bold text-text-dim uppercase tracking-wider ml-1">
-              Email Address
-            </label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                <Mail size={18} className="text-text-dim transition-colors duration-200 group-focus-within:text-primary" />
-              </div>
+          <div className="input-group">
+            <label htmlFor="email">Email Address</label>
+            <div className="input-wrapper">
+              <Mail size={18} className="input-icon" />
               <input
                 id="email"
                 type="email"
@@ -63,19 +57,14 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-slate-950/40 border border-white/10 rounded-lg pl-12 pr-5 h-[54px] text-text text-[15px] outline-none transition-all duration-200 focus:border-primary focus:bg-slate-950/60 focus:ring-4 focus:ring-primary/10 placeholder:text-white/20"
               />
             </div>
           </div>
 
-          <div className="flex flex-col gap-2.5">
-            <label htmlFor="password" className="text-[11px] font-bold text-text-dim uppercase tracking-wider ml-1">
-              Password
-            </label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                <Lock size={18} className="text-text-dim transition-colors duration-200 group-focus-within:text-primary" />
-              </div>
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <div className="input-wrapper">
+              <Lock size={18} className="input-icon" />
               <input
                 id="password"
                 type="password"
@@ -83,36 +72,168 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full bg-slate-950/40 border border-white/10 rounded-lg pl-12 pr-5 h-[54px] text-text text-[15px] outline-none transition-all duration-200 focus:border-primary focus:bg-slate-950/60 focus:ring-4 focus:ring-primary/10 placeholder:text-white/20"
               />
             </div>
           </div>
 
-          <div className="mt-2">
-            <Button 
-              variant="primary" 
-              type="submit" 
-              fullWidth
-              disabled={isLoading}
-              size="lg"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin mr-2" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In to Dashboard'
-              )}
-            </Button>
-          </div>
+          <Button 
+            variant="primary" 
+            type="submit" 
+            fullWidth
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </Button>
         </form>
 
-        <div className="mt-12 text-center">
-          <p className="text-[11px] text-text-dim tracking-wide">&copy; 2024 Fleet Tracker Systems. All rights reserved.</p>
+        <div className="login-footer">
+          <p>&copy; 2024 Fleet Tracker Systems. All rights reserved.</p>
         </div>
       </div>
-    </div>
 
+      <style jsx>{`
+        .login-page {
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: radial-gradient(circle at top right, #1e1b4b, #020617);
+          padding: var(--space-xl);
+        }
+
+        .login-card {
+          width: 100%;
+          max-width: 420px;
+          background: rgba(30, 41, 59, 0.5);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 24px;
+          padding: var(--space-2xl);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-header {
+          text-align: center;
+          margin-bottom: var(--space-2xl);
+        }
+
+        .logo-container {
+          width: 64px;
+          height: 64px;
+          background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto var(--space-lg);
+          box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-icon {
+          color: white;
+        }
+
+        h1 {
+          font-size: 28px;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 4px;
+        }
+
+        p {
+          color: var(--color-text-dim);
+          font-size: 14px;
+        }
+
+        .login-form {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xl);
+        }
+
+        .error-alert {
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+          padding: var(--space-md);
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          border-radius: 12px;
+          color: #fca5a5;
+          font-size: 13px;
+        }
+
+        .input-group {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-sm);
+        }
+
+        label {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-dim);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .input-icon {
+          position: absolute;
+          left: 14px;
+          color: var(--color-text-dim);
+        }
+
+        input {
+          width: 100%;
+          background: rgba(15, 23, 42, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 12px 14px 12px 42px;
+          color: white;
+          font-size: 15px;
+          transition: all 0.2s ease;
+        }
+
+        input:focus {
+          outline: none;
+          border-color: var(--color-primary);
+          background: rgba(15, 23, 42, 0.8);
+          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .login-footer {
+          margin-top: var(--space-2xl);
+          text-align: center;
+        }
+
+        .login-footer p {
+          font-size: 11px;
+          color: var(--color-text-dim);
+        }
+      `}</style>
+    </div>
   );
 }

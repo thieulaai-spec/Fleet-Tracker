@@ -85,7 +85,7 @@ export default function OrdersPage() {
     { 
       header: 'Order ID', 
       accessor: (o: Order) => (
-        <div className="flex items-center gap-2 text-(--color-primary-light) font-semibold">
+        <div className="order-id-cell">
           <Package size={16} />
           <span>{o.id.split('-')[0]}</span>
         </div>
@@ -94,13 +94,13 @@ export default function OrdersPage() {
     { 
       header: 'Route', 
       accessor: (o: Order) => (
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs max-w-[150px] overflow-hidden truncate">
+        <div className="route-cell">
+          <div className="route-point">
             <MapPin size={12} className="text-primary" />
             <span>{o.pickupAddress}</span>
           </div>
-          <ChevronRight size={14} className="text-(--color-text-dim)" />
-          <div className="flex items-center gap-1.5 text-xs max-w-[150px] overflow-hidden truncate">
+          <ChevronRight size={14} className="text-dim" />
+          <div className="route-point">
             <MapPin size={12} className="text-success" />
             <span>{o.deliveryAddress}</span>
           </div>
@@ -119,7 +119,7 @@ export default function OrdersPage() {
     { 
       header: 'Created At', 
       accessor: (o: Order) => (
-        <div className="flex items-center gap-1.5 text-xs text-(--color-text-dim)">
+        <div className="time-cell">
           <Clock size={14} />
           <span>{format(new Date(o.createdAt), 'yyyy-MM-dd HH:mm')}</span>
         </div>
@@ -134,11 +134,11 @@ export default function OrdersPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-(--space-xl)">
-      <header className="flex justify-between items-center">
+    <div className="page-container">
+      <header className="page-header">
         <div>
-          <h1 className="text-2xl font-bold">Order Management</h1>
-          <p className="text-(--color-text-dim)">Create, track and manage delivery orders for your fleet.</p>
+          <h1>Order Management</h1>
+          <p className="text-dim">Create, track and manage delivery orders for your fleet.</p>
         </div>
         <Button variant="primary" icon={<Plus size={18} />} onClick={() => setIsModalOpen(true)}>
           Create New Order
@@ -156,8 +156,8 @@ export default function OrdersPage() {
           </>
         )}
       >
-        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-(--space-lg)">
+        <form className="order-form" onSubmit={handleSubmit(onSubmit)}>
+          <div className="form-grid">
             <Input 
               label="Weight (kg)" 
               type="number"
@@ -171,42 +171,36 @@ export default function OrdersPage() {
               {...register('description')}
               error={errors.description?.message}
             />
-            <div className="sm:col-span-2 space-y-4">
-              <Input 
-                label="Pickup Address" 
-                placeholder="Address or coordinates" 
-                {...register('pickupAddress')}
-                error={errors.pickupAddress?.message}
-              />
-              <Input 
-                label="Delivery Address" 
-                placeholder="Address or coordinates" 
-                {...register('deliveryAddress')}
-                error={errors.deliveryAddress?.message}
-              />
-            </div>
+            <Input 
+              label="Pickup Address" 
+              placeholder="Address or coordinates" 
+              {...register('pickupAddress')}
+              error={errors.pickupAddress?.message}
+            />
+            <Input 
+              label="Delivery Address" 
+              placeholder="Address or coordinates" 
+              {...register('deliveryAddress')}
+              error={errors.deliveryAddress?.message}
+            />
           </div>
         </form>
       </Modal>
 
-      <section className="card flex justify-between items-center px-(--space-lg) py-(--space-md)">
-        <div className="flex-1 max-w-[400px]">
-          <SearchInput
-            placeholder="Search by ID or address..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-(--space-lg)">
+      <section className="filters-bar card">
+        <SearchInput
+          placeholder="Search by ID or address..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <div className="filter-actions">
           <Button variant="secondary" size="md" icon={<Filter size={18} />}>Filters</Button>
-          <div className="w-px h-6 bg-border" />
-          <span className="text-(--color-text-dim)">
-            Total <span className="font-bold text-text">{filteredOrders.length}</span> orders
-          </span>
+          <div className="divider" />
+          <span className="results-count">Total <b>{filteredOrders.length}</b> orders</span>
         </div>
       </section>
 
-      <section>
+      <section className="table-section">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <LoadingSpinner size={32} />
@@ -215,6 +209,83 @@ export default function OrdersPage() {
           <DataTable data={filteredOrders} columns={columns} />
         )}
       </section>
+
+      <style jsx>{`
+        .page-container {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xl);
+        }
+
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .order-id-cell {
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+          color: var(--color-primary-light);
+          font-weight: 600;
+        }
+
+        .route-cell {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+        }
+
+        .route-point {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          max-width: 150px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .time-cell {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          color: var(--color-text-dim);
+        }
+
+        .filters-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: var(--space-md) var(--space-lg);
+        }
+
+        .filters-bar :global(.search-input-group) {
+          flex: 1;
+          max-width: 400px;
+        }
+
+        .divider {
+          width: 1px;
+          height: 24px;
+          background: var(--color-border);
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--space-lg);
+        }
+
+        @media (max-width: 600px) {
+          .form-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
   );
 }

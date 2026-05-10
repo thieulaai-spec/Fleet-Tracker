@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -11,7 +11,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const isLoginPage = pathname === '/login';
 
@@ -23,8 +22,24 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <Loader2 className="animate-spin text-primary" size={48} />
+      <div className="loading-screen">
+        <Loader2 className="animate-spin" size={48} color="var(--color-primary)" />
+        <style jsx>{`
+          .loading-screen {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-background);
+          }
+          .animate-spin {
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -34,19 +49,40 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-background text-text">
-      <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
-      <div 
-        className={`
-          flex-1 flex flex-col transition-[margin-left] duration-200 ease-in-out
-          ${sidebarCollapsed ? 'ml-20' : 'ml-sidebar'}
-        `}
-      >
+    <div className="app-container">
+      <Sidebar />
+      <div className="main-wrapper">
         <Header />
-        <main className="p-xl flex-1 overflow-y-auto">
+        <main className="content">
           {children}
         </main>
       </div>
+
+      <style jsx global>{`
+        .app-container {
+          display: flex;
+          min-height: 100vh;
+          background: var(--color-background);
+        }
+
+        .main-wrapper {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          margin-left: var(--sidebar-width);
+          transition: margin-left var(--transition-normal);
+        }
+
+        :global(.sidebar.collapsed) + .main-wrapper {
+          margin-left: 80px;
+        }
+
+        .content {
+          padding: var(--space-xl);
+          flex: 1;
+          overflow-y: auto;
+        }
+      `}</style>
     </div>
   );
 }

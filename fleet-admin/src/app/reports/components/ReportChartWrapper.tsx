@@ -21,28 +21,76 @@ export function ReportChartWrapper({
   height = 300 
 }: ReportChartWrapperProps) {
   return (
-    <div className="bg-surface border border-border rounded-md p-(--space-lg) flex flex-col gap-(--space-lg)">
-      <div className="flex justify-between items-start">
+    <div className="chart-wrapper">
+      <div className="chart-header">
         <div className="header-info">
-          <h3 className="text-lg font-semibold text-text leading-tight">{title}</h3>
-          {subtitle && <p className="text-xs text-(--color-text-dim) mt-1">{subtitle}</p>}
+          <h3>{title}</h3>
+          {subtitle && <p>{subtitle}</p>}
         </div>
       </div>
 
-      <div className="relative w-full" style={{ height }}>
+      <div className="chart-content" style={{ height }}>
         {isLoading ? (
-          <div className="h-full flex flex-col items-center justify-center gap-(--space-md)">
+          <div className="status-container">
             <LoadingSpinner size={32} />
-            <p className="text-sm text-(--color-text-muted)">Loading chart data...</p>
+            <p>Loading chart data...</p>
           </div>
         ) : isEmpty ? (
-          <div className="h-full flex flex-col items-center justify-center gap-(--space-md)">
-            <p className="text-sm text-(--color-text-muted)">No data available for the selected range</p>
+          <div className="status-container">
+            <p className="empty-text">No data available for the selected range</p>
           </div>
         ) : (
           children
         )}
       </div>
+
+      <style jsx>{`
+        .chart-wrapper {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          padding: var(--space-lg);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-lg);
+        }
+
+        .chart-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+
+        .header-info h3 {
+          font: var(--font-h3);
+          color: var(--color-text);
+        }
+
+        .header-info p {
+          font: var(--font-label-sm);
+          color: var(--color-text-dim);
+          margin-top: 4px;
+        }
+
+        .chart-content {
+          position: relative;
+          width: 100%;
+        }
+
+        .status-container {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-md);
+        }
+
+        .empty-text {
+          color: var(--color-text-muted);
+          font: var(--font-body-sm);
+        }
+      `}</style>
     </div>
   );
 }

@@ -110,7 +110,7 @@ export default function VehiclesPage() {
     {
       header: 'Actions',
       accessor: (v: Vehicle) => (
-        <div className="flex gap-1">
+        <div className="action-buttons">
           <Button variant="ghost" size="sm" icon={<Eye size={16} />} aria-label={`View ${v.plateNumber}`} />
           <Button variant="ghost" size="sm" icon={<Edit2 size={16} />} aria-label={`Edit ${v.plateNumber}`} onClick={() => openEditModal(v)} />
           <Button variant="ghost" size="sm" icon={<Trash2 size={16} />} className="text-danger" aria-label={`Delete ${v.plateNumber}`} onClick={() => setVehicleToDelete(v)} />
@@ -120,11 +120,11 @@ export default function VehiclesPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-(--space-xl)">
-      <header className="flex justify-between items-center">
+    <div className="page-container">
+      <header className="page-header">
         <div>
-          <h1 className="text-2xl font-bold">Vehicle Management</h1>
-          <p className="text-(--color-text-dim)">Manage your fleet vehicles, maintenance schedules, and assignments.</p>
+          <h1>Vehicle Management</h1>
+          <p className="text-dim">Manage your fleet vehicles, maintenance schedules, and assignments.</p>
         </div>
         <Button variant="primary" icon={<Plus size={18} />} onClick={openCreateModal}>
           Add New Vehicle
@@ -142,8 +142,8 @@ export default function VehiclesPage() {
           </>
         )}
       >
-        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 gap-(--space-lg)">
+        <form className="vehicle-form" onSubmit={handleSubmit(onSubmit)}>
+          <div className="form-grid">
             <Input 
               label="Plate Number" 
               placeholder="e.g. 29A-12345" 
@@ -156,29 +156,23 @@ export default function VehiclesPage() {
               {...register('maxCapacityKg', { valueAsNumber: true })}
               error={errors.maxCapacityKg?.message}
             />
-            <div className="flex flex-col gap-1.5">
-              <label className="text-(--color-text-dim) font-medium">Vehicle Type</label>
-              <select 
-                className="bg-surface-low border border-border rounded-default text-text p-2.5 text-sm outline-none transition-colors focus:border-primary" 
-                {...register('type')}
-              >
+            <div className="form-group">
+              <label className="label">Vehicle Type</label>
+              <select className="select" {...register('type')}>
                 <option value="small">Small</option>
                 <option value="medium">Medium</option>
                 <option value="large">Large</option>
               </select>
-              {errors.type && <p className="text-danger text-xs mt-1">{errors.type.message}</p>}
+              {errors.type && <p className="error-text">{errors.type.message}</p>}
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-(--color-text-dim) font-medium">Status</label>
-              <select 
-                className="bg-surface-low border border-border rounded-default text-text p-2.5 text-sm outline-none transition-colors focus:border-primary" 
-                {...register('status')}
-              >
+            <div className="form-group">
+              <label className="label">Status</label>
+              <select className="select" {...register('status')}>
                 <option value="available">Available</option>
                 <option value="delivering">Delivering</option>
                 <option value="maintenance">Maintenance</option>
               </select>
-              {errors.status && <p className="text-danger text-xs mt-1">{errors.status.message}</p>}
+              {errors.status && <p className="error-text">{errors.status.message}</p>}
             </div>
           </div>
         </form>
@@ -199,24 +193,20 @@ export default function VehiclesPage() {
         }}
       />
 
-      <section className="card flex justify-between items-center px-(--space-lg) py-(--space-md)">
-        <div className="flex-1 max-w-[400px]">
-          <SearchInput
-            placeholder="Search by plate number or driver..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-(--space-lg)">
+      <section className="filters-bar card">
+        <SearchInput
+          placeholder="Search by plate number or driver..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <div className="filter-actions">
           <Button variant="secondary" size="md" icon={<Filter size={18} />}>Filters</Button>
-          <div className="w-px h-6 bg-border" />
-          <span className="text-(--color-text-dim)">
-            Showing <span className="font-bold text-text">{filteredVehicles.length}</span> vehicles
-          </span>
+          <div className="divider" />
+          <span className="results-count">Showing <b>{filteredVehicles.length}</b> vehicles</span>
         </div>
       </section>
 
-      <section>
+      <section className="table-section">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <LoadingSpinner size={32} />
@@ -225,6 +215,95 @@ export default function VehiclesPage() {
           <DataTable data={filteredVehicles} columns={columns} />
         )}
       </section>
+
+      <style jsx>{`
+        .page-container {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xl);
+        }
+
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .filters-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: var(--space-md) var(--space-lg);
+        }
+
+        .filters-bar :global(.search-input-group) {
+          flex: 1;
+          max-width: 400px;
+        }
+
+        .filter-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-lg);
+        }
+
+        .divider {
+          width: 1px;
+          height: 24px;
+          background: var(--color-border);
+        }
+
+        .results-count {
+          font: var(--font-label-sm);
+          color: var(--color-text-dim);
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 4px;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: var(--space-lg);
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .label {
+          font: var(--font-label-md);
+          color: var(--color-text-dim);
+        }
+
+        .select {
+          background: var(--color-surface-low);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-default);
+          color: var(--color-text);
+          padding: 10px 12px;
+          font: var(--font-body-md);
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .select:focus {
+          border-color: var(--color-primary);
+        }
+
+        .error-text {
+          color: var(--color-danger);
+          font-size: 12px;
+          margin-top: 4px;
+        }
+        .capitalize {
+          text-transform: capitalize;
+        }
+      `}</style>
     </div>
   );
 }

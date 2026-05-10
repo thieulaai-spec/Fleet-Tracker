@@ -54,39 +54,34 @@ import { OptimizationModule } from './optimization/optimization.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const dbSynchronize =
-          configService.get<string>('DB_SYNCHRONIZE') === 'true';
-        const dbSsl = configService.get<string>('DB_SSL') === 'true';
-
-        return {
-          type: 'postgres',
-          url: configService.get<string>('DATABASE_URL'),
-          entities: [
-            User,
-            Driver,
-            Vehicle,
-            Order,
-            Trip,
-            TripOrder,
-            GpsLocation,
-            Alert,
-            DriverKpi,
-          ],
-          synchronize: dbSynchronize,
-          logging: true,
-          ssl: dbSsl,
-          extra: {
-            ssl: dbSsl
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
+        entities: [
+          User,
+          Driver,
+          Vehicle,
+          Order,
+          Trip,
+          TripOrder,
+          GpsLocation,
+          Alert,
+          DriverKpi,
+        ],
+        synchronize: configService.get<string>('NODE_ENV') === 'development',
+        logging: true,
+        ssl: configService.get<string>('DB_SSL') === 'true',
+        extra: {
+          ssl:
+            configService.get<string>('DB_SSL') === 'true'
               ? {
                   rejectUnauthorized:
                     configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') ===
                     'true',
                 }
               : null,
-          },
-        };
-      },
+        },
+      }),
     }),
 
     // AuthModule added in Phase 02

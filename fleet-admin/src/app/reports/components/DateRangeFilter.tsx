@@ -55,41 +55,38 @@ export function DateRangeFilter({ onRangeChange }: DateRangeFilterProps) {
   };
 
   return (
-    <div className="relative w-[220px]">
-      <div 
-        className="flex items-center gap-(--space-sm) py-[10px] px-(--space-md) bg-surface-high border border-border rounded-sm cursor-pointer text-text font-medium text-sm transition-all duration-150 hover:border-primary"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <Calendar size={18} className="text-(--color-primary-light)" />
+    <div className="filter-container">
+      <div className="filter-trigger" onClick={() => setIsOpen(!isOpen)}>
+        <Calendar size={18} className="icon" />
         <span>{selectedLabel}</span>
-        <ChevronDown size={16} className={`ml-auto transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={16} className={`chevron ${isOpen ? 'open' : ''}`} />
       </div>
 
       {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] right-0 w-[280px] bg-surface border border-border rounded-md shadow-lg z-100 p-(--space-sm) animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="filter-dropdown">
           {PRESET_RANGES.map((preset) => (
             <div 
               key={preset.label} 
-              className="py-[10px] px-(--space-md) rounded-sm cursor-pointer text-(--color-text-dim) transition-all duration-150 hover:bg-surface-high hover:text-text"
+              className="preset-item"
               onClick={() => handlePresetClick(preset)}
             >
               {preset.label}
             </div>
           ))}
-          <div className="h-px bg-border my-(--space-sm)" />
-          <div className="py-(--space-sm) px-(--space-md)">
-            <span className="block text-[12px] text-(--color-text-muted) mb-2 uppercase font-semibold">Custom Range</span>
-            <div className="flex items-center gap-(--space-xs) text-[12px] text-(--color-text-muted)">
+          <div className="divider" />
+          <div className="custom-range">
+            <span className="custom-label">Custom Range</span>
+            <div className="inputs">
               <input 
                 type="date" 
-                className="flex-1 bg-surface-high border border-border rounded-sm p-[6px] text-text text-[12px] outline-none focus:border-primary" 
+                className="date-input" 
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
               />
               <span>to</span>
               <input 
                 type="date" 
-                className="flex-1 bg-surface-high border border-border rounded-sm p-[6px] text-text text-[12px] outline-none focus:border-primary" 
+                className="date-input" 
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
               />
@@ -97,7 +94,7 @@ export function DateRangeFilter({ onRangeChange }: DateRangeFilterProps) {
             <Button 
               size="sm" 
               fullWidth 
-              className="mt-3"
+              style={{ marginTop: '12px' }}
               onClick={handleApply}
               disabled={!customFrom || !customTo}
             >
@@ -106,6 +103,119 @@ export function DateRangeFilter({ onRangeChange }: DateRangeFilterProps) {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .filter-container {
+          position: relative;
+          width: 220px;
+        }
+
+        .filter-trigger {
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+          padding: 10px var(--space-md);
+          background: var(--color-surface-high);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-default);
+          cursor: pointer;
+          color: var(--color-text);
+          font-weight: 500;
+          font-size: 14px;
+          transition: all var(--transition-fast);
+        }
+
+        .filter-trigger:hover {
+          border-color: var(--color-primary);
+        }
+
+        .icon {
+          color: var(--color-primary-light);
+        }
+
+        .chevron {
+          margin-left: auto;
+          transition: transform var(--transition-fast);
+        }
+
+        .chevron.open {
+          transform: rotate(180deg);
+        }
+
+        .filter-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          width: 280px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-lg);
+          z-index: 100;
+          padding: var(--space-sm);
+          animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preset-item {
+          padding: 10px var(--space-md);
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          color: var(--color-text-dim);
+          transition: all var(--transition-fast);
+        }
+
+        .preset-item:hover {
+          background: var(--color-surface-high);
+          color: var(--color-text);
+        }
+
+        .divider {
+          height: 1px;
+          background: var(--color-border);
+          margin: var(--space-sm) 0;
+        }
+
+        .custom-range {
+          padding: var(--space-sm) var(--space-md);
+        }
+
+        .custom-label {
+          display: block;
+          font-size: 12px;
+          color: var(--color-text-muted);
+          margin-bottom: 8px;
+          text-transform: uppercase;
+          font-weight: 600;
+        }
+
+        .inputs {
+          display: flex;
+          align-items: center;
+          gap: var(--space-xs);
+          font-size: 12px;
+          color: var(--color-text-muted);
+        }
+
+        .date-input {
+          flex: 1;
+          background: var(--color-surface-high);
+          border: 1px solid var(--color-border);
+          border-radius: 4px;
+          padding: 6px;
+          color: var(--color-text);
+          font-size: 12px;
+          outline: none;
+        }
+
+        .date-input:focus {
+          border-color: var(--color-primary);
+        }
+      `}</style>
     </div>
   );
 }

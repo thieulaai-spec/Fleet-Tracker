@@ -168,17 +168,16 @@ describe('OrdersService', () => {
   describe('updateStatus', () => {
     it('should allow valid transition PENDING -> ASSIGNED', async () => {
       mockRepository.findOne.mockResolvedValue({ ...mockOrder });
-      const result = await service.updateStatus(
-        'order-1',
-        OrderStatus.ASSIGNED,
-      );
+      const result = await service.updateStatus('order-1', {
+        status: OrderStatus.ASSIGNED,
+      });
       expect(result.status).toBe(OrderStatus.ASSIGNED);
     });
 
     it('should throw BadRequestException for invalid transition PENDING -> DELIVERING', async () => {
       mockRepository.findOne.mockResolvedValue({ ...mockOrder });
       await expect(
-        service.updateStatus('order-1', OrderStatus.DELIVERING),
+        service.updateStatus('order-1', { status: OrderStatus.DELIVERING }),
       ).rejects.toThrow(BadRequestException);
     });
   });

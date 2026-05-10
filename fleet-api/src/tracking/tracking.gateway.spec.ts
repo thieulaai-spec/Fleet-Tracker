@@ -248,6 +248,41 @@ describe('TrackingGateway', () => {
       expect(result.event).toBe('error');
       expect(result.data).toBe('DB Error');
     });
+
+    it('should return numeric timestamp in gps:received event', async () => {
+      const socket = {
+        ...mockSocket,
+        data: { user: { role: 'admin' } },
+      } as any;
+      const data = { tripId: 't1', vehicleId: 'v1', latitude: 1, longitude: 1 };
+      mockTrackingService.processGpsUpdate.mockResolvedValue({});
+
+      const result = await gateway.handleGpsUpdate(socket, data as any);
+
+      expect(result.event).toBe('gps:received');
+      expect(typeof result.data.timestamp).toBe('number');
+      expect(result.data.timestamp).toBeGreaterThan(0);
+    });
+  });
+
+  describe('handleSosAlert', () => {
+    it('should broadcast SOS with numeric timestamp', async () => {
+      const socket = {
+        ...mockSocket,
+        data: { user: { id: 'u1', fullName: 'Driver Name' } },
+      } as any;
+      const data = { tripId: 't1', description: 'Engine fire' };
+
+      const result = await gateway.handleSosAlert(socket, data);
+
+      expect(result.status).toBe('ok');
+      expect(mockServer.to).toHaveBeenCalledWith('admin');
+      expect(mockServer.emit).toHaveBeenCalledWith('alert:new', expect.objectContaining({
+        type: 'SOS',
+        tripId: 't1',
+        timestamp: expect.any(Number),
+      }));
+    });
   });
 
   describe('handleSubscribeTrip', () => {

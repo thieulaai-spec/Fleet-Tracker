@@ -234,25 +234,55 @@ export class ReportsService {
   async getTripSummary(from: Date, to: Date) {
     const trips = await this.tripRepository.find({
       where: { createdAt: Between(from, to) },
-      relations: ['vehicle', 'driver'],
+      relations: ['vehicle', 'driver', 'tripOrders', 'tripOrders.order'],
       order: { createdAt: 'DESC' },
     });
+
+    const tripIds = trips.map((t) => t.id);
+    const unresolvedAlerts = await this.alertRepository
+      .createQueryBuilder('alert')
+      .where('alert.tripId IN (:...tripIds)', { tripIds: tripIds.length ? tripIds : [null] })
+      .andWhere('alert.isResolved = :isResolved', { isResolved: false })
+      .getMany();
+
+    const delayedTripIds = new Set(unresolvedAlerts.map((a) => a.tripId));
 
     return {
       totalTrips: trips.length,
       activeTrips: trips.filter((t) => t.status === TripStatus.IN_PROGRESS).length,
-      delayedTrips: 0,
-      trips: trips.map((t) => ({
-        id: t.id,
-        date: t.createdAt.toISOString().split('T')[0],
-        vehiclePlate: t.vehicle?.plateNumber || 'N/A',
-        driverName: t.driver?.fullName || 'N/A',
-        status: t.status,
-        distance: t.totalDistanceKm,
-        duration: 'N/A', // Calculated if needed
-        startLocation: 'N/A',
-        endLocation: 'N/A',
-      })),
+      delayedTrips: delayedTripIds.size,
+      trips: trips.map((t) => {
+        const sortedOrders = (t.tripOrders || []).sort(
+          (a, b) => a.sequence - b.sequence,
+        );
+        const startOrder = sortedOrders[0]?.order;
+        const endOrder = sortedOrders[sortedOrders.length - 1]?.order;
+
+        let duration = 'N/A';
+        if (t.startedAt && t.completedAt) {
+          const diffMs = t.completedAt.getTime() - t.startedAt.getTime();
+          const hours = Math.floor(diffMs / (1000 * 60 * 60));
+          const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          duration = `${hours}h ${minutes}m`;
+        } else if (t.startedAt && t.status === TripStatus.IN_PROGRESS) {
+          const diffMs = Date.now() - t.startedAt.getTime();
+          const hours = Math.floor(diffMs / (1000 * 60 * 60));
+          const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          duration = `${hours}h ${minutes}m (active)`;
+        }
+
+        return {
+          id: t.id,
+          date: t.createdAt.toISOString().split('T')[0],
+          vehiclePlate: t.vehicle?.plateNumber || 'N/A',
+          driverName: t.driver?.fullName || 'N/A',
+          status: t.status,
+          distance: parseFloat(t.totalDistanceKm as any || 0),
+          duration,
+          startLocation: startOrder?.pickupAddress || 'N/A',
+          endLocation: endOrder?.deliveryAddress || 'N/A',
+        };
+      }),
     };
   }
 }

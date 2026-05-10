@@ -144,7 +144,7 @@ Token phải được gửi qua `auth.token` trong handshake.
 ### Events Emitted (Client -> Server):
 
 #### `gps:update`
-Cập nhật GPS. Server thực hiện debouncing (5s) và kiểm tra tính hợp lệ của trip/vehicle.
+Cập nhật GPS đơn lẻ. Server thực hiện debouncing (5s) và kiểm tra tính hợp lệ của trip/vehicle.
 **Payload:**
 ```json
 {
@@ -157,6 +157,13 @@ Cập nhật GPS. Server thực hiện debouncing (5s) và kiểm tra tính hợ
   "timestamp": 1651854000000
 }
 ```
+
+#### `gps:batch_update`
+Cập nhật GPS theo lô (Batch). Dùng khi tài xế có kết nối trở lại sau khi offline để đồng bộ toàn bộ lịch sử di chuyển.
+**Payload:** `GpsUpdateDto[]` (Mảng các object tương tự `gps:update`).
+
+**Response Event:** `gps:batch_received`
+**Payload:** `{ count: number, timestamp: number }`
 
 #### `subscribe:trip`
 Đăng ký nhận cập nhật cho một chuyến đi cụ thể.

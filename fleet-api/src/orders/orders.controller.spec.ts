@@ -93,10 +93,7 @@ describe('OrdersController', () => {
     it('should update order status', async () => {
       const dto = { status: OrderStatus.ASSIGNED };
       expect(await controller.updateStatus('o1', dto)).toEqual(mockOrder);
-      expect(service.updateStatus).toHaveBeenCalledWith(
-        'o1',
-        OrderStatus.ASSIGNED,
-      );
+      expect(service.updateStatus).toHaveBeenCalledWith('o1', dto);
     });
   });
 

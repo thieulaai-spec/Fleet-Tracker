@@ -60,7 +60,7 @@ interface TripState {
   acceptTrip: (id: string) => Promise<void>;
   rejectTrip: (id: string) => Promise<void>;
   updateTripStatus: (id: string, status: TripStatus) => Promise<void>;
-  updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
+  updateOrderStatus: (id: string, status: OrderStatus, photoUrl?: string, signatureUrl?: string) => Promise<void>;
 }
 
 export const useTripStore = create<TripState>()(
@@ -217,17 +217,19 @@ export const useTripStore = create<TripState>()(
         }
       },
 
-      updateOrderStatus: async (id: string, status: OrderStatus) => {
+      updateOrderStatus: async (id: string, status: OrderStatus, photoUrl?: string, signatureUrl?: string) => {
         set({ isLoading: true, error: null });
         try {
-          const { token } = useAuthStore.getState();
+          const token = useAuthStore.getState()?.token;
+          if (!token) throw new Error('Authentication token not found');
+
           const response = await fetch(`${API_URL}/orders/${id}/status`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ status }),
+            body: JSON.stringify({ status, photoUrl, signatureUrl }),
           });
 
           if (!response.ok) {

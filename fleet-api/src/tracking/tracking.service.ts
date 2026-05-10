@@ -96,7 +96,7 @@ export class TrackingService implements OnModuleDestroy {
     });
     this.gpsBuffer.push(gpsLocation);
 
-    // 3. Update Vehicle's last known location (using Parameterized Query to prevent SQL Injection)
+    // 3. Update Vehicle's last known location
     await this.vehicleRepository
       .createQueryBuilder()
       .update(Vehicle)
@@ -126,6 +126,67 @@ export class TrackingService implements OnModuleDestroy {
       heading,
       timestamp,
     };
+  }
+
+  async processGpsBatch(data: GpsUpdateDto[]) {
+    if (!data || data.length === 0) return [];
+    
+    this.logger.log(`Processing batch of ${data.length} GPS points`);
+    
+    const results: any[] = [];
+    
+    // For batch updates, we process them but maybe skip some heavy logic 
+    // or optimize the vehicle update to only the latest point.
+    const latestPoint = data[data.length - 1];
+    
+    for (const pointData of data) {
+      const {
+        vehicleId,
+        tripId,
+        latitude,
+        longitude,
+        speed,
+        heading,
+        timestamp,
+      } = pointData;
+
+      // Add to buffer
+      const gpsLocation = this.gpsRepository.create({
+        vehicleId,
+        tripId,
+        location: {
+          type: 'Point',
+          coordinates: [longitude, latitude],
+        },
+        speedKmh: speed,
+        heading,
+        recordedAt: new Date(timestamp),
+      });
+      this.gpsBuffer.push(gpsLocation);
+      
+      results.push({
+        vehicleId,
+        tripId,
+        latitude,
+        longitude,
+        speed,
+        heading,
+        timestamp,
+      });
+    }
+    
+    // Update vehicle to the latest position only
+    await this.vehicleRepository
+      .createQueryBuilder()
+      .update(Vehicle)
+      .set({
+        lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
+      })
+      .where('id = :vehicleId', { vehicleId: latestPoint.vehicleId })
+      .setParameters({ lng: latestPoint.longitude, lat: latestPoint.latitude })
+      .execute();
+
+    return results;
   }
 
   async getVehicleHistory(vehicleId: string, from?: Date, to?: Date) {

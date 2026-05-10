@@ -50,9 +50,32 @@ export default function ProfileScreen() {
     : 100;
   
   const totalDistance = tripHistory.reduce((acc, trip) => acc + (trip.totalDistanceKm || 0), 0);
-  // Simulate avg speed based on total distance and a reasonable factor, 
-  // or just use a stable but professional looking number
-  const avgSpeed = tripHistory.length > 0 ? (38.5 + (Math.random() * 5)).toFixed(1) : 0;
+  
+  // Calculate real avg speed based on completed trips duration and distance
+  const calculateAvgSpeed = () => {
+    if (completedTrips.length === 0) return 0;
+    
+    let totalHours = 0;
+    let distanceWithTime = 0;
+    
+    completedTrips.forEach(trip => {
+      if (trip.startedAt && trip.completedAt) {
+        const start = new Date(trip.startedAt).getTime();
+        const end = new Date(trip.completedAt).getTime();
+        const durationHours = (end - start) / (1000 * 60 * 60);
+        
+        if (durationHours > 0) {
+          totalHours += durationHours;
+          distanceWithTime += (trip.totalDistanceKm || 0);
+        }
+      }
+    });
+    
+    if (totalHours === 0) return 0;
+    return (distanceWithTime / totalHours).toFixed(1);
+  };
+
+  const avgSpeed = calculateAvgSpeed();
 
   const stats = [
     { label: 'Completed', value: completedTrips.length, icon: Trophy, color: '#fbbf24' },

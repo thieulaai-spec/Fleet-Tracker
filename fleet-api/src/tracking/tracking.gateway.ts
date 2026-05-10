@@ -145,7 +145,7 @@ export class TrackingGateway
       tripId,
       driverId: userId,
       location: location || null,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
     });
 
     return { status: 'ok', message: 'SOS received and dispatch notified' };
@@ -189,10 +189,42 @@ export class TrackingGateway
 
       return {
         event: 'gps:received',
-        data: { timestamp: new Date().toISOString() },
+        data: { timestamp: Date.now() },
       };
     } catch (error) {
       this.logger.error(`Error processing GPS update: ${error.message}`);
+      return { event: 'error', data: error.message };
+    }
+  }
+
+  @SubscribeMessage('gps:batch_update')
+  async handleGpsBatchUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: GpsUpdateDto[],
+  ) {
+    if (!data || data.length === 0) return { status: 'ok' };
+    
+    const user = client.data.user;
+    if (user.role !== 'driver' && user.role !== 'admin') {
+      return { event: 'error', data: 'Unauthorized' };
+    }
+
+    try {
+      const results = await this.trackingService.processGpsBatch(data);
+      
+      // Broadcast the LATEST location to admins to keep dashboard snappy
+      if (results.length > 0) {
+        const latest: any = results[results.length - 1];
+        this.server.to('admin').emit('vehicle:location', latest);
+        this.server.to(`trip:${latest.tripId}`).emit('trip:location', latest);
+      }
+
+      return {
+        event: 'gps:batch_received',
+        data: { count: results.length, timestamp: Date.now() },
+      };
+    } catch (error) {
+      this.logger.error(`Error processing batch GPS update: ${error.message}`);
       return { event: 'error', data: error.message };
     }
   }

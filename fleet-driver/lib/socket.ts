@@ -117,15 +117,15 @@ class SocketService {
 
     console.log(`[Sync] Syncing ${points.length} offline GPS points...`);
 
-    // Emit points in batches or sequentially
-    // To ensure order and avoid overwhelming the server, we send them one by one
-    // In a production app, we might use a single batch event
-    for (const point of points) {
-      this.socket.emit('gps:update', point);
-    }
-
-    await offlineQueue.clear();
-    console.log('[Sync] Offline data synced successfully');
+    // Use batch update to optimize network and server processing
+    this.socket.emit('gps:batch_update', points, (ack: any) => {
+      if (ack?.event !== 'error') {
+        console.log('[Sync] Offline data synced successfully');
+        offlineQueue.clear();
+      } else {
+        console.error('[Sync] Batch sync failed:', ack.data);
+      }
+    });
   }
 
   getSocket() {

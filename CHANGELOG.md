@@ -12,8 +12,18 @@
         - Hiển thị trạng thái kết nối (Connection Awareness) trực quan.
         - Tối ưu hóa hiệu suất Map rendering trên thiết bị di động.
 - **Backend (API)**:
+    - Triển khai `gps:batch_update` socket handler để hỗ trợ đồng bộ vị trí số lượng lớn.
     - Bổ sung `sos:alert` handler trong `TrackingGateway` để điều hướng cảnh báo khẩn cấp.
     - Cập nhật `AlertsModule` hỗ trợ báo cáo sự cố chi tiết từ tài xế.
+
+### Changed
+- **Mobile (Driver App)**:
+    - Nâng cấp cơ chế Offline Sync: Sử dụng sự kiện `gps:batch_update` để gửi toàn bộ dữ liệu vị trí trong queue chỉ với một request.
+    - Cải thiện **Proof of Delivery (POD)**:
+        - Sử dụng `expo-file-system` để lưu trữ tạm thời chữ ký, khắc phục lỗi hiển thị trên Android.
+        - Fix logic hoàn tất chuyến đi: Chỉ đóng chuyến đi khi *tất cả* đơn hàng đã được giao và ký nhận.
+        - Khắc phục lỗi build TypeScript v18 của `expo-file-system`.
+    - Profile: Thay thế `Math.random()` bằng các phép tính tốc độ thực tế từ lịch sử di chuyển.
 
 ### Fixed
 - Build: Khắc phục triệt để lỗi TypeScript config và JSX resolution trên Expo.

@@ -4,8 +4,9 @@ import SignatureScreen, { SignatureViewRef } from 'react-native-signature-canvas
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, Check, RotateCcw } from 'lucide-react-native';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useTripStore, TripStatus } from '@/store/useTripStore';
+import { useTripStore, TripStatus, OrderStatus } from '@/store/useTripStore';
 import Toast from 'react-native-toast-message';
+import { cacheDirectory, writeAsStringAsync, EncodingType, deleteAsync } from 'expo-file-system/legacy';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -15,20 +16,28 @@ export default function SignatureCapture() {
   const router = useRouter();
   const { orderId, tripId, photoUrl } = useLocalSearchParams();
   const { token } = useAuthStore();
-  const { updateTripStatus } = useTripStore();
+  const { updateTripStatus, updateOrderStatus, activeTrip } = useTripStore();
 
   const handleSignature = async (signature: string) => {
     if (!orderId) return;
     
     setIsUploading(true);
     try {
-      // 1. Upload signature image
+      // 1. Save base64 signature to a temporary file (better for Android compatibility)
+      const filename = `signature_${orderId}_${Date.now()}.png`;
+      const path = `${cacheDirectory}${filename}`;
+      const base64Data = signature.replace('data:image/png;base64,', '');
+      
+      await writeAsStringAsync(path, base64Data, {
+        encoding: EncodingType.Base64,
+      });
+
+      // 2. Upload signature image
       const formData = new FormData();
-      // signature is a base64 string
       // @ts-ignore
       formData.append('file', {
-        uri: signature,
-        name: `signature_${orderId}.png`,
+        uri: path,
+        name: filename,
         type: 'image/png',
       });
 
@@ -44,28 +53,27 @@ export default function SignatureCapture() {
       if (!uploadRes.ok) throw new Error('Failed to upload signature');
       const { url: signatureUrl } = await uploadRes.json();
 
-      // 2. Finalize order and trip status
-      // In this simple version, we update the whole trip to COMPLETED when the last order is signed
-      // or we can just update the order status if we had per-order status updates in the UI.
-      // For now, let's update the trip status with the collected data.
-      
-      await fetch(`${API_URL}/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ 
-          status: 'delivered',
-          photoUrl: photoUrl,
-          signatureUrl: signatureUrl
-        }),
-      });
+      // 3. Finalize order status via store method
+      await updateOrderStatus(
+        orderId as string, 
+        OrderStatus.DELIVERED, 
+        photoUrl as string, 
+        signatureUrl
+      );
 
-      // If this was the last order, complete the trip
-      // For this MVP, we'll just assume completing an order completes the trip if requested
-      if (tripId) {
-        await updateTripStatus(tripId as string, TripStatus.COMPLETED);
+      // 4. Check if all orders in the trip are delivered before completing the trip
+      if (tripId && activeTrip && activeTrip.id === tripId) {
+        // We use the updated state from the store if possible, 
+        // but since updateOrderStatus calls fetchTrips, activeTrip might be updated.
+        // However, to be safe, let's check the current activeTrip orders.
+        // NOTE: In a real app, you might want to wait for the store to update or check the result.
+        const remainingOrders = activeTrip.orders.filter(
+          o => o.id !== orderId && o.status !== OrderStatus.DELIVERED
+        );
+
+        if (remainingOrders.length === 0) {
+          await updateTripStatus(tripId as string, TripStatus.COMPLETED);
+        }
       }
 
       Toast.show({
@@ -76,6 +84,9 @@ export default function SignatureCapture() {
       
       router.dismissAll();
       router.replace('/(tabs)');
+      
+      // Cleanup temp file
+      await deleteAsync(path, { idempotent: true });
     } catch (error: any) {
       Toast.show({
         type: 'error',

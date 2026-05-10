@@ -65,13 +65,13 @@ export default function FuelCostPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-(--space-xl)">
-      <div className="flex justify-between items-center">
+    <div className="fuel-reports">
+      <div className="action-bar">
         <DateRangeFilter onRangeChange={setDateRange} />
         <ExportActions reportName="fuel_cost" params={dateRange} />
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-(--space-lg)">
+      <div className="stats-grid">
         <StatCard 
           label="Total Fuel Cost" 
           value={`$${(data?.totalCost || 0).toLocaleString()}`} 
@@ -93,7 +93,7 @@ export default function FuelCostPage() {
         />
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-(--space-lg)">
+      <div className="charts-grid">
         <div className="chart-item">
           <ReportChartWrapper 
             title="Fuel Cost by Vehicle Type" 
@@ -150,10 +150,10 @@ export default function FuelCostPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-(--space-md) bg-surface border border-border rounded-(--radius-lg) p-(--space-lg)">
+      <div className="table-section">
         <header className="section-header">
-          <h2 className="text-xl font-bold text-text">Vehicle Fuel Efficiency</h2>
-          <p className="text-sm text-(--color-text-dim)">Detailed cost and consumption per vehicle</p>
+          <h2>Vehicle Fuel Efficiency</h2>
+          <p>Detailed cost and consumption per vehicle</p>
         </header>
         <DataTable 
           data={data?.vehicleFuelStats || []} 
@@ -161,6 +161,52 @@ export default function FuelCostPage() {
           columns={columns}
         />
       </div>
+
+      <style jsx>{`
+        .fuel-reports {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xl);
+        }
+
+        .action-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: var(--space-lg);
+        }
+
+        .charts-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          gap: var(--space-lg);
+        }
+
+        .table-section {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-md);
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          padding: var(--space-lg);
+        }
+
+        .section-header h2 {
+          font: var(--font-h3);
+          color: var(--color-text);
+        }
+
+        .section-header p {
+          font: var(--font-body-sm);
+          color: var(--color-text-dim);
+        }
+      `}</style>
     </div>
   );
 }

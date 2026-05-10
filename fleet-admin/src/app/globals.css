@@ -1,12 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import "tailwindcss";
+/* ===== FleetTracker Design System ===== */
+/* Based on: Fleet Intelligence System (Stitch) */
 
-@theme {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* === Colors === */
   --color-primary: #6366f1;
   --color-primary-container: #8083ff;
   --color-primary-light: #c0c1ff;
   --color-primary-hover: #4f46e5;
-  --color-primary-dark: #3730a3;
 
   --color-secondary: #0ea5e9;
   --color-secondary-light: #89ceff;
@@ -42,45 +44,48 @@
   --color-error: #ffb4ab;
   --color-error-container: #93000a;
 
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
+  /* === Typography === */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* Radius */
-  --radius-sm: 0.25rem;
-  --radius-default: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  --font-h1: 700 30px/38px var(--font-family);
+  --font-h2: 600 24px/32px var(--font-family);
+  --font-h3: 600 20px/28px var(--font-family);
+  --font-body-lg: 400 16px/24px var(--font-family);
+  --font-body-md: 400 14px/20px var(--font-family);
+  --font-label-sm: 500 12px/16px var(--font-family);
+  --font-mono-data: 600 14px/20px var(--font-family);
 
-  /* Shadows */
+  /* === Spacing === */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* === Border Radius === */
+  --radius-sm: 4px;
+  --radius-default: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* === Shadows === */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
 
-  /* Typography */
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  
-  /* Layout */
+  /* === Layout === */
   --sidebar-width: 260px;
   --header-height: 72px;
 
-  /* Transitions */
+  /* === Transitions === */
   --transition-fast: 150ms ease-out;
   --transition-normal: 200ms ease-in-out;
   --transition-slow: 300ms ease-in-out;
 }
-
-:root {
-  --color-background: #051424;
-  --color-text: #d4e4fa;
-}
-
 
 /* ===== Base Reset ===== */
 *,
@@ -118,167 +123,220 @@ a {
 a:hover { color: var(--color-primary); }
 
 /* ===== Buttons ===== */
-@utility btn {
-  @apply inline-flex items-center justify-center gap-sm px-5 py-2.5 border-none rounded-default font-medium cursor-pointer transition-all duration-150 ease-out;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-default);
   font: var(--font-body-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-@utility btn-primary {
-  @apply bg-primary text-white hover:bg-primary-hover hover:shadow-glow;
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  box-shadow: var(--shadow-glow);
 }
 
-@utility btn-secondary {
-  @apply bg-transparent text-text border border-outline-variant hover:bg-surface-high hover:border-outline;
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-outline-variant);
+}
+.btn-secondary:hover {
+  background: var(--color-surface-high);
+  border-color: var(--color-outline);
 }
 
-@utility btn-danger {
-  @apply bg-transparent text-danger border border-[rgba(239,68,68,0.3)] hover:bg-[rgba(239,68,68,0.1)];
+.btn-danger {
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
 
-@utility btn-sm {
-  @apply px-3 py-1.5 text-[12px];
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
-@utility btn-lg {
-  @apply px-7 py-3.5 text-[16px];
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 16px;
 }
 
 /* ===== Cards ===== */
-@utility card {
-  @apply bg-surface border border-border rounded-md p-lg transition-all duration-200 ease-in-out hover:border-outline-variant;
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  transition: all var(--transition-normal);
+}
+.card:hover {
+  border-color: var(--color-outline-variant);
 }
 
 /* ===== Stat Cards ===== */
-@utility stat-card {
-  @apply bg-surface border border-border rounded-md p-lg flex flex-col gap-sm;
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
-@utility stat-value {
-  @apply tracking-tight;
+.stat-card .stat-value {
   font: var(--font-h1);
+  letter-spacing: -0.02em;
 }
 
-@utility stat-label {
-  @apply text-text-muted uppercase tracking-widest text-[10px] font-semibold;
+.stat-card .stat-label {
+  font: var(--font-label-sm);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ===== Badges ===== */
-@utility badge {
-  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-semibold text-[11px];
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font: var(--font-label-sm);
+  font-weight: 600;
 }
 
-@utility badge-success {
-  @apply bg-[rgba(34,197,94,0.15)] text-tertiary-light;
+.badge-success {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--color-tertiary-light);
 }
-
-@utility badge-primary {
-  @apply bg-[rgba(99,102,241,0.15)] text-primary-light;
+.badge-primary {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-primary-light);
 }
-
-@utility badge-warning {
-  @apply bg-[rgba(245,158,11,0.15)] text-warning;
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
 }
-
-@utility badge-danger {
-  @apply bg-[rgba(239,68,68,0.15)] text-danger;
+.badge-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
 }
-
-@utility badge-neutral {
-  @apply bg-[rgba(144,143,160,0.15)] text-text-muted;
+.badge-neutral {
+  background: rgba(144, 143, 160, 0.15);
+  color: var(--color-text-muted);
 }
 
 /* ===== Data Tables ===== */
-@utility data-table {
-  @apply w-full border-collapse;
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
 }
-
-@utility table-header {
-  @apply uppercase tracking-widest text-text-muted p-sm text-left border-b border-outline-variant text-[11px] font-semibold;
+.data-table thead th {
+  font: var(--font-label-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-outline-variant);
 }
-
-@utility table-cell {
-  @apply p-md border-b border-border;
+.data-table tbody td {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
   font: var(--font-body-md);
 }
-
-@utility table-row {
-  @apply transition-colors duration-150 ease-out hover:bg-surface-high;
+.data-table tbody tr {
+  transition: background var(--transition-fast);
+}
+.data-table tbody tr:hover {
+  background: var(--color-surface-high);
 }
 
 /* ===== Form Inputs ===== */
-@utility input {
-  @apply w-full px-3.5 py-2.5 bg-surface-low border border-outline-variant rounded-default text-text outline-none transition-all duration-150 ease-out focus:border-primary focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)] placeholder:text-text-dim;
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--color-surface-low);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-default);
+  color: var(--color-text);
   font: var(--font-body-md);
+  transition: all var(--transition-fast);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+.input::placeholder {
+  color: var(--color-text-dim);
 }
 
-@utility select {
-  @apply appearance-none bg-no-repeat pr-9;
+.select {
+  appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23908fa0' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
   background-position: right 12px center;
+  padding-right: 36px;
 }
 
 /* ===== Glassmorphism ===== */
-@utility glass {
-  @apply bg-[rgba(18,33,49,0.7)] backdrop-blur-xl border border-border;
+.glass {
+  background: rgba(18, 33, 49, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
 }
 
 /* ===== Alert Items ===== */
-@utility alert-item {
-  @apply p-md border-l-[3px] rounded-r-default bg-surface mb-sm;
+.alert-item {
+  padding: var(--space-md);
+  border-left: 3px solid;
+  border-radius: 0 var(--radius-default) var(--radius-default) 0;
+  background: var(--color-surface);
+  margin-bottom: var(--space-sm);
 }
-
-@utility alert-speed { @apply border-l-danger; }
-@utility alert-route { @apply border-l-warning; }
-@utility alert-stop { @apply border-l-info; }
-@utility alert-incident { @apply border-l-danger; }
+.alert-item.alert-speed { border-left-color: var(--color-danger); }
+.alert-item.alert-route { border-left-color: var(--color-warning); }
+.alert-item.alert-stop { border-left-color: #f97316; }
+.alert-item.alert-incident { border-left-color: var(--color-danger); }
 
 /* ===== Scrollbar ===== */
-@layer base {
-  ::-webkit-scrollbar {
-    @apply w-1.5 h-1.5;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-surface-low;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-outline-variant rounded-full hover:bg-outline;
-  }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-low);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline);
 }
 
-/* ===== Utility Classes (Legacy cleanup) ===== */
-@utility text-muted { @apply text-text-muted; }
-@utility text-dim { @apply text-text-dim; }
-@utility text-primary-themed { @apply text-primary-light; }
-@utility text-success-themed { @apply text-tertiary-light; }
-@utility text-warning-themed { @apply text-warning; }
-
-/* ===== Animations ===== */
-@keyframes modal-in {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes pulse-glow {
-  0% { filter: drop-shadow(0 0 2px currentColor); }
-  50% { filter: drop-shadow(0 0 10px currentColor); }
-  100% { filter: drop-shadow(0 0 2px currentColor); }
-}
-
-@utility animate-modal-in {
-  animation: modal-in 0.2s ease-out;
-}
-
-@utility animate-pulse-glow {
-  animation: pulse-glow 2s infinite;
-}
-
-@keyframes dash {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@utility animate-dash {
-  animation: dash 20s linear infinite;
-}
-
+/* ===== Utility Classes ===== */
+.text-muted { color: var(--color-text-muted); }
+.text-dim { color: var(--color-text-dim); }
+.text-primary { color: var(--color-primary-light); }
+.text-success { color: var(--color-tertiary-light); }
+.text-warning { color: var(--color-warning); }
+.text-danger { color: var(--color-danger); }

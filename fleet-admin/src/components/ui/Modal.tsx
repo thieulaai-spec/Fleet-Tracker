@@ -13,57 +13,101 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const sizeClasses = {
-  sm: 'max-w-[400px]',
-  md: 'max-w-[600px]',
-  lg: 'max-w-[800px]',
-  xl: 'max-w-[1000px]',
-};
-
 export function Modal({ isOpen, onClose, title, children, footer, size = 'md' }: ModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-1000 p-4" 
-      onClick={onClose}
-    >
+    <div className="modal-overlay" onClick={onClose}>
       <div 
-        className={`
-          bg-surface border border-border rounded-2xl 
-          flex flex-col max-h-[90vh] w-full shadow-2xl 
-          animate-modal-in 
-          ${sizeClasses[size]}
-        `.trim()} 
+        className={`modal-content size-${size}`} 
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        <header className="p-6 border-b border-border flex justify-between items-center">
-          <h3 id="modal-title" className="text-xl font-semibold text-text">
-            {title}
-          </h3>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            icon={<X size={20} />} 
-            onClick={onClose} 
-            aria-label="Close modal" 
-          />
+        <header className="modal-header">
+          <h3 id="modal-title">{title}</h3>
+          <Button variant="ghost" size="sm" icon={<X size={20} />} onClick={onClose} aria-label="Close modal" />
         </header>
         
-        <div className="p-6 overflow-y-auto">
+        <div className="modal-body">
           {children}
         </div>
 
         {footer && (
-          <footer className="p-6 border-t border-border flex justify-end gap-4 bg-surface-low rounded-b-2xl">
+          <footer className="modal-footer">
             {footer}
           </footer>
         )}
       </div>
+
+      <style jsx>{`
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: var(--space-md);
+        }
+
+        .modal-content {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          display: flex;
+          flex-direction: column;
+          max-height: 90vh;
+          width: 100%;
+          box-shadow: var(--shadow-xl);
+          animation: modal-in 0.2s ease-out;
+        }
+
+        .size-sm { max-width: 400px; }
+        .size-md { max-width: 600px; }
+        .size-lg { max-width: 800px; }
+        .size-xl { max-width: 1000px; }
+
+        @keyframes modal-in {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+          padding: var(--space-lg);
+          border-bottom: 1px solid var(--color-border);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .modal-header h3 {
+          font: var(--font-h3);
+          margin: 0;
+        }
+
+        .modal-body {
+          padding: var(--space-lg);
+          overflow-y: auto;
+        }
+
+        .modal-footer {
+          padding: var(--space-lg);
+          border-top: 1px solid var(--color-border);
+          display: flex;
+          justify-content: flex-end;
+          gap: var(--space-md);
+          background: var(--color-surface-low);
+          border-bottom-left-radius: var(--radius-lg);
+          border-bottom-right-radius: var(--radius-lg);
+        }
+      `}</style>
     </div>
   );
 }
-

@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 
@@ -16,29 +18,90 @@ interface StatCardProps {
 
 export function StatCard({ label, value, icon: Icon, trend, color = 'var(--color-primary)' }: StatCardProps) {
   return (
-    <div className="bg-surface border border-border rounded-xl p-6 flex flex-col gap-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-outline-variant">
-      <div className="flex justify-between items-start">
-        <div 
-          className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center"
-          style={{ color: color }}
-        >
+    <div className="stat-card">
+      <div className="stat-header">
+        <div className="stat-icon-wrapper" style={{ color: color }}>
           <Icon size={24} />
         </div>
         {trend && (
-          <div className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${
-            trend.isUp 
-              ? 'bg-success/10 text-success' 
-              : 'bg-danger/10 text-danger'
-          }`}>
+          <div className={`stat-trend ${trend.isUp ? 'up' : 'down'}`}>
             {trend.isUp ? '↑' : '↓'} {Math.abs(trend.value)}%
           </div>
         )}
       </div>
-      <div className="flex flex-col">
-        <span className="text-[11px] font-semibold text-text-dim uppercase tracking-wider">{label}</span>
-        <h3 className="text-2xl font-bold text-text mt-1">{value}</h3>
+      <div className="stat-content">
+        <span className="stat-label">{label}</span>
+        <h3 className="stat-value">{value}</h3>
       </div>
-    </div>
 
+      <style jsx>{`
+        .stat-card {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          padding: var(--space-lg);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-md);
+          transition: transform var(--transition-fast), border-color var(--transition-fast);
+        }
+
+        .stat-card:hover {
+          transform: translateY(-2px);
+          border-color: var(--color-outline-variant);
+        }
+
+        .stat-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+
+        .stat-icon-wrapper {
+          width: 48px;
+          height: 48px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: var(--radius-default);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .stat-trend {
+          font-size: 12px;
+          font-weight: 600;
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .stat-trend.up {
+          background: rgba(34, 197, 94, 0.1);
+          color: var(--color-success);
+        }
+
+        .stat-trend.down {
+          background: rgba(239, 68, 68, 0.1);
+          color: var(--color-danger);
+        }
+
+        .stat-content {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .stat-label {
+          font: var(--font-label-sm);
+          color: var(--color-text-dim);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+          font: var(--font-h2);
+          color: var(--color-text);
+          margin-top: 4px;
+        }
+      `}</style>
+    </div>
   );
 }

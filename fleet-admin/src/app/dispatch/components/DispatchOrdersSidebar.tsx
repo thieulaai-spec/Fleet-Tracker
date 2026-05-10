@@ -36,79 +36,142 @@ export function DispatchOrdersSidebar({
   groups,
 }: DispatchOrdersSidebarProps) {
   return (
-    <aside className="bg-surface border border-border rounded-xl flex flex-col overflow-hidden">
-      <div className="p-4 border-b border-border flex justify-between items-center bg-surface-low">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-text-dim">Pending Orders</h3>
+    <aside className="dispatch-sidebar orders-list">
+      <div className="sidebar-header">
+        <h3>Pending Orders</h3>
         <Badge variant="warning">{pendingOrderCount}</Badge>
       </div>
-      <div className="flex-1 overflow-y-auto flex flex-col">
+      <div className="sidebar-content">
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <LoadingSpinner size={24} />
           </div>
+        ) : groups.length === 0 ? (
+          <div className="text-center py-8 text-dim">No pending orders</div>
         ) : (
-          <div className="p-4 space-y-4">
-            <div className="w-full">
+          <>
+            <div className="dispatch-search">
               <SearchInput
                 placeholder="Search pending orders..."
                 value={searchQuery}
                 onChange={(event) => onSearchQueryChange(event.target.value)}
               />
             </div>
-            
-            {groups.length === 0 ? (
-              <div className="text-center py-8 text-(--color-text-dim) text-sm">No pending orders</div>
-            ) : (
-              <div className="space-y-6">
-                {groups.map((group) => (
-                  <div key={group.key} className="space-y-3">
-                    {clusterView && (
-                      <div className="flex justify-between items-center px-1">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-(--color-text-dim)">{group.label}</span>
-                        <Badge variant="neutral">{group.orders.length}</Badge>
+            {groups.map((group) => (
+              <div key={group.key} className="cluster-group">
+                {clusterView && (
+                  <div className="cluster-header">
+                    <span>{group.label}</span>
+                    <Badge variant="neutral">{group.orders.length}</Badge>
+                  </div>
+                )}
+                {group.orders.map((order) => (
+                  <div
+                    key={order.id}
+                    className={`dispatch-card ${selectedOrder === order.id ? 'selected' : ''}`}
+                    onClick={() => onSelectOrder(order.id)}
+                  >
+                    <div className="card-header">
+                      <span className="order-id">{order.id.split('-')[0]}</span>
+                      <span className="order-weight">{order.weightKg}kg</span>
+                    </div>
+                    <div className="order-route">
+                      <div className="point">
+                        <MapPin size={12} className="text-primary" />
+                        <span>{order.pickupAddress}</span>
                       </div>
-                    )}
-                    <div className="space-y-2">
-                      {group.orders.map((order) => (
-                        <div
-                          key={order.id}
-                          className={`
-                            bg-surface-low border rounded-lg p-3 cursor-pointer transition-all 
-                            hover:border-primary-light hover:bg-surface-high
-                            ${selectedOrder === order.id ? 'border-primary bg-primary/5 shadow-[0_0_0_1px_var(--color-primary)]' : 'border-border'}
-                          `.trim()}
-                          onClick={() => onSelectOrder(order.id)}
-                        >
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-bold text-primary-light text-sm">{order.id.split('-')[0]}</span>
-                            <span className="text-[11px] text-text-dim font-medium">{order.weightKg}kg</span>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="flex items-center gap-1.5 text-[11px] text-text truncate max-w-27.5">
-                              <MapPin size={12} className="text-primary shrink-0" />
-                              <span className="truncate">{order.pickupAddress}</span>
-                            </div>
-                            <ChevronRight size={14} className="text-text-dim shrink-0" />
-                            <div className="flex items-center gap-1.5 text-[11px] text-text truncate max-w-27.5">
-                              <MapPin size={12} className="text-success shrink-0" />
-                              <span className="truncate">{order.deliveryAddress}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="pt-2 border-t border-border">
-                            <Button variant="ghost" size="sm" fullWidth className="h-7 text-xs">Details</Button>
-                          </div>
-                        </div>
-                      ))}
+                      <ChevronRight size={14} className="text-dim" />
+                      <div className="point">
+                        <MapPin size={12} className="text-success" />
+                        <span>{order.deliveryAddress}</span>
+                      </div>
+                    </div>
+                    <div className="card-footer">
+                      <Button variant="ghost" size="sm">Details</Button>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            ))}
+          </>
         )}
       </div>
+
+      <style jsx>{`
+        .dispatch-search {
+          margin-bottom: var(--space-sm);
+        }
+
+        .dispatch-search :global(.search-input-group) {
+          width: 100%;
+        }
+
+        .cluster-group {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-sm);
+        }
+
+        .cluster-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font: var(--font-label-sm);
+          color: var(--color-text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .dispatch-card {
+          background: var(--color-surface-low);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-default);
+          padding: var(--space-md);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .dispatch-card:hover {
+          border-color: var(--color-primary-light);
+          background: var(--color-surface-high);
+        }
+
+        .dispatch-card.selected {
+          border-color: var(--color-primary);
+          background: rgba(99, 102, 241, 0.05);
+          box-shadow: 0 0 0 1px var(--color-primary);
+        }
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: var(--space-sm);
+        }
+
+        .order-id { font-weight: 700; color: var(--color-primary-light); }
+        .order-weight { font-size: 12px; color: var(--color-text-dim); }
+
+        .order-route {
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+          margin-bottom: var(--space-sm);
+        }
+
+        .point { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--color-text); }
+
+        .card-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: var(--space-sm);
+          border-top: 1px solid var(--color-border);
+          padding-top: var(--space-sm);
+        }
+
+        .customer-name { font-size: 12px; font-weight: 500; }
+      `}</style>
     </aside>
   );
 }

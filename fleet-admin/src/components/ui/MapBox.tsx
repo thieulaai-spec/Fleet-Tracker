@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Navigation } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 
 interface Coordinate {
   lat: number;
@@ -36,47 +36,151 @@ export function MapBox({
   className = "" 
 }: MapBoxProps) {
   return (
-    <div className={`
-      relative bg-[#0f172a] min-h-75 w-full overflow-hidden flex items-center justify-center rounded-inherit
-      bg-[linear-gradient(rgba(30,41,59,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(30,41,59,0.5)_1px,transparent_1px)]
-      bg-size-[20px_20px]
-      ${className}
-    `.trim()}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(15,23,42,0.8)_100%)] pointer-events-none" />
+    <div className={`map-container ${className}`}>
+      <div className="map-grid-overlay" />
       
       {/* Simulate a path */}
-      <svg className="absolute inset-0 w-full h-full opacity-60" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <svg className="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
         <polyline
           points="20,80 40,60 60,70 80,20"
           fill="none"
           stroke="var(--color-primary)"
           strokeWidth="0.5"
           strokeDasharray="2,1"
-          className="animate-dash"
-          style={{ strokeDashoffset: 100 }}
+          className="animated-path"
         />
       </svg>
 
       {/* Markers */}
-      <div className="absolute transform -translate-x-1/2 -translate-y-full flex flex-col items-center gap-1 z-10" style={{ left: '20%', top: '80%' }}>
-        <div className="w-2.5 h-2.5 rounded-full border-2 border-white shadow-[0_0_10px_rgba(0,0,0,0.5)] bg-primary" />
-        <div className="text-2.5 text-white bg-[#0f172a]/80 px-1.5 py-0.5 rounded border border-white/10 whitespace-nowrap">Start</div>
+      <div className="marker marker-start" style={{ left: '20%', top: '80%' }}>
+        <div className="marker-dot" style={{ background: 'var(--color-primary)' }} />
+        <div className="marker-label">Start</div>
       </div>
       
-      <div className="absolute transform -translate-x-1/2 -translate-y-full flex flex-col items-center gap-1 z-10" style={{ left: '80%', top: '20%' }}>
-        <div className="w-2.5 h-2.5 rounded-full border-2 border-white shadow-[0_0_10px_rgba(0,0,0,0.5)] bg-danger" />
-        <div className="text-2.5 text-white bg-[#0f172a]/80 px-1.5 py-0.5 rounded border border-white/10 whitespace-nowrap">End</div>
+      <div className="marker marker-end" style={{ left: '80%', top: '20%' }}>
+        <div className="marker-dot" style={{ background: 'var(--color-danger)' }} />
+        <div className="marker-label">End</div>
       </div>
 
-      <div className="absolute top-2.5 right-2.5 flex flex-col gap-1">
-        <div className="w-6 h-6 bg-[#1e293b]/90 border border-white/10 text-white flex items-center justify-center rounded cursor-pointer text-base hover:bg-[#1e293b] transition-colors">+</div>
-        <div className="w-6 h-6 bg-[#1e293b]/90 border border-white/10 text-white flex items-center justify-center rounded cursor-pointer text-base hover:bg-[#1e293b] transition-colors">-</div>
+      <div className="map-controls">
+        <div className="control-btn">+</div>
+        <div className="control-btn">-</div>
       </div>
 
-      <div className="absolute bottom-2.5 left-2.5 bg-[#0f172a]/90 px-2 py-1 rounded-full flex items-center gap-1.5 text-[11px] text-[#94a3b8] border border-white/10">
+      <div className="map-status">
         <Navigation size={12} className="text-primary animate-pulse" />
         <span>Live Preview Mode</span>
       </div>
+
+      <style jsx>{`
+        .map-container {
+          position: relative;
+          background: #0f172a;
+          background-image: 
+            linear-gradient(rgba(30, 41, 59, 0.5) 1px, transparent 1px),
+            linear-gradient(90px, rgba(30, 41, 59, 0.5) 1px, transparent 1px);
+          background-size: 20px 20px;
+          min-height: 300px;
+          width: 100%;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: inherit;
+        }
+
+        .map-grid-overlay {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at center, transparent 0%, rgba(15, 23, 42, 0.8) 100%);
+          pointer-events: none;
+        }
+
+        .path-svg {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          opacity: 0.6;
+        }
+
+        .animated-path {
+          stroke-dashoffset: 100;
+          animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        .marker {
+          position: absolute;
+          transform: translate(-50%, -100%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          z-index: 10;
+        }
+
+        .marker-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .marker-label {
+          font-size: 10px;
+          color: white;
+          background: rgba(15, 23, 42, 0.8);
+          padding: 2px 6px;
+          border-radius: 4px;
+          white-space: nowrap;
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .map-controls {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .control-btn {
+          width: 24px;
+          height: 24px;
+          background: rgba(30, 41, 59, 0.9);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+        }
+
+        .map-status {
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          background: rgba(15, 23, 42, 0.9);
+          padding: 4px 8px;
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          color: #94a3b8;
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+      `}</style>
     </div>
   );
 }

@@ -15,48 +15,210 @@ export function Header() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="h-header px-xl flex items-center justify-between sticky top-0 z-90 border-b border-border glass">
-      <div className="flex items-center bg-surface-low border border-outline-variant rounded-default px-md w-100 transition-all duration-150 ease-out focus-within:border-primary focus-within:bg-surface-high focus-within:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]">
-        <Search size={18} className="text-text-dim" />
+    <header className="header glass">
+      <div className="search-container">
+        <Search size={18} className="search-icon" />
         <input 
           type="text" 
           placeholder="Search for vehicles, drivers or orders..." 
-          className="border-none bg-transparent text-text p-2.5 w-full outline-none text-sm"
+          className="search-input"
         />
       </div>
 
-      <div className="flex items-center gap-lg">
-        <button className="bg-transparent border-none text-text-muted flex items-center gap-xs cursor-pointer p-2 rounded-sm transition-all duration-150 ease-out text-xs hover:bg-surface-high hover:text-text" aria-label="Language">
+      <div className="header-actions">
+        <button className="action-btn" aria-label="Language">
           <Globe size={20} />
           <span>EN</span>
         </button>
         
-        <button className="bg-transparent border-none text-text-muted flex items-center gap-xs cursor-pointer p-2 rounded-sm transition-all duration-150 ease-out text-xs hover:bg-surface-high hover:text-text relative" aria-label="Notifications">
+        <button className="action-btn notification-btn" aria-label="Notifications">
           <Bell size={20} />
-          <span className="absolute top-1 right-1 bg-danger text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-surface">3</span>
+          <span className="notification-badge">3</span>
         </button>
 
-        <div className="flex items-center gap-sm bg-surface-low p-1 rounded-default border border-border">
-          <div className="flex items-center gap-md py-1 px-2 rounded-sm cursor-pointer transition-[background] duration-150 ease-out hover:bg-surface-high">
-            <div className="w-9 h-9 bg-surface-highest rounded-full flex items-center justify-center text-primary-light border border-border">
+        <div className="user-profile-group">
+          <div className="user-profile">
+            <div className="avatar">
               <UserIcon size={20} />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-text">{user?.fullName || 'Admin User'}</span>
-              <span className="text-[12px] text-text-dim">{user?.role || 'Fleet Manager'}</span>
+            <div className="user-info">
+              <span className="user-name">{user?.fullName || 'Admin User'}</span>
+              <span className="user-role">{user?.role || 'Fleet Manager'}</span>
             </div>
-            <ChevronDown size={16} className="text-text-dim" />
+            <ChevronDown size={16} className="dropdown-icon" />
           </div>
           
-          <button 
-            className="bg-transparent border-none text-text-dim flex items-center justify-center w-9 h-9 rounded-sm cursor-pointer transition-all duration-150 ease-out hover:bg-[rgba(239,68,68,0.1)] hover:text-danger" 
-            onClick={logout} 
-            title="Logout"
-          >
+          <button className="logout-btn" onClick={logout} title="Logout">
             <LogOut size={18} />
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        .header {
+          height: var(--header-height);
+          padding: 0 var(--space-xl);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: sticky;
+          top: 0;
+          z-index: 90;
+          border-bottom: 1px solid var(--color-border);
+        }
+
+        .search-container {
+          display: flex;
+          align-items: center;
+          background: var(--color-surface-low);
+          border: 1px solid var(--color-outline-variant);
+          border-radius: var(--radius-default);
+          padding: 0 var(--space-md);
+          width: 400px;
+          transition: all var(--transition-fast);
+        }
+
+        .search-container:focus-within {
+          border-color: var(--color-primary);
+          background: var(--color-surface-high);
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-icon {
+          color: var(--color-text-dim);
+        }
+
+        .search-input {
+          border: none;
+          background: transparent;
+          color: var(--color-text);
+          padding: 10px;
+          width: 100%;
+          outline: none;
+          font: var(--font-body-md);
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-lg);
+        }
+
+        .action-btn {
+          background: transparent;
+          border: none;
+          color: var(--color-text-muted);
+          display: flex;
+          align-items: center;
+          gap: var(--space-xs);
+          cursor: pointer;
+          padding: 8px;
+          border-radius: var(--radius-sm);
+          transition: all var(--transition-fast);
+          font: var(--font-label-sm);
+        }
+
+        .action-btn:hover {
+          background: var(--color-surface-high);
+          color: var(--color-text);
+        }
+
+        .notification-btn {
+          position: relative;
+        }
+
+        .notification-badge {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          background: var(--color-danger);
+          color: white;
+          font-size: 10px;
+          font-weight: 700;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid var(--color-surface);
+        }
+
+        .user-profile-group {
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+          background: var(--color-surface-low);
+          padding: 4px;
+          border-radius: var(--radius-default);
+          border: 1px solid var(--color-border);
+        }
+
+        .user-profile {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+          padding: 4px 8px;
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          transition: background var(--transition-fast);
+        }
+
+        .user-profile:hover {
+          background: var(--color-surface-high);
+        }
+
+        .logout-btn {
+          background: transparent;
+          border: none;
+          color: var(--color-text-dim);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .logout-btn:hover {
+          background: rgba(239, 68, 68, 0.1);
+          color: var(--color-danger);
+        }
+
+        .avatar {
+          width: 36px;
+          height: 36px;
+          background: var(--color-surface-highest);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--color-primary-light);
+          border: 1px solid var(--color-border);
+        }
+
+        .user-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .user-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--color-text);
+        }
+
+        .user-role {
+          font-size: 12px;
+          color: var(--color-text-dim);
+        }
+
+        .dropdown-icon {
+          color: var(--color-text-dim);
+        }
+      `}</style>
     </header>
   );
 }

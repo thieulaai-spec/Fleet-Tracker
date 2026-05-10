@@ -39,20 +39,37 @@ export default function KpiLeaderboardPage() {
     { 
       header: 'Rank', 
       accessor: (item: KpiLeaderboardItem) => (
-        <RankBadge rank={item.rank} />
+        <span className="rank-badge">#{item.rank}</span>
       ),
       width: '80px'
     },
     { 
       header: 'Driver', 
       accessor: (item: KpiLeaderboardItem) => (
-        <DriverCell item={item} />
+        <Link href={`/drivers?id=${item.driverId}`} className="driver-cell link">
+          <div className="avatar">{item.driverName.charAt(0)}</div>
+          <div className="driver-name-wrapper">
+            <span>{item.driverName}</span>
+            <ExternalLink size={12} className="link-icon" />
+          </div>
+        </Link>
       )
     },
     { 
       header: 'KPI Score', 
       accessor: (item: KpiLeaderboardItem) => (
-        <ScoreCell score={item.score} color={getScoreColor(item.score)} />
+        <div className="score-cell">
+          <div className="score-bar-bg">
+            <div 
+              className="score-bar-fill" 
+              style={{ 
+                width: `${item.score}%`,
+                background: getScoreColor(item.score)
+              }} 
+            />
+          </div>
+          <span style={{ color: getScoreColor(item.score), fontWeight: 'bold' }}>{item.score}%</span>
+        </div>
       )
     },
     { header: 'Trips', accessor: 'tripsCount' as keyof KpiLeaderboardItem },
@@ -79,10 +96,10 @@ export default function KpiLeaderboardPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-(--space-lg)">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-(--space-sm) text-(--color-text-dim) text-sm">
-          <Trophy size={20} className="text-(--color-warning)" />
+    <div className="kpi-leaderboard">
+      <div className="action-bar">
+        <div className="info">
+          <Trophy size={20} color="var(--color-warning)" />
           <span>Updated every 24 hours</span>
         </div>
         <ExportActions reportName="kpi_leaderboard" />
@@ -94,42 +111,98 @@ export default function KpiLeaderboardPage() {
         isLoading={isLoading}
         onRowClick={(item) => console.log('Driver clicked:', item.driverId)}
       />
-    </div>
-  );
-}
 
-// Helper components for table cells to keep the columns definition clean
-function RankBadge({ rank }: { rank: number }) {
-  return <span className="font-bold text-(--color-primary-light)">#{rank}</span>;
-}
+      <style jsx>{`
+        .kpi-leaderboard {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-lg);
+        }
 
-function DriverCell({ item }: { item: KpiLeaderboardItem }) {
-  return (
-    <Link href={`/drivers?id=${item.driverId}`} className="group flex items-center gap-(--space-md) no-underline text-inherit hover:text-(--color-primary-light) transition-colors duration-150">
-      <div className="w-8 h-8 bg-surface-high rounded-full flex items-center justify-center font-bold text-xs text-text">
-        {item.driverName.charAt(0)}
-      </div>
-      <div className="flex items-center gap-1.5">
-        <span>{item.driverName}</span>
-        <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
-      </div>
-    </Link>
-  );
-}
+        .action-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
 
-function ScoreCell({ score, color }: { score: number, color: string }) {
-  return (
-    <div className="flex items-center gap-(--space-md) min-w-[150px]">
-      <div className="flex-1 h-2 bg-surface-high rounded-full overflow-hidden">
-        <div 
-          className="h-full rounded-full transition-all duration-1000 ease-out" 
-          style={{ 
-            width: `${score}%`,
-            background: color
-          }} 
-        />
-      </div>
-      <span className="font-bold" style={{ color }}>{score}%</span>
+        .info {
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+          color: var(--color-text-dim);
+          font-size: 14px;
+        }
+
+        .rank-badge {
+          font-weight: 700;
+          color: var(--color-primary-light);
+        }
+
+        .driver-cell {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+        }
+
+        .driver-cell.link {
+          text-decoration: none;
+          color: inherit;
+          transition: color var(--transition-fast);
+        }
+
+        .driver-cell.link:hover {
+          color: var(--color-primary-light);
+        }
+
+        .driver-name-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .link-icon {
+          opacity: 0;
+          transition: opacity var(--transition-fast);
+        }
+
+        .driver-cell.link:hover .link-icon {
+          opacity: 1;
+        }
+
+        .avatar {
+          width: 32px;
+          height: 32px;
+          background: var(--color-surface-high);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 12px;
+          color: var(--color-text);
+        }
+
+        .score-cell {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+          min-width: 150px;
+        }
+
+        .score-bar-bg {
+          flex: 1;
+          height: 8px;
+          background: var(--color-surface-high);
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .score-bar-fill {
+          height: 100%;
+          border-radius: 4px;
+          transition: width 1s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

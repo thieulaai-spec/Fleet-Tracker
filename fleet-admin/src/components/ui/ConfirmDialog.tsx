@@ -44,7 +44,14 @@ export function ConfirmDialog({
         </>
       )}
     >
-      <p className="text-(--color-text-muted) leading-relaxed">{description}</p>
+      <p className="confirm-dialog-description">{description}</p>
+
+      <style jsx>{`
+        .confirm-dialog-description {
+          color: var(--color-text-muted);
+          line-height: 1.6;
+        }
+      `}</style>
     </Modal>
   );
 }

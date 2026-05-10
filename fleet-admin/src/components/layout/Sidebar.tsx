@@ -13,6 +13,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Signal,
   BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -26,52 +27,28 @@ const navItems = [
   { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
 
-interface SidebarProps {
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
-}
-
-export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
+export function Sidebar() {
+  const [collapsed, setCollapsed] = React.useState(false);
   const pathname = usePathname();
   const { logout } = useAuth();
 
   return (
-    <aside 
-      className={`
-        h-screen bg-surface border-r border-border 
-        flex flex-col transition-[width] duration-200 ease-in-out fixed left-0 top-0 z-100
-        ${collapsed ? 'w-20' : 'w-sidebar'}
-      `}
-    >
-      <div 
-        className={`
-          h-header flex items-center border-b border-border
-          ${collapsed ? 'px-md justify-center' : 'px-lg justify-between'}
-        `}
-      >
-        <div className="flex items-center gap-sm">
-          <div className="w-8 h-8 bg-primary text-white rounded-sm flex items-center justify-center font-bold text-sm">FT</div>
-          {!collapsed && (
-            <span className="font-bold text-lg text-text">
-              Fleet<span className="text-primary-light">Tracker</span>
-            </span>
-          )}
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <div className="sidebar-header">
+        <div className="logo">
+          <div className="logo-icon">FT</div>
+          {!collapsed && <span className="logo-text">Fleet<span>Tracker</span></span>}
         </div>
         <button 
-          className={`
-            flex items-center justify-center cursor-pointer transition-all duration-150 ease-out
-            ${collapsed 
-              ? 'absolute -right-3 top-18 bg-primary text-white rounded-full border-none shadow-sm w-6 h-6' 
-              : 'bg-surface-high border border-border text-text-muted w-6 h-6 rounded-sm hover:text-primary-light hover:border-primary'}
-          `} 
+          className="collapse-btn" 
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 
-      <nav className="flex-1 py-lg px-sm flex flex-col gap-xs">
+      <nav className="sidebar-nav">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -80,53 +57,190 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             <Link 
               key={item.name} 
               href={item.href}
-              className={`
-                flex items-center gap-md no-underline rounded-default 
-                transition-all duration-150 ease-out relative w-full cursor-pointer text-sm font-medium
-                ${collapsed ? 'justify-center p-3' : 'py-3 px-md'}
-                ${isActive 
-                  ? 'bg-[rgba(99,102,241,0.1)] text-primary-light' 
-                  : 'bg-transparent text-text-muted hover:bg-surface-high hover:text-text'}
-              `}
+              className={`nav-item ${isActive ? 'active' : ''}`}
               title={collapsed ? item.name : undefined}
             >
               <Icon size={20} />
               {!collapsed && <span>{item.name}</span>}
-              {isActive && (
-                <div className="absolute left-0 top-[20%] bottom-[20%] w-0.75 bg-primary rounded-r-sm" />
-              )}
+              {isActive && <div className="active-indicator" />}
             </Link>
           );
         })}
       </nav>
 
-      <div className="py-lg px-sm border-t border-border flex flex-col gap-xs">
-        <Link 
-          href="/settings" 
-          className={`
-            flex items-center gap-md no-underline rounded-default 
-            transition-all duration-150 ease-out relative w-full cursor-pointer text-sm font-medium
-            text-text-muted hover:bg-surface-high hover:text-text
-            ${collapsed ? 'justify-center p-3' : 'py-3 px-md'}
-          `}
-        >
+      <div className="sidebar-footer">
+        <Link href="/settings" className="nav-item">
           <Settings size={20} />
           {!collapsed && <span>Settings</span>}
         </Link>
-        <button 
-          className={`
-            flex items-center gap-md no-underline rounded-default 
-            transition-all duration-150 ease-out relative w-full cursor-pointer text-sm font-medium
-            text-danger opacity-80 hover:bg-[rgba(239,68,68,0.1)] hover:opacity-100
-            ${collapsed ? 'justify-center p-3' : 'py-3 px-md'}
-            bg-transparent border-none
-          `} 
-          onClick={logout}
-        >
+        <button className="nav-item logout-btn" onClick={logout}>
           <LogOut size={20} />
           {!collapsed && <span>Logout</span>}
         </button>
       </div>
+
+      <style jsx>{`
+        .sidebar {
+          width: var(--sidebar-width);
+          height: 100vh;
+          background: var(--color-surface);
+          border-right: 1px solid var(--color-border);
+          display: flex;
+          flex-direction: column;
+          transition: width var(--transition-normal);
+          position: fixed;
+          left: 0;
+          top: 0;
+          z-index: 100;
+        }
+
+        .sidebar.collapsed {
+          width: 80px;
+        }
+
+        .sidebar-header {
+          height: var(--header-height);
+          padding: 0 var(--space-lg);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid var(--color-border);
+        }
+
+        .collapsed .sidebar-header {
+          padding: 0 var(--space-md);
+          justify-content: center;
+        }
+
+        .logo {
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+        }
+
+        .logo-icon {
+          width: 32px;
+          height: 32px;
+          background: var(--color-primary);
+          color: white;
+          border-radius: var(--radius-sm);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 14px;
+        }
+
+        .logo-text {
+          font-weight: 700;
+          font-size: 18px;
+          color: var(--color-text);
+        }
+
+        .logo-text span {
+          color: var(--color-primary-light);
+        }
+
+        .collapse-btn {
+          background: var(--color-surface-high);
+          border: 1px solid var(--color-border);
+          color: var(--color-text-muted);
+          width: 24px;
+          height: 24px;
+          border-radius: var(--radius-sm);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .collapse-btn:hover {
+          color: var(--color-primary-light);
+          border-color: var(--color-primary);
+        }
+
+        .collapsed .collapse-btn {
+          position: absolute;
+          right: -12px;
+          top: 72px;
+          background: var(--color-primary);
+          color: white;
+          border-radius: 50%;
+          border: none;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .sidebar-nav {
+          flex: 1;
+          padding: var(--space-lg) var(--space-sm);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xs);
+        }
+
+        .nav-item {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+          padding: 12px var(--space-md);
+          color: var(--color-text-muted);
+          text-decoration: none;
+          border-radius: var(--radius-default);
+          transition: all var(--transition-fast);
+          position: relative;
+          background: transparent;
+          border: none;
+          width: 100%;
+          cursor: pointer;
+          font: var(--font-body-md);
+          font-weight: 500;
+        }
+
+        .collapsed .nav-item {
+          justify-content: center;
+          padding: 12px;
+        }
+
+        .nav-item:hover {
+          background: var(--color-surface-high);
+          color: var(--color-text);
+        }
+
+        .nav-item.active {
+          background: rgba(99, 102, 241, 0.1);
+          color: var(--color-primary-light);
+        }
+
+        .active-indicator {
+          position: absolute;
+          left: 0;
+          top: 20%;
+          bottom: 20%;
+          width: 3px;
+          background: var(--color-primary);
+          border-radius: 0 4px 4px 0;
+        }
+
+        .sidebar-footer {
+          padding: var(--space-lg) var(--space-sm);
+          border-top: 1px solid var(--color-border);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xs);
+        }
+
+        .logout-btn {
+          color: var(--color-danger);
+          opacity: 0.8;
+        }
+
+        .logout-btn:hover {
+          background: rgba(239, 68, 68, 0.1);
+          color: var(--color-danger);
+          opacity: 1;
+        }
+      `}</style>
     </aside>
   );
 }

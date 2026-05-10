@@ -7,7 +7,8 @@ import {
   User as UserIcon, 
   Edit2, 
   Trash2, 
-  Phone
+  Phone,
+  Star
 } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
@@ -15,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Modal } from '@/components/ui/Modal';
+import { Input } from '@/components/ui/Input';
 
 import { useDrivers } from '@/hooks/use-drivers';
 import { Driver } from '@/types';
@@ -25,9 +27,10 @@ interface DriverWithUser extends Driver {
 }
 
 export default function DriversPage() {
-  const { drivers, isLoading } = useDrivers();
+  const { drivers, isLoading, registerDriver, isRegistering } = useDrivers();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedDriver, setSelectedDriver] = React.useState<DriverWithUser | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -44,13 +47,13 @@ export default function DriversPage() {
     { 
       header: 'Driver', 
       accessor: (d: DriverWithUser) => (
-        <div className="flex items-center gap-(--space-md)">
-          <div className="w-8 h-8 bg-surface-highest rounded-full flex items-center justify-center text-(--color-primary-light)">
+        <div className="driver-info">
+          <div className="driver-avatar">
             <UserIcon size={16} />
           </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-text">{d.fullName}</span>
-            <span className="text-[12px] text-(--color-text-dim)">{d.user?.email || 'N/A'}</span>
+          <div className="driver-details">
+            <span className="driver-name">{d.fullName}</span>
+            <span className="driver-email">{d.user?.email || 'N/A'}</span>
           </div>
         </div>
       )
@@ -71,7 +74,7 @@ export default function DriversPage() {
     {
       header: 'Actions',
       accessor: (d: DriverWithUser) => (
-        <div className="flex gap-1">
+        <div className="action-buttons">
           <Button variant="ghost" size="sm" icon={<Phone size={16} />} aria-label={`Call ${d.fullName}`} />
           <Button variant="ghost" size="sm" icon={<Edit2 size={16} />} aria-label={`Edit ${d.fullName}`} />
           <Button variant="ghost" size="sm" icon={<Trash2 size={16} />} className="text-danger" aria-label={`Delete ${d.fullName}`} />
@@ -81,13 +84,13 @@ export default function DriversPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-(--space-xl)">
-      <header className="flex justify-between items-center">
+    <div className="page-container">
+      <header className="page-header">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Driver Management</h1>
-          <p className="text-(--color-text-dim)">Monitor driver performance, status, and contact information.</p>
+          <h1>Driver Management</h1>
+          <p className="text-dim">Monitor driver performance, status, and contact information.</p>
         </div>
-        <Button variant="primary" icon={<Plus size={18} />} onClick={() => {}}>
+        <Button variant="primary" icon={<Plus size={18} />} onClick={() => setIsModalOpen(true)}>
           Register New Driver
         </Button>
       </header>
@@ -98,56 +101,54 @@ export default function DriversPage() {
         title="Driver Details"
       >
         {selectedDriver && (
-          <div className="flex flex-col gap-(--space-lg)">
-            <div className="flex items-center gap-(--space-md)">
-              <div className="w-14 h-14 bg-surface-highest rounded-full flex items-center justify-center text-(--color-primary-light)">
+          <div className="driver-detail">
+            <div className="driver-detail-header">
+              <div className="driver-avatar large">
                 <UserIcon size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-semibold">{selectedDriver.fullName}</h3>
-                <p className="text-(--color-text-dim)">{selectedDriver.user?.email}</p>
+                <h3>{selectedDriver.fullName}</h3>
+                <p className="text-dim">{selectedDriver.user?.email}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-(--space-md)">
-              <div className="flex flex-col gap-[6px] p-(--space-md) bg-surface-low border border-border rounded-default">
-                <span className="text-[11px] font-bold text-(--color-text-dim) uppercase tracking-wider">Phone</span>
-                <span className="text-sm font-medium">{selectedDriver.phone}</span>
+            <div className="detail-grid">
+              <div className="detail-item">
+                <span className="detail-label">Phone</span>
+                <span>{selectedDriver.phone}</span>
               </div>
-              <div className="flex flex-col gap-[6px] p-(--space-md) bg-surface-low border border-border rounded-default">
-                <span className="text-[11px] font-bold text-(--color-text-dim) uppercase tracking-wider">Status</span>
+              <div className="detail-item">
+                <span className="detail-label">Status</span>
                 <Badge variant={selectedDriver.status === 'available' ? 'success' : selectedDriver.status === 'on_trip' ? 'primary' : 'neutral'}>
                   {selectedDriver.status.replace('_', ' ')}
                 </Badge>
               </div>
-              <div className="flex flex-col gap-[6px] p-(--space-md) bg-surface-low border border-border rounded-default">
-                <span className="text-[11px] font-bold text-(--color-text-dim) uppercase tracking-wider">License Class</span>
-                <span className="text-sm font-medium">{selectedDriver.licenseClass}</span>
+              <div className="detail-item">
+                <span className="detail-label">License Class</span>
+                <span>{selectedDriver.licenseClass}</span>
               </div>
-              <div className="flex flex-col gap-[6px] p-(--space-md) bg-surface-low border border-border rounded-default">
-                <span className="text-[11px] font-bold text-(--color-text-dim) uppercase tracking-wider">Expiry</span>
-                <span className="text-sm font-medium">{selectedDriver.licenseExpiry && mounted ? new Date(selectedDriver.licenseExpiry).toLocaleDateString() : 'N/A'}</span>
+              <div className="detail-item">
+                <span className="detail-label">Expiry</span>
+                <span>{selectedDriver.licenseExpiry && mounted ? new Date(selectedDriver.licenseExpiry).toLocaleDateString() : 'N/A'}</span>
               </div>
             </div>
           </div>
         )}
       </Modal>
 
-      <section className="card flex justify-between items-center py-(--space-md) px-(--space-lg)">
-        <div className="flex-1 max-w-[400px]">
-          <SearchInput
-            placeholder="Search by name, email or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-(--space-lg) ml-4">
+      <section className="filters-bar card">
+        <SearchInput
+          placeholder="Search by name, email or phone..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <div className="filter-actions">
           <Button variant="secondary" size="md" icon={<Filter size={18} />}>Filters</Button>
-          <div className="w-px h-6 bg-border" />
-          <span className="text-xs uppercase tracking-wider text-(--color-text-dim)">Total <b className="text-text">{filteredDrivers.length}</b> drivers</span>
+          <div className="divider" />
+          <span className="results-count">Total <b>{filteredDrivers.length}</b> drivers</span>
         </div>
       </section>
 
-      <section>
+      <section className="table-section">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <LoadingSpinner size={32} />
@@ -156,6 +157,132 @@ export default function DriversPage() {
           <DataTable data={filteredDrivers} columns={columns} onRowClick={(driver) => setSelectedDriver(driver as DriverWithUser)} />
         )}
       </section>
+
+      <style jsx>{`
+        .page-container {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xl);
+        }
+
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .filters-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: var(--space-md) var(--space-lg);
+        }
+
+        .filters-bar :global(.search-input-group) {
+          flex: 1;
+          max-width: 400px;
+        }
+
+        .driver-info {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+        }
+
+        .driver-detail {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-lg);
+        }
+
+        .driver-detail-header {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+        }
+
+        .driver-avatar.large {
+          width: 56px;
+          height: 56px;
+        }
+
+        .detail-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: var(--space-md);
+        }
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding: var(--space-md);
+          background: var(--color-surface-low);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-default);
+        }
+
+        .detail-label {
+          font: var(--font-label-sm);
+          color: var(--color-text-dim);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .driver-avatar {
+          width: 32px;
+          height: 32px;
+          background: var(--color-surface-highest);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--color-primary-light);
+        }
+
+        .driver-details {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .driver-name {
+          font-weight: 600;
+          color: var(--color-text);
+        }
+
+        .driver-email {
+          font-size: 12px;
+          color: var(--color-text-dim);
+        }
+
+        .rating {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          color: var(--color-warning);
+          font-weight: 600;
+        }
+
+        .star-icon {
+          fill: var(--color-warning);
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 4px;
+        }
+
+        .divider {
+          width: 1px;
+          height: 24px;
+          background: var(--color-border);
+        }
+
+        .results-count {
+          font: var(--font-label-sm);
+          color: var(--color-text-dim);
+        }
+      `}</style>
     </div>
   );
 }

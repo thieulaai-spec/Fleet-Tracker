@@ -3,141 +3,226 @@ import {
   StyleSheet, 
   View, 
   Text, 
-  FlatList, 
+  SectionList, 
   TouchableOpacity, 
   RefreshControl,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Truck, MapPin, ChevronRight, Clock, CheckCircle2, AlertCircle } from 'lucide-react-native';
+import { Truck, MapPin, ChevronRight, Clock, CheckCircle2, AlertCircle, History, RefreshCw, AlertTriangle, WifiOff } from 'lucide-react-native';
 import { useTripStore, TripStatus } from '../../store/useTripStore';
+import { ConnectionStatus } from '@/components/ConnectionStatus';
+import Toast from 'react-native-toast-message';
 
 export default function TripsScreen() {
+  const { 
+    pendingTrips, 
+    activeTrip, 
+    tripHistory,
+    fetchTrips, 
+    acceptTrip, 
+    rejectTrip,
+    isLoading,
+    error 
+  } = useTripStore();
   const [refreshing, setRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { pendingTrips, activeTrip, setPendingTrips, setActiveTrip } = useTripStore();
   const router = useRouter();
-
-  const fetchTrips = async () => {
-    setIsLoading(true);
-    // Mock API fetch
-    setTimeout(() => {
-      setPendingTrips([
-        {
-          id: 'T-1001',
-          vehicleId: 'V-01',
-          driverId: 'D-01',
-          status: TripStatus.ASSIGNED,
-          totalDistanceKm: 12.5,
-          createdAt: new Date().toISOString(),
-          orders: [
-            { id: 'O-1', customerName: 'John Doe', address: '123 Main St', status: 'pending' },
-            { id: 'O-2', customerName: 'Jane Smith', address: '456 Oak Ave', status: 'pending' },
-          ]
-        }
-      ]);
-      setIsLoading(false);
-      setRefreshing(false);
-    }, 1000);
-  };
 
   useEffect(() => {
     fetchTrips();
   }, []);
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    fetchTrips();
+    await fetchTrips();
+    setRefreshing(false);
   };
 
-  const handleAcceptTrip = (trip: any) => {
-    setActiveTrip(trip);
-    // Remove from pending
-    setPendingTrips(pendingTrips.filter(t => t.id !== trip.id));
-    router.push('/(tabs)/map');
+  const handleAcceptTrip = (id: string) => {
+    Alert.alert(
+      'Accept Trip',
+      'Are you sure you want to accept this trip assignment?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Accept', 
+          onPress: async () => {
+            try {
+              await acceptTrip(id);
+              Toast.show({
+                type: 'success',
+                text1: 'Trip Accepted',
+                text2: 'You have accepted the assignment.'
+              });
+              router.push('/(tabs)/map');
+            } catch (err: any) {
+              Toast.show({
+                type: 'error',
+                text1: 'Failed to Accept',
+                text2: err.message
+              });
+            }
+          } 
+        },
+      ]
+    );
   };
 
-  const renderTripCard = ({ item }: { item: any }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.tripIdBadge}>
-          <Text style={styles.tripIdText}>{item.id}</Text>
-        </View>
-        <Text style={styles.timeText}>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-      </View>
+  const handleRejectTrip = (id: string) => {
+    Alert.alert(
+      'Reject Trip',
+      'Are you sure you want to reject this trip? This will return it to the pending pool.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Reject', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await rejectTrip(id);
+              Toast.show({
+                type: 'info',
+                text1: 'Trip Rejected',
+                text2: 'The assignment has been returned.'
+              });
+            } catch (err: any) {
+              Toast.show({
+                type: 'error',
+                text1: 'Failed to Reject',
+                text2: err.message
+              });
+            }
+          } 
+        },
+      ]
+    );
+  };
 
-      <View style={styles.cardBody}>
-        <View style={styles.routeInfo}>
-          <View style={styles.iconColumn}>
-            <MapPin size={20} color="#6366f1" />
-            <View style={styles.dotLine} />
-            <MapPin size={20} color="#10b981" />
-          </View>
-          <View style={styles.addressColumn}>
-            <Text style={styles.addressText} numberOfLines={1}>Warehouse Alpha</Text>
-            <Text style={styles.addressSubtext}>Pickup Point</Text>
-            <View style={styles.spacer} />
-            <Text style={styles.addressText} numberOfLines={1}>{item.orders[item.orders.length - 1].address}</Text>
-            <Text style={styles.addressSubtext}>Final Delivery</Text>
-          </View>
-        </View>
+  const renderTripCard = ({ item, section }: { item: any, section: any }) => {
+    const isActive = section.title === 'Active Trip';
+    const isHistory = section.title === 'Trip History';
 
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Truck size={16} color="#94a3b8" />
-            <Text style={styles.statLabel}>{item.orders.length} Orders</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Clock size={16} color="#94a3b8" />
-            <Text style={styles.statLabel}>{item.totalDistanceKm} km</Text>
-          </View>
-        </View>
-      </View>
-
+    return (
       <TouchableOpacity 
-        style={styles.acceptButton}
-        onPress={() => handleAcceptTrip(item)}
+        style={[styles.card, isActive && styles.activeCard, isHistory && styles.historyCard]}
+        disabled={!isActive && !isHistory}
+        onPress={() => isActive && router.push('/(tabs)/map')}
       >
-        <Text style={styles.acceptButtonText}>Accept Trip</Text>
+        <View style={styles.cardHeader}>
+          <View style={[styles.tripIdBadge, isActive && styles.activeBadge]}>
+            <Text style={[styles.tripIdText, isActive && styles.activeBadgeText]}>
+              {item.id.substring(0, 8)}
+            </Text>
+          </View>
+          <Text style={styles.timeText}>
+            {new Date(item.createdAt).toLocaleDateString()} • {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </View>
+
+        <View style={styles.cardBody}>
+          <View style={styles.routeInfo}>
+            <View style={styles.iconColumn}>
+              <MapPin size={18} color={isActive ? "#6366f1" : "#94a3b8"} />
+              <View style={styles.dotLine} />
+              <MapPin size={18} color="#10b981" />
+            </View>
+            <View style={styles.addressColumn}>
+              <Text style={styles.addressText} numberOfLines={1}>Warehouse Alpha</Text>
+              <Text style={styles.addressSubtext}>Pickup Point</Text>
+              <View style={styles.spacer} />
+              <Text style={styles.addressText} numberOfLines={1}>
+                {item.orders?.length > 0 ? item.orders[item.orders.length - 1].address : 'No orders'}
+              </Text>
+              <Text style={styles.addressSubtext}>Final Delivery</Text>
+            </View>
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Truck size={14} color="#94a3b8" />
+              <Text style={styles.statLabel}>{item.orders?.length || 0} Orders</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Clock size={14} color="#94a3b8" />
+              <Text style={styles.statLabel}>{item.totalDistanceKm || 0} km</Text>
+            </View>
+            {isHistory && (
+              <View style={[styles.statusTag, { backgroundColor: item.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
+                <Text style={[styles.statusTagText, { color: item.status === 'completed' ? '#10b981' : '#ef4444' }]}>
+                  {item.status.toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {section.title === 'Pending Trips' && (
+          <View style={styles.actionRow}>
+            <TouchableOpacity 
+              style={styles.rejectButton}
+              onPress={() => handleRejectTrip(item.id)}
+              disabled={isLoading}
+            >
+              <Text style={styles.rejectButtonText}>Reject</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.acceptButton}
+              onPress={() => handleAcceptTrip(item.id)}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.acceptButtonText}>Accept Trip</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {isActive && (
+          <View style={styles.activeFooter}>
+            <Text style={styles.activeFooterText}>Tap to continue delivery</Text>
+            <ChevronRight size={16} color="#6366f1" />
+          </View>
+        )}
       </TouchableOpacity>
-    </View>
-  );
+    );
+  };
+
+  const sections = [
+    ...(activeTrip ? [{ title: 'Active Trip', data: [activeTrip] }] : []),
+    ...(pendingTrips.length > 0 ? [{ title: 'Pending Trips', data: pendingTrips }] : []),
+    ...(tripHistory.length > 0 ? [{ title: 'Trip History', data: tripHistory.slice(0, 5) }] : []),
+  ];
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Available Trips</Text>
-        <Text style={styles.headerSubtitle}>New assignments will appear here</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.headerTitle}>Trips</Text>
+          <ConnectionStatus />
+        </View>
+        <Text style={styles.headerSubtitle}>View and manage your assignments</Text>
       </View>
 
-      {activeTrip && (
-        <TouchableOpacity 
-          style={styles.activeTripBanner}
-          onPress={() => router.push('/(tabs)/map')}
-        >
-          <View style={styles.bannerContent}>
-            <View style={styles.bannerIcon}>
-              <ActivityIndicator size="small" color="#6366f1" />
-            </View>
-            <View>
-              <Text style={styles.bannerTitle}>Active Trip: {activeTrip.id}</Text>
-              <Text style={styles.bannerSubtitle}>Tap to continue delivery</Text>
-            </View>
-          </View>
-          <ChevronRight color="#6366f1" />
-        </TouchableOpacity>
-      )}
-
-      {isLoading && !refreshing ? (
+      {isLoading && !refreshing && sections.length === 0 ? (
         <View style={styles.loader}>
           <ActivityIndicator size="large" color="#6366f1" />
         </View>
       ) : (
-        <FlatList
-          data={pendingTrips}
+        <SectionList
+          sections={sections}
           renderItem={renderTripCard}
+          renderSectionHeader={({ section: { title } }) => (
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{title}</Text>
+            </View>
+          )}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.list}
+          stickySectionHeadersEnabled={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />
           }
@@ -171,6 +256,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#94a3b8',
     marginTop: 4,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 12,
+    borderRadius: 8,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    flex: 1,
   },
   activeTripBanner: {
     flexDirection: 'row',
@@ -212,6 +314,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(51, 65, 85, 0.5)',
   },
+  activeCard: {
+    borderColor: '#6366f1',
+    borderWidth: 2,
+    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+  },
+  historyCard: {
+    opacity: 0.8,
+  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -223,6 +333,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
+  },
+  activeBadge: {
+    backgroundColor: '#6366f1',
+  },
+  activeBadgeText: {
+    color: '#fff',
   },
   tripIdText: {
     color: '#6366f1',
@@ -279,7 +395,12 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     fontSize: 14,
   },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   acceptButton: {
+    flex: 2,
     backgroundColor: '#6366f1',
     height: 50,
     borderRadius: 10,
@@ -288,6 +409,21 @@ const styles = StyleSheet.create({
   },
   acceptButtonText: {
     color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  rejectButton: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    height: 50,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  rejectButtonText: {
+    color: '#94a3b8',
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -305,5 +441,39 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 15,
     fontSize: 16,
+  },
+  activeFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(99, 102, 241, 0.2)',
+    gap: 8,
+  },
+  activeFooterText: {
+    color: '#6366f1',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  sectionHeader: {
+    paddingVertical: 10,
+    marginTop: 10,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  statusTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  statusTagText: {
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

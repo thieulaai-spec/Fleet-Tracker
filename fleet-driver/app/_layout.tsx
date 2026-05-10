@@ -49,13 +49,55 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useTripStore, TripStatus } from '../store/useTripStore';
 import { useRouter, useSegments } from 'expo-router';
 import { startBackgroundLocation, stopBackgroundLocation } from '../lib/backgroundTasks';
+import { NetworkBanner } from '../components/NetworkBanner';
+import { socketService } from '../lib/socket';
+
+import Toast from 'react-native-toast-message';
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const { isAuthenticated } = useAuthStore();
-  const { activeTrip } = useTripStore();
+  const { activeTrip, fetchTrips } = useTripStore();
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      socketService.connect();
+
+      const handleTripAssigned = (data: any) => {
+        Toast.show({
+          type: 'success',
+          text1: 'New Trip Assigned! 🚛',
+          text2: `You have a new assignment: ${data.id.substring(0, 8)}`,
+          visibilityTime: 6000,
+        });
+        fetchTrips();
+      };
+
+      const handleTripCancelled = (data: any) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Trip Cancelled ❌',
+          text2: `Trip ${data.tripId.substring(0, 8)} has been cancelled by dispatcher`,
+          visibilityTime: 6000,
+        });
+        fetchTrips();
+        // If the cancelled trip was the active one, redirect to trips list
+        if (activeTrip?.id === data.tripId) {
+          router.replace('/(tabs)');
+        }
+      };
+
+      socketService.on('trip:assigned', handleTripAssigned);
+      socketService.on('trip:cancelled', handleTripCancelled);
+
+      return () => {
+        socketService.off('trip:assigned', handleTripAssigned);
+        socketService.off('trip:cancelled', handleTripCancelled);
+      };
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(tabs)';
@@ -68,7 +110,7 @@ function RootLayoutNav() {
   }, [isAuthenticated, segments]);
 
   useEffect(() => {
-    if (activeTrip && (activeTrip.status === TripStatus.STARTED || activeTrip.status === TripStatus.PICKED_UP || activeTrip.status === TripStatus.DELIVERING)) {
+    if (activeTrip && activeTrip.status === TripStatus.IN_PROGRESS) {
       startBackgroundLocation();
     } else {
       stopBackgroundLocation();
@@ -77,11 +119,13 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={DarkTheme}>
+      <NetworkBanner />
       <Stack>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
+      <Toast />
     </ThemeProvider>
   );
 }

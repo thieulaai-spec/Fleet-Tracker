@@ -54,6 +54,17 @@ export class TrackingGateway
     this.server.to(`trip:${payload.id}`).emit('trip:status', payload);
   }
 
+  @OnEvent('trip.assigned')
+  handleTripAssigned(payload: any) {
+    this.logger.log(
+      `Broadcasting trip assignment: ${payload.id} to driver ${payload.driverId}`,
+    );
+    // Notify the specific driver
+    this.server.to(`driver:${payload.driverId}`).emit('trip:assigned', payload);
+    // Also notify admins
+    this.server.to('admin').emit('trip:assigned', payload);
+  }
+
   @OnEvent('alert.resolved')
   handleAlertResolved(payload: any) {
     this.logger.log(`Broadcasting alert resolution: ${payload.id}`);
@@ -113,6 +124,31 @@ export class TrackingGateway
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
+  }
+
+  @SubscribeMessage('sos:alert')
+  async handleSosAlert(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { tripId: string; description?: string; location?: { latitude: number; longitude: number } },
+  ) {
+    const userId = client.data.user.id;
+    const { tripId, description, location } = data;
+
+    this.logger.log(`Emergency SOS received from user ${userId} for trip ${tripId}`);
+
+    // Broadcast to all admins (who should be in the 'admin' room)
+    this.server.to('admin').emit('alert:new', {
+      type: 'SOS',
+      severity: 'CRITICAL',
+      message: `EMERGENCY: Driver ${client.data.user.fullName || userId} triggered SOS!`,
+      details: description || 'No description provided',
+      tripId,
+      driverId: userId,
+      location: location || null,
+      timestamp: new Date().toISOString(),
+    });
+
+    return { status: 'ok', message: 'SOS received and dispatch notified' };
   }
 
   @SubscribeMessage('gps:update')

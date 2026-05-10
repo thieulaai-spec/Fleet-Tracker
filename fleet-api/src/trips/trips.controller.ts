@@ -23,6 +23,12 @@ import { UserRole } from '../entities/user.entity';
 export class TripsController {
   constructor(private readonly tripsService: TripsService) {}
 
+  @ApiOperation({ summary: 'List trips for current driver' })
+  @Get('my')
+  findMyTrips(@Request() req) {
+    return this.tripsService.findMyTrips(req.user.id);
+  }
+
   @Roles(UserRole.ADMIN, UserRole.DISPATCHER)
   @ApiOperation({ summary: 'List all trips (Admin only)' })
   @Get()

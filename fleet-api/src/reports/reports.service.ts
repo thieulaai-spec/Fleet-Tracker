@@ -140,7 +140,7 @@ export class ReportsService {
     });
 
     // Group by type
-    const costByVehicleType = [];
+    const costByVehicleType: { type: string; cost: number }[] = [];
     ['small', 'medium', 'large'].forEach((type) => {
       const cost = vehicleFuelStats
         .filter((s) => s.type === type)
@@ -240,8 +240,8 @@ export class ReportsService {
 
     return {
       totalTrips: trips.length,
-      activeTrips: trips.filter((t) => t.status === TripStatus.ONGOING).length,
-      delayedTrips: trips.filter((t) => t.status === TripStatus.DELAYED).length,
+      activeTrips: trips.filter((t) => t.status === TripStatus.IN_PROGRESS).length,
+      delayedTrips: 0,
       trips: trips.map((t) => ({
         id: t.id,
         date: t.createdAt.toISOString().split('T')[0],
@@ -250,8 +250,8 @@ export class ReportsService {
         status: t.status,
         distance: t.totalDistanceKm,
         duration: 'N/A', // Calculated if needed
-        startLocation: t.startLocation || 'N/A',
-        endLocation: t.endLocation || 'N/A',
+        startLocation: 'N/A',
+        endLocation: 'N/A',
       })),
     };
   }

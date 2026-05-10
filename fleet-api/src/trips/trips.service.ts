@@ -22,6 +22,16 @@ export class TripsService {
     private eventEmitter: EventEmitter2,
   ) {}
 
+  async findMyTrips(userId: string) {
+    return this.tripRepository.find({
+      where: [
+        { driver: { userId } },
+      ],
+      relations: ['vehicle', 'driver', 'tripOrders', 'tripOrders.order'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async findAll() {
     return this.tripRepository.find({
       relations: ['vehicle', 'driver', 'tripOrders', 'tripOrders.order'],

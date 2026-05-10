@@ -8,27 +8,36 @@ import {
   Platform,
   Alert
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Navigation, MapPin, Truck, CheckCircle2, Phone, AlertTriangle } from 'lucide-react-native';
-import { useTripStore, TripStatus } from '../../store/useTripStore';
+import { useTripStore, TripStatus, OrderStatus } from '../../store/useTripStore';
 import { socketService } from '../../lib/socket';
+import Toast from 'react-native-toast-message';
+import { SosButton } from '@/components/SosButton';
+import { ConnectionStatus } from '@/components/ConnectionStatus';
+import * as Linking from 'expo-linking';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ActiveTripMap() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const { activeTrip, updateTripStatus } = useTripStore();
+  const { activeTrip, updateTripStatus, updateOrderStatus } = useTripStore();
   const mapRef = useRef<MapView>(null);
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      let { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
+      if (foregroundStatus !== 'granted') {
         setErrorMsg('Permission to access location was denied');
         return;
       }
+
+      // We also need background permission for the task to work properly
+      await Location.requestBackgroundPermissionsAsync();
 
       let currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
@@ -37,47 +46,147 @@ export default function ActiveTripMap() {
       socketService.connect();
     })();
 
-    // Subscribe to location updates
+    // Subscribe to location updates with dynamic frequency for battery optimization
+    const trackingOptions = {
+      accuracy: Location.Accuracy.High,
+      timeInterval: activeTrip?.status === TripStatus.IN_PROGRESS ? 5000 : 30000,
+      distanceInterval: activeTrip?.status === TripStatus.IN_PROGRESS ? 10 : 100,
+    };
+
     const subscription = Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.High,
-        timeInterval: 5000,
-        distanceInterval: 10,
-      },
+      trackingOptions,
       (newLocation) => {
         setLocation(newLocation);
         // Emit location to socket
-        if (activeTrip) {
-          socketService.emit('location:update', {
+        if (activeTrip && activeTrip.status === TripStatus.IN_PROGRESS) {
+          socketService.emit('gps:update', {
             tripId: activeTrip.id,
+            vehicleId: activeTrip.vehicleId,
             latitude: newLocation.coords.latitude,
             longitude: newLocation.coords.longitude,
-            heading: newLocation.coords.heading,
-            speed: newLocation.coords.speed,
+            heading: newLocation.coords.heading || 0,
+            speed: newLocation.coords.speed || 0,
+            timestamp: new Date(newLocation.timestamp).toISOString(),
           });
         }
       }
-    );
+    ).catch(err => {
+      console.error('GPS Watch Error:', err);
+      setErrorMsg('Lost GPS signal. Trying to reconnect...');
+      // Fallback: try to get single position after a delay
+      setTimeout(async () => {
+        try {
+          const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          setLocation(loc);
+        } catch (e) {
+          console.error('GPS Fallback Error:', e);
+        }
+      }, 10000);
+    });
+
+    // Fit map to route when trip loads
+    if (activeTrip?.plannedRoute && activeTrip.plannedRoute.length > 0) {
+      setTimeout(() => {
+        mapRef.current?.fitToCoordinates(activeTrip.plannedRoute as any, {
+          edgePadding: { top: 100, right: 50, bottom: 300, left: 50 },
+          animated: true,
+        });
+      }, 1000);
+    }
 
     return () => {
-      subscription.then(sub => sub.remove());
+      subscription.then(sub => {
+        if (sub && typeof sub.remove === 'function') {
+          sub.remove();
+        }
+      });
     };
-  }, [activeTrip]);
+  }, [activeTrip?.id]);
 
   const handleStatusUpdate = (newStatus: TripStatus) => {
+    if (!activeTrip) return;
+
+    let title = 'Update Status';
+    let message = `Are you sure you want to change status to ${newStatus}?`;
+
+    if (newStatus === TripStatus.IN_PROGRESS) {
+      title = 'Start Delivery';
+      message = 'Confirm that you have picked up all items and are starting the delivery route.';
+    } else if (newStatus === TripStatus.COMPLETED) {
+      title = 'Complete Trip';
+      message = 'Confirm that all orders have been delivered successfully.';
+    }
+
     Alert.alert(
-      'Update Status',
-      `Are you sure you want to change status to ${newStatus}?`,
+      title,
+      message,
       [
         { text: 'Cancel', style: 'cancel' },
         { 
           text: 'Confirm', 
-          onPress: () => {
-            updateTripStatus(newStatus);
-            socketService.emit('trip:status_change', {
-              tripId: activeTrip?.id,
-              status: newStatus
-            });
+          onPress: async () => {
+            try {
+              await updateTripStatus(activeTrip.id, newStatus);
+              socketService.emit('trip:status_change', {
+                tripId: activeTrip.id,
+                status: newStatus
+              });
+              Toast.show({
+                type: 'success',
+                text1: 'Status Updated',
+                text2: `Trip is now ${newStatus}`
+              });
+            } catch (err: any) {
+              Toast.show({
+                type: 'error',
+                text1: 'Update Failed',
+                text2: err.message
+              });
+            }
+          }
+        },
+      ]
+    );
+  };
+  
+  const handleOrderStatusUpdate = (orderId: string, newStatus: OrderStatus) => {
+    let title = 'Update Order';
+    let message = `Change order status to ${newStatus.replace('_', ' ')}?`;
+
+    if (newStatus === OrderStatus.PICKED_UP) {
+      title = 'Confirm Pickup';
+      message = 'Have you successfully picked up the items for this order?';
+    } else if (newStatus === OrderStatus.DELIVERING) {
+      title = 'Start Delivery';
+      message = 'Are you starting the delivery for this order?';
+    }
+
+    Alert.alert(
+      title,
+      message,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Confirm', 
+          onPress: async () => {
+            try {
+              await updateOrderStatus(orderId, newStatus);
+              socketService.emit('order:status_change', {
+                orderId,
+                status: newStatus
+              });
+              Toast.show({
+                type: 'success',
+                text1: 'Order Updated',
+                text2: `Status is now ${newStatus.replace('_', ' ')}`
+              });
+            } catch (err: any) {
+              Toast.show({
+                type: 'error',
+                text1: 'Update Failed',
+                text2: err.message
+              });
+            }
           }
         },
       ]
@@ -95,12 +204,35 @@ export default function ActiveTripMap() {
     }
   };
 
+  const openNavigation = () => {
+    if (!activeTrip || activeTrip.orders.length === 0) return;
+    const nextOrder = activeTrip.orders[0];
+    const { latitude, longitude } = nextOrder.deliveryLocation || { latitude: 0, longitude: 0 };
+    
+    const url = Platform.select({
+      ios: `maps:0,0?q=${latitude},${longitude}`,
+      android: `geo:0,0?q=${latitude},${longitude}`,
+    });
+
+    if (url) {
+      Linking.openURL(url).catch(() => {
+        Alert.alert('Error', 'Could not open map application');
+      });
+    }
+  };
+
   if (!activeTrip) {
     return (
       <View style={styles.emptyContainer}>
         <Truck size={64} color="#334155" />
         <Text style={styles.emptyTitle}>No Active Trip</Text>
         <Text style={styles.emptySubtitle}>Go to the Trips tab to accept a new assignment</Text>
+        <TouchableOpacity 
+          style={styles.refreshButton} 
+          onPress={() => useTripStore.getState().fetchTrips()}
+        >
+          <Text style={styles.refreshButtonText}>Refresh</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -133,27 +265,60 @@ export default function ActiveTripMap() {
           </Marker>
         )}
 
-        {/* Example waypoints */}
-        <Marker
-          coordinate={{ latitude: 21.03, longitude: 105.86 }}
-          title="Pickup: Warehouse A"
-          pinColor="#6366f1"
-        />
-        
-        {activeTrip.orders.map((order, index) => (
-          <Marker
-            key={order.id}
-            coordinate={{ latitude: 21.04 + (index * 0.01), longitude: 105.87 + (index * 0.01) }}
-            title={`Delivery: ${order.customerName}`}
-            pinColor="#10b981"
+        {/* Route Polyline */}
+        {activeTrip.plannedRoute && activeTrip.plannedRoute.length > 0 && (
+          <Polyline
+            coordinates={activeTrip.plannedRoute}
+            strokeColor="#6366f1"
+            strokeWidth={4}
+            lineDashPattern={[0]}
           />
+        )}
+
+        {/* Pickup Marker (Warehouse) */}
+        {activeTrip.orders[0]?.pickupLocation && (
+          <Marker
+            coordinate={activeTrip.orders[0].pickupLocation}
+            title="Pickup: Warehouse"
+          >
+             <View style={[styles.markerContainer, { backgroundColor: '#6366f1' }]}>
+                <Truck size={14} color="#fff" />
+             </View>
+          </Marker>
+        )}
+        
+        {/* Delivery Markers */}
+        {activeTrip.orders.map((order) => (
+          order.deliveryLocation && (
+            <Marker
+              key={order.id}
+              coordinate={order.deliveryLocation}
+              title={`Delivery: ${order.customerName}`}
+              description={order.address}
+            >
+              <View style={[styles.markerContainer, { backgroundColor: '#10b981' }]}>
+                <MapPin size={14} color="#fff" />
+              </View>
+            </Marker>
+          )
         ))}
       </MapView>
 
       <View style={styles.topOverlay}>
+        <View style={styles.header}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={styles.headerTitle}>Live Tracking</Text>
+              <Text style={styles.headerSubtitle}>
+                {activeTrip ? `Trip #${activeTrip.id.substring(0, 8).toUpperCase()}` : 'No active trip'}
+              </Text>
+            </View>
+            <ConnectionStatus />
+          </View>
+        </View>
         <View style={styles.tripInfoCard}>
           <View style={styles.tripInfoMain}>
-            <Text style={styles.tripIdText}>Trip: {activeTrip.id}</Text>
+            <Text style={styles.tripIdText}>Trip: {activeTrip.id.substring(0, 8)}</Text>
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(activeTrip.status) }]}>
               <Text style={styles.statusText}>{activeTrip.status.toUpperCase()}</Text>
             </View>
@@ -172,47 +337,83 @@ export default function ActiveTripMap() {
             <MapPin size={24} color="#10b981" />
             <View style={styles.stopTextContainer}>
               <Text style={styles.stopLabel}>Next Stop</Text>
-              <Text style={styles.stopAddress}>{activeTrip.orders[0].address}</Text>
+              <Text style={styles.stopAddress}>{activeTrip.orders[0]?.address || 'No orders'}</Text>
             </View>
-            <TouchableOpacity style={styles.callButton}>
+            <TouchableOpacity style={styles.callButton} onPress={openNavigation}>
+              <Navigation size={20} color="#6366f1" />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.callButton, { marginLeft: 10 }]}>
               <Phone size={20} color="#6366f1" />
             </TouchableOpacity>
           </View>
 
           <View style={styles.buttonRow}>
-            {activeTrip.status === TripStatus.ASSIGNED && (
+            {activeTrip.status === TripStatus.ACCEPTED && (
               <TouchableOpacity 
                 style={[styles.actionButton, { backgroundColor: '#6366f1' }]}
-                onPress={() => handleStatusUpdate(TripStatus.STARTED)}
+                onPress={() => handleStatusUpdate(TripStatus.IN_PROGRESS)}
               >
                 <Truck size={20} color="#fff" />
-                <Text style={styles.actionButtonText}>Start Trip</Text>
+                <Text style={styles.actionButtonText}>Start Delivery</Text>
               </TouchableOpacity>
             )}
 
-            {activeTrip.status === TripStatus.STARTED && (
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: '#f59e0b' }]}
-                onPress={() => handleStatusUpdate(TripStatus.PICKED_UP)}
-              >
-                <Truck size={20} color="#fff" />
-                <Text style={styles.actionButtonText}>Arrived at Pickup</Text>
-              </TouchableOpacity>
-            )}
+            {activeTrip.status === TripStatus.IN_PROGRESS && (() => {
+              const currentOrder = activeTrip.orders.find(o => o.status !== OrderStatus.DELIVERED);
+              
+              if (!currentOrder) {
+                return (
+                  <TouchableOpacity 
+                    style={[styles.actionButton, { backgroundColor: '#3b82f6' }]}
+                    onPress={() => handleStatusUpdate(TripStatus.COMPLETED)}
+                  >
+                    <CheckCircle2 size={20} color="#fff" />
+                    <Text style={styles.actionButtonText}>Finish Trip</Text>
+                  </TouchableOpacity>
+                );
+              }
 
-            {(activeTrip.status === TripStatus.PICKED_UP || activeTrip.status === TripStatus.DELIVERING) && (
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: '#10b981' }]}
-                onPress={() => handleStatusUpdate(TripStatus.COMPLETED)}
-              >
-                <CheckCircle2 size={20} color="#fff" />
-                <Text style={styles.actionButtonText}>Delivered</Text>
-              </TouchableOpacity>
-            )}
+              if (currentOrder.status === OrderStatus.ASSIGNED || currentOrder.status === OrderStatus.PENDING) {
+                return (
+                  <TouchableOpacity 
+                    style={[styles.actionButton, { backgroundColor: '#f59e0b' }]}
+                    onPress={() => handleOrderStatusUpdate(currentOrder.id, OrderStatus.PICKED_UP)}
+                  >
+                    <Truck size={20} color="#fff" />
+                    <Text style={styles.actionButtonText}>Picked Up</Text>
+                  </TouchableOpacity>
+                );
+              }
 
-            <TouchableOpacity style={styles.sosButton}>
-              <AlertTriangle size={24} color="#ef4444" />
-            </TouchableOpacity>
+              if (currentOrder.status === OrderStatus.PICKED_UP) {
+                return (
+                  <TouchableOpacity 
+                    style={[styles.actionButton, { backgroundColor: '#8b5cf6' }]}
+                    onPress={() => handleOrderStatusUpdate(currentOrder.id, OrderStatus.DELIVERING)}
+                  >
+                    <Navigation size={20} color="#fff" />
+                    <Text style={styles.actionButtonText}>Delivering</Text>
+                  </TouchableOpacity>
+                );
+              }
+
+              return (
+                <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: '#10b981' }]}
+                  onPress={() => {
+                    router.push({
+                      pathname: '/camera',
+                      params: { orderId: currentOrder.id, tripId: activeTrip.id }
+                    });
+                  }}
+                >
+                  <CheckCircle2 size={20} color="#fff" />
+                  <Text style={styles.actionButtonText}>Complete Order</Text>
+                </TouchableOpacity>
+              );
+            })()}
+
+            <SosButton tripId={activeTrip.id} />
           </View>
         </View>
       </View>
@@ -222,10 +423,11 @@ export default function ActiveTripMap() {
 
 const getStatusColor = (status: TripStatus) => {
   switch (status) {
-    case TripStatus.ASSIGNED: return '#6366f1';
-    case TripStatus.STARTED: return '#3b82f6';
-    case TripStatus.PICKED_UP: return '#f59e0b';
-    case TripStatus.DELIVERING: return '#10b981';
+    case TripStatus.PENDING: return '#94a3b8';
+    case TripStatus.ACCEPTED: return '#6366f1';
+    case TripStatus.IN_PROGRESS: return '#10b981';
+    case TripStatus.COMPLETED: return '#3b82f6';
+    case TripStatus.CANCELLED: return '#ef4444';
     default: return '#64748b';
   }
 };
@@ -254,6 +456,19 @@ const styles = StyleSheet.create({
     top: 60,
     left: 20,
     right: 20,
+  },
+  header: {
+    marginBottom: 15,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#94a3b8',
+    marginTop: 2,
   },
   tripInfoCard: {
     backgroundColor: '#1e293b',
@@ -394,6 +609,31 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: '#6366f1',
+  },
+  markerContainer: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  refreshButton: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#6366f1',
+    borderRadius: 8,
+  },
+  refreshButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   emptyContainer: {
     flex: 1,

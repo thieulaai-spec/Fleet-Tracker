@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 
 @Injectable()
@@ -123,7 +124,11 @@ export class OrdersService {
     return this.ordersRepository.save(order);
   }
 
-  async updateStatus(id: string, status: OrderStatus): Promise<Order> {
+  async updateStatus(
+    id: string,
+    updateStatusDto: UpdateOrderStatusDto,
+  ): Promise<Order> {
+    const { status, photoUrl, signatureUrl } = updateStatusDto;
     const order = await this.findOne(id);
 
     // Status transition validation
@@ -144,6 +149,9 @@ export class OrdersService {
     }
 
     order.status = status;
+    if (photoUrl) order.photoUrl = photoUrl;
+    if (signatureUrl) order.signatureUrl = signatureUrl;
+
     return this.ordersRepository.save(order);
   }
 

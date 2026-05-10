@@ -10,6 +10,7 @@ import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Trip, TripStatus } from '../entities/trip.entity';
 import { TripOrder } from '../entities/trip-order.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class DispatchService {
@@ -21,6 +22,7 @@ export class DispatchService {
     @InjectRepository(Trip)
     private tripRepository: Repository<Trip>,
     private dataSource: DataSource,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async suggestVehicles(orderId: string) {
@@ -128,6 +130,10 @@ export class DispatchService {
       await queryRunner.manager.save(Vehicle, vehicle);
 
       await queryRunner.commitTransaction();
+
+      // Emit event for real-time notification
+      this.eventEmitter.emit('trip.assigned', savedTrip);
+
       return savedTrip;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -236,6 +242,10 @@ export class DispatchService {
       await queryRunner.manager.save(Vehicle, vehicle);
 
       await queryRunner.commitTransaction();
+
+      // Emit event for real-time notification
+      this.eventEmitter.emit('trip.assigned', savedTrip);
+
       return savedTrip;
     } catch (err) {
       await queryRunner.rollbackTransaction();

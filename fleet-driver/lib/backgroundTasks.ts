@@ -2,34 +2,62 @@ import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import { socketService } from './socket';
 import { useTripStore } from '../store/useTripStore';
+import { offlineQueue } from './offlineQueue';
 
 export const LOCATION_TASK_NAME = 'background-location-task';
 
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
+  let locations = data?.locations;
+
   if (error) {
-    console.error('Background location task error:', error);
-    return;
+    console.error('[Background] Location task error:', error);
+    // Fallback: try to get last known position
+    try {
+      const lastLocation = await Location.getLastKnownPositionAsync();
+      if (lastLocation) {
+        locations = [lastLocation];
+      }
+    } catch (e) {
+      console.error('[Background] Last known position failed:', e);
+      return;
+    }
   }
 
-  if (data) {
-    const { locations } = data;
+  if (locations && locations.length > 0) {
     const location = locations[0];
+    
+    // Battery Optimization: Skip if accuracy is very poor (> 100m) 
+    if (location.coords.accuracy && location.coords.accuracy > 100) {
+      console.log('[Background] Skipping inaccurate location:', location.coords.accuracy);
+      return;
+    }
 
-    if (location) {
-      const { activeTrip } = useTripStore.getState();
+    const activeTrip = useTripStore.getState().activeTrip;
+    
+    if (activeTrip) {
+      // Connect if not connected (background task might run when app is killed)
+      socketService.connect();
       
-      if (activeTrip) {
-        // Connect if not connected (background task might run when app is killed)
-        socketService.connect();
-        
-        socketService.emit('location:update', {
+      try {
+        const payload = {
           tripId: activeTrip.id,
+          vehicleId: activeTrip.vehicleId,
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-          heading: location.coords.heading,
-          speed: location.coords.speed,
-          timestamp: location.timestamp,
-        });
+          heading: location.coords.heading || 0,
+          speed: location.coords.speed || 0,
+          timestamp: new Date(location.timestamp).toISOString(),
+        };
+
+        if (socketService.getSocket()?.connected) {
+          socketService.emit('gps:update', payload);
+          console.log(`[Background] GPS update sent for trip ${activeTrip.id}`);
+        } else {
+          console.log('[Background] Socket disconnected, queueing GPS point');
+          await offlineQueue.push(payload);
+        }
+      } catch (emitError) {
+        console.error('[Background] Failed to handle GPS update:', emitError);
       }
     }
   }
@@ -37,17 +65,25 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
 
 export const startBackgroundLocation = async () => {
   const { status } = await Location.requestBackgroundPermissionsAsync();
-  if (status === 'granted') {
+  if (status !== 'granted') {
+    console.error('Background location permission denied');
+    return;
+  }
+
+  const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
+  if (!isRegistered) {
     await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: Location.Accuracy.High,
-      timeInterval: 10000,
-      distanceInterval: 20,
+      accuracy: Location.Accuracy.Balanced,
+      timeInterval: 10000, // 10 seconds
+      distanceInterval: 20, // 20 meters
       foregroundService: {
-        notificationTitle: 'Fleet Tracker is active',
-        notificationBody: 'Your location is being tracked for the current trip',
-        notificationColor: '#6366f1',
+        notificationTitle: 'FleetTracker Tracking',
+        notificationBody: 'FleetTracker is tracking your location for an active trip.',
+        notificationColor: '#3b82f6',
       },
+      pausesUpdatesAutomatically: true, // Battery optimization
     });
+    console.log('Background location tracking started');
   }
 };
 
@@ -55,5 +91,6 @@ export const stopBackgroundLocation = async () => {
   const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
   if (isRegistered) {
     await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    console.log('Background location tracking stopped');
   }
 };

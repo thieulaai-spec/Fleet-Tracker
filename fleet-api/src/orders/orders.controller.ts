@@ -62,13 +62,13 @@ export class OrdersController {
   }
 
   @Patch(':id/status')
-  @Roles(UserRole.ADMIN) // In Phase 04, Drivers might also update status
+  @Roles(UserRole.ADMIN, UserRole.DRIVER) // Allow drivers too
   @ApiOperation({ summary: 'Update order status' })
   updateStatus(
     @Param('id') id: string,
     @Body() updateOrderStatusDto: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateStatus(id, updateOrderStatusDto.status);
+    return this.ordersService.updateStatus(id, updateOrderStatusDto);
   }
 
   @Delete(':id')

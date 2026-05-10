@@ -13,7 +13,9 @@
 - **Scripts:** Thêm các lệnh quản lý migration vào `package.json`.
 
 ### Fixed
-- Khắc phục lỗi crash khi khởi tạo database ở môi trường production.
+- **SSL Error:** Khắc phục lỗi `SELF_SIGNED_CERT_IN_CHAIN` bằng cách thiết lập `rejectUnauthorized: false` trong `AppModule` và `data-source.ts`.
+- **Deployment Entry Point:** Sửa lỗi không tìm thấy module khi khởi động trên Render bằng cách trỏ đúng đường dẫn `dist/src/main`.
+- **Migration Conflict:** Giải quyết lỗi `NOT NULL VIOLATION` bằng cách sử dụng `InitialSchema` migration mới trên database sạch.
 
 
 

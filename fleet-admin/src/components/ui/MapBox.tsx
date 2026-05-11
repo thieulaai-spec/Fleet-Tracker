@@ -42,6 +42,29 @@ interface MapBoxProps {
 }
 
 /**
+ * Resolves CSS variables like var(--color-primary) to their hex values.
+ * Mapbox paint properties do not support CSS variables.
+ */
+function resolveColor(color: string | undefined): string {
+  if (!color) return '#6366f1';
+  if (!color.startsWith('var(')) return color;
+
+  // Mapping of common project CSS variables to their hex values
+  const colorMap: Record<string, string> = {
+    '--color-primary': '#6366f1',
+    '--color-primary-light': '#c0c1ff',
+    '--color-success': '#22c55e',
+    '--color-warning': '#f59e0b',
+    '--color-danger': '#ef4444',
+    '--color-secondary': '#0ea5e9',
+    '--color-tertiary': '#10b981',
+  };
+
+  const variableName = color.match(/var\(([^)]+)\)/)?.[1];
+  return variableName ? colorMap[variableName] || '#6366f1' : color;
+}
+
+/**
  * Interactive MapBox Component
  * Uses react-map-gl for real-time fleet tracking and trip visualization.
  */
@@ -169,7 +192,7 @@ export function MapBox({
                 id={`line-${line.id}`}
                 type="line"
                 paint={{
-                  'line-color': line.color || '#6366f1',
+                  'line-color': resolveColor(line.color),
                   'line-width': line.width ?? 2,
                   'line-opacity': 0.75,
                   'line-dasharray': dashArray,
@@ -194,7 +217,7 @@ export function MapBox({
                   {marker.label}
                 </div>
               )}
-              <div className="marker-icon" style={{ color: marker.color || 'var(--color-primary)' }}>
+              <div className="marker-icon" style={{ color: resolveColor(marker.color) }}>
                 {marker.icon || <MapPin size={selectedMarkerId === marker.id ? 32 : 24} fill="currentColor" stroke="white" strokeWidth={1} />}
               </div>
             </div>

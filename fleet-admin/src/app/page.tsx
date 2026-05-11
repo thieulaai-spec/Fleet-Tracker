@@ -23,6 +23,7 @@ import { Dropdown } from '@/components/ui/Dropdown';
 import { useVehicles } from '@/hooks/use-vehicles';
 import { useDrivers } from '@/hooks/use-drivers';
 import { useOrders } from '@/hooks/use-orders';
+import { useAlerts } from '@/hooks/use-alerts';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 
@@ -31,13 +32,13 @@ export default function DashboardPage() {
   const { vehicles, isLoading: vehiclesLoading } = useVehicles();
   const { drivers, isLoading: driversLoading } = useDrivers();
   const { orders, isLoading: ordersLoading } = useOrders();
+  const { alerts, isLoading: alertsLoading, resolveAlert } = useAlerts();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  const isLoading = vehiclesLoading || driversLoading || ordersLoading;
   const currency = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
@@ -89,27 +90,7 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
 
-  const initialAlerts = React.useMemo(() => [
-    { id: 1, type: 'speed', message: 'Vehicle VN-102 exceeding speed limit (85km/h)', time: '2 mins ago', plate: 'VN-102' },
-    { id: 2, type: 'route', message: 'Vehicle VN-045 diverted from planned route', time: '15 mins ago', plate: 'VN-045' },
-    { id: 3, type: 'stop', message: 'Vehicle VN-088 unplanned stop > 30 mins', time: '40 mins ago', plate: 'VN-088' },
-  ], []);
-
-  const [activeAlerts, setActiveAlerts] = React.useState<any[]>([]);
-
-  React.useEffect(() => {
-    if (vehicles.length > 0) {
-      const enhancedAlerts = initialAlerts.map(alert => {
-        const vehicle = vehicles.find((v: Vehicle) => v.plateNumber.includes(alert.plate));
-        return { ...alert, vehicleId: vehicle?.id };
-      });
-      setActiveAlerts(enhancedAlerts);
-    }
-  }, [vehicles, initialAlerts]);
-
-  const dismissAlert = (id: number) => {
-    setActiveAlerts(prev => prev.filter(alert => alert.id !== id));
-  };
+  const isLoading = vehiclesLoading || driversLoading || ordersLoading || alertsLoading;
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" size={32} /></div>;
@@ -187,32 +168,35 @@ export default function DashboardPage() {
             <Badge variant="danger">Live</Badge>
           </div>
           <div className="alerts-list">
-            {activeAlerts.length === 0 ? (
+            {alerts.length === 0 ? (
               <div className="text-dim text-center py-8">No active alerts</div>
             ) : (
-              activeAlerts.map((alert) => (
+              alerts.map((alert) => (
                 <div key={alert.id} className={`alert-item alert-${alert.type}`}>
                   <div className="alert-content">
                     <div className="alert-header">
                       <AlertTriangle size={16} />
-                      <span className="alert-type">{alert.type.toUpperCase()}</span>
+                      <span className="alert-type">{alert.type.replace('_', ' ').toUpperCase()}</span>
                     </div>
                     <p className="alert-message">{alert.message}</p>
-                    <span className="alert-time"><Clock size={12} /> {alert.time}</span>
+                    <span className="alert-time">
+                      <Clock size={12} /> 
+                      {mounted ? `${formatDistanceToNow(new Date(alert.createdAt))} ago` : '...'}
+                    </span>
                   </div>
                   <Dropdown align="right" trigger={
                     <Button variant="secondary" size="sm">
                       Action
                     </Button>
                   }>
-                    <button className="dropdown-item" onClick={() => router.push(`/dispatch${alert.vehicleId ? `?vehicleId=${alert.vehicleId}` : ''}`)}>
+                    <button className="dropdown-item" onClick={() => router.push(`/dispatch?vehicleId=${alert.vehicleId}`)}>
                       <Navigation size={16} /> Track Location
                     </button>
-                    <button className="dropdown-item" onClick={() => router.push(`/vehicles?search=${alert.plate}`)}>
+                    <button className="dropdown-item" onClick={() => router.push(`/vehicles?search=${alert.vehicle?.plateNumber}`)}>
                       <AlertTriangle size={16} /> View Vehicle
                     </button>
                     <div className="dropdown-divider" />
-                    <button className="dropdown-item" onClick={() => dismissAlert(alert.id)}>
+                    <button className="dropdown-item" onClick={() => resolveAlert(alert.id)}>
                       <CheckCircle size={16} /> Dismiss Alert
                     </button>
                   </Dropdown>
@@ -334,14 +318,17 @@ export default function DashboardPage() {
           margin-bottom: 4px;
         }
 
-        .alert-speed { border-left-color: var(--color-danger); }
-        .alert-speed .alert-type { color: var(--color-danger); }
+        .alert-speed_violation { border-left-color: var(--color-danger); }
+        .alert-speed_violation .alert-type { color: var(--color-danger); }
         
-        .alert-route { border-left-color: var(--color-warning); }
-        .alert-route .alert-type { color: var(--color-warning); }
+        .alert-route_deviation { border-left-color: var(--color-warning); }
+        .alert-route_deviation .alert-type { color: var(--color-warning); }
         
-        .alert-stop { border-left-color: #f97316; }
-        .alert-stop .alert-type { color: #f97316; }
+        .alert-abnormal_stop { border-left-color: #f97316; }
+        .alert-abnormal_stop .alert-type { color: #f97316; }
+
+        .alert-incident { border-left-color: #ef4444; }
+        .alert-incident .alert-type { color: #ef4444; }
 
         .alert-message {
           font-size: 13px;

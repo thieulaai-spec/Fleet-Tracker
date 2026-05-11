@@ -1,3 +1,19 @@
+## [2026-05-11] - Dashboard Real-time Alerts & Monitoring
+### Added
+- **Frontend (Admin Dashboard)**:
+    - Triển khai **Real-time Active Alerts**:
+        - Thay thế toàn bộ dữ liệu hardcoded (fake) bằng dữ liệu thực tế từ API `/alerts/active`.
+        - Tích hợp **WebSocket Listener** (`alert:new`, `alert:resolved`) để cập nhật danh sách cảnh báo ngay lập tức mà không cần tải lại trang.
+        - Tạo hook `useAlerts` hỗ trợ quản lý trạng thái, xử lý lỗi và polling fallback (60s).
+        - Cập nhật giao diện Dashboard hiển thị đầy đủ các loại vi phạm: Quá tốc độ, Lệch lộ trình, Dừng đỗ bất thường và Sự cố (Incident).
+        - Hỗ trợ chức năng **Dismiss Alert** đồng bộ trực tiếp với cơ sở dữ liệu qua API `/resolve`.
+
+### Fixed
+- **Frontend (Admin Dashboard)**:
+    - Khắc phục lỗi TypeScript: Xử lý biến `isLoading` bị khai báo trùng lặp trong `DashboardPage`.
+    - Đồng bộ hóa kiểu dữ liệu Alert Enums giữa Backend (Postgres) và Frontend (TypeScript).
+    - Đảm bảo build production thành công 100% với các thay đổi mới.
+
 ## [2026-05-11] - Interactive Order Dispatch & Driver Management (Phase 12)
 ### Added
 - **Frontend (Admin Dashboard)**:

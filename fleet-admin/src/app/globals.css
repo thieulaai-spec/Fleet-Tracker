@@ -245,12 +245,16 @@
 @utility px-md { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
 @utility px-lg { padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
 @utility px-xl { padding-left: var(--spacing-xl); padding-right: var(--spacing-xl); }
+@utility px-2xl { padding-left: var(--spacing-2xl); padding-right: var(--spacing-2xl); }
+@utility px-3xl { padding-left: var(--spacing-3xl); padding-right: var(--spacing-3xl); }
 
 @utility py-xs { padding-top: var(--spacing-xs); padding-bottom: var(--spacing-xs); }
 @utility py-sm { padding-top: var(--spacing-sm); padding-bottom: var(--spacing-sm); }
 @utility py-md { padding-top: var(--spacing-md); padding-bottom: var(--spacing-md); }
 @utility py-lg { padding-top: var(--spacing-lg); padding-bottom: var(--spacing-lg); }
 @utility py-xl { padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl); }
+@utility py-2xl { padding-top: var(--spacing-2xl); padding-bottom: var(--spacing-2xl); }
+@utility py-3xl { padding-top: var(--spacing-3xl); padding-bottom: var(--spacing-3xl); }
 
 @utility pt-lg { padding-top: var(--spacing-lg); }
 @utility pb-xl { padding-bottom: var(--spacing-xl); }
@@ -261,18 +265,24 @@
 @utility m-md { margin: var(--spacing-md); }
 @utility m-lg { margin: var(--spacing-lg); }
 @utility m-xl { margin: var(--spacing-xl); }
+@utility m-2xl { margin: var(--spacing-2xl); }
+@utility m-3xl { margin: var(--spacing-3xl); }
 
 @utility mt-xs { margin-top: var(--spacing-xs); }
 @utility mt-sm { margin-top: var(--spacing-sm); }
 @utility mt-md { margin-top: var(--spacing-md); }
 @utility mt-lg { margin-top: var(--spacing-lg); }
 @utility mt-xl { margin-top: var(--spacing-xl); }
+@utility mt-2xl { margin-top: var(--spacing-2xl); }
+@utility mt-3xl { margin-top: var(--spacing-3xl); }
 
 @utility mb-xs { margin-bottom: var(--spacing-xs); }
 @utility mb-sm { margin-bottom: var(--spacing-sm); }
 @utility mb-md { margin-bottom: var(--spacing-md); }
 @utility mb-lg { margin-bottom: var(--spacing-lg); }
 @utility mb-xl { margin-bottom: var(--spacing-xl); }
+@utility mb-2xl { margin-bottom: var(--spacing-2xl); }
+@utility mb-3xl { margin-bottom: var(--spacing-3xl); }
 
 @utility gap-xs { gap: var(--spacing-xs); }
 @utility gap-sm { gap: var(--spacing-sm); }

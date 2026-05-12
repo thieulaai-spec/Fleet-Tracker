@@ -18,12 +18,12 @@ export function Header() {
 
   return (
     <header className="h-header px-xl flex items-center justify-between sticky top-0 z-90 border-b border-border glass">
-      <div className="flex items-center bg-surface-low border border-outline-variant rounded-default px-md w-(400px) transition-all focus-within:border-primary focus-within:bg-surface-high focus-within:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]">
+      <div className="flex items-center bg-surface-low border border-outline-variant rounded-default px-md w-[400px] transition-all focus-within:border-primary focus-within:bg-surface-high focus-within:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]">
         <Search size={18} className="text-text-dim" />
         <input 
           type="text" 
           placeholder="Search for vehicles, drivers or orders..." 
-          className="border-none bg-transparent text-text p-md w-(400px) outline-none font-body-md"
+          className="border-none bg-transparent text-text p-md w-[400px] outline-none font-body-md"
         />
       </div>
 

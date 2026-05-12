@@ -403,7 +403,7 @@ export default function OrdersPage() {
         onConfirm={handleCancelOrder}
       />
 
-      <section className="card flex justify-between items-center px-xl py-lg gap-xl shadow-glow/5 border-primary/10">
+      <section className="card flex justify-between items-center px-xl py-lg gap-xl shadow-glow border-primary/10">
         <SearchInput
           placeholder="Search by ID or address..."
           value={searchQuery}

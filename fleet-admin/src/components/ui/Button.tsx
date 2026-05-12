@@ -33,7 +33,7 @@ export function Button({
   const sizes = {
     sm: 'px-md py-xs text-xs h-9',
     md: 'px-lg py-sm text-sm h-11',
-    lg: 'px-xl py-md text-base h-13',
+    lg: 'px-xl py-md text-base h-14',
   };
 
   const baseClasses = `

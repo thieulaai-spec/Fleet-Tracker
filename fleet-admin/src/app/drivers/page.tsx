@@ -216,7 +216,7 @@ export default function DriversPage() {
         />
       </section>
 
-      <section className="card flex justify-between items-center px-xl py-lg gap-xl mb-xl shadow-glow/5 border-primary/10">
+      <section className="card flex justify-between items-center px-xl py-lg gap-xl mb-xl shadow-glow border-primary/10">
         <SearchInput
           placeholder="Search by name, email or phone..."
           value={searchQuery}

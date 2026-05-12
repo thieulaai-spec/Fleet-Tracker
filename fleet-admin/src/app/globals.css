@@ -97,33 +97,35 @@
 }
 
 /* ===== Base Styles ===== */
-html {
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
-}
+@layer base {
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
 
-body {
-  font: var(--font-body-md);
-  color: var(--color-text);
-  background: var(--color-background);
-  letter-spacing: 0;
-  line-height: 1.6;
-}
+  body {
+    font: var(--font-body-md);
+    color: var(--color-text);
+    background: var(--color-background);
+    letter-spacing: 0;
+    line-height: 1.6;
+  }
 
-/* ===== Headings ===== */
-h1 { font: var(--font-h1); letter-spacing: -0.02em; margin-bottom: var(--spacing-xs); }
-h2 { font: var(--font-h2); letter-spacing: -0.01em; margin-bottom: var(--spacing-xs); }
-h3 { font: var(--font-h3); letter-spacing: -0.01em; margin-bottom: var(--spacing-xs); }
+  /* ===== Headings ===== */
+  h1 { font: var(--font-h1); letter-spacing: -0.02em; margin-bottom: var(--spacing-xs); }
+  h2 { font: var(--font-h2); letter-spacing: -0.01em; margin-bottom: var(--spacing-xs); }
+  h3 { font: var(--font-h3); letter-spacing: -0.01em; margin-bottom: var(--spacing-xs); }
 
-/* ===== Links ===== */
-a {
-  color: var(--color-primary-light);
-  text-decoration: none;
-  transition: color var(--transition-fast);
+  /* ===== Links ===== */
+  a {
+    color: var(--color-primary-light);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  a:hover { color: var(--color-primary); }
 }
-a:hover { color: var(--color-primary); }
 
 /* ===== Glassmorphism ===== */
 .glass {
@@ -170,86 +172,11 @@ a:hover { color: var(--color-primary); }
 .text-warning { color: var(--color-warning); }
 .text-danger { color: var(--color-danger); }
 
-/* === Custom Spacing Utilities === */
-/* Tailwind v4 sometimes conflicts with breakpoint names for spacing. 
-   We explicitly define these to ensure they are available. */
-@utility p-xs { padding: var(--spacing-xs); }
-@utility p-sm { padding: var(--spacing-sm); }
-@utility p-md { padding: var(--spacing-md); }
-@utility p-lg { padding: var(--spacing-lg); }
-@utility p-xl { padding: var(--spacing-xl); }
-@utility p-2xl { padding: var(--spacing-2xl); }
-@utility p-3xl { padding: var(--spacing-3xl); }
-
-@utility px-xs { padding-left: var(--spacing-xs); padding-right: var(--spacing-xs); }
-@utility px-sm { padding-left: var(--spacing-sm); padding-right: var(--spacing-sm); }
-@utility px-md { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
-@utility px-lg { padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
-@utility px-xl { padding-left: var(--spacing-xl); padding-right: var(--spacing-xl); }
-@utility px-2xl { padding-left: var(--spacing-2xl); padding-right: var(--spacing-2xl); }
-
-@utility py-xs { padding-top: var(--spacing-xs); padding-bottom: var(--spacing-xs); }
-@utility py-sm { padding-top: var(--spacing-sm); padding-bottom: var(--spacing-sm); }
-@utility py-md { padding-top: var(--spacing-md); padding-bottom: var(--spacing-md); }
-@utility py-lg { padding-top: var(--spacing-lg); padding-bottom: var(--spacing-lg); }
-@utility py-xl { padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl); }
-@utility py-2xl { padding-top: var(--spacing-2xl); padding-bottom: var(--spacing-2xl); }
-
-@utility gap-xs { gap: var(--spacing-xs); }
-@utility gap-sm { gap: var(--spacing-sm); }
-@utility gap-md { gap: var(--spacing-md); }
-@utility gap-lg { gap: var(--spacing-lg); }
-@utility gap-xl { gap: var(--spacing-xl); }
-@utility gap-2xl { gap: var(--spacing-2xl); }
-
-@utility m-xs { margin: var(--spacing-xs); }
-@utility m-sm { margin: var(--spacing-sm); }
-@utility m-md { margin: var(--spacing-md); }
-@utility m-lg { margin: var(--spacing-lg); }
-@utility m-xl { margin: var(--spacing-xl); }
-@utility m-2xl { margin: var(--spacing-2xl); }
-
-@utility mt-xs { margin-top: var(--spacing-xs); }
-@utility mt-sm { margin-top: var(--spacing-sm); }
-@utility mt-md { margin-top: var(--spacing-md); }
-@utility mt-lg { margin-top: var(--spacing-lg); }
-@utility mt-xl { margin-top: var(--spacing-xl); }
-@utility mt-2xl { margin-top: var(--spacing-2xl); }
-
-@utility mb-xs { margin-bottom: var(--spacing-xs); }
-@utility mb-sm { margin-bottom: var(--spacing-sm); }
-@utility mb-md { margin-bottom: var(--spacing-md); }
-@utility mb-lg { margin-bottom: var(--spacing-lg); }
-@utility mb-xl { margin-bottom: var(--spacing-xl); }
-@utility mb-2xl { margin-bottom: var(--spacing-2xl); }
-
-@utility ml-xs { margin-left: var(--spacing-xs); }
-@utility ml-sm { margin-left: var(--spacing-sm); }
-@utility ml-md { margin-left: var(--spacing-md); }
-@utility ml-lg { margin-left: var(--spacing-lg); }
-@utility ml-xl { margin-left: var(--spacing-xl); }
-@utility ml-2xl { margin-left: var(--spacing-2xl); }
-
-@utility mr-xs { margin-right: var(--spacing-xs); }
-@utility mr-sm { margin-right: var(--spacing-sm); }
-@utility mr-md { margin-right: var(--spacing-md); }
-@utility mr-lg { margin-right: var(--spacing-lg); }
-@utility mr-xl { margin-right: var(--spacing-xl); }
-@utility mr-2xl { margin-right: var(--spacing-2xl); }
-
-@utility mx-xs { margin-left: var(--spacing-xs); margin-right: var(--spacing-xs); }
-@utility mx-sm { margin-left: var(--spacing-sm); margin-right: var(--spacing-sm); }
-@utility mx-md { margin-left: var(--spacing-md); margin-right: var(--spacing-md); }
-@utility mx-lg { margin-left: var(--spacing-lg); margin-right: var(--spacing-lg); }
-@utility mx-xl { margin-left: var(--spacing-xl); margin-right: var(--spacing-xl); }
-@utility mx-2xl { margin-left: var(--spacing-2xl); margin-right: var(--spacing-2xl); }
-
-@utility my-xs { margin-top: var(--spacing-xs); margin-bottom: var(--spacing-xs); }
-@utility my-sm { margin-top: var(--spacing-sm); margin-bottom: var(--spacing-sm); }
-@utility my-md { margin-top: var(--spacing-md); margin-bottom: var(--spacing-md); }
-@utility my-lg { margin-top: var(--spacing-lg); margin-bottom: var(--spacing-lg); }
-@utility my-xl { margin-top: var(--spacing-xl); margin-bottom: var(--spacing-xl); }
-@utility my-2xl { margin-top: var(--spacing-2xl); margin-bottom: var(--spacing-2xl); }
+/* === Spacing Utilities === 
+   In Tailwind v4, these are automatically generated from --spacing-* variables in @theme.
+   If standard names like p-lg fail due to collision with breakpoints, 
+   we can use @utility to define them with a custom prefix if needed.
+*/
 @utility dropdown-item {
   display: flex;
   align-items: center;

@@ -59,7 +59,7 @@ describe('RolesGuard', () => {
     (
       mockExecutionContext.switchToHttp().getRequest as jest.Mock
     ).mockReturnValue({
-      user: { role: UserRole.OPERATOR },
+      user: { role: UserRole.DRIVER },
     });
     expect(guard.canActivate(mockExecutionContext)).toBe(false);
   });

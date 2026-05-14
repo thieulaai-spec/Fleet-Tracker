@@ -14,6 +14,8 @@
     - **Operational State Mapping**: Synchronized `statusMap` to include `transporting`, `off_duty`, and `completed` states, improving tracking accuracy.
 
 ### Fixed
+- **Backend (API)**:
+    - Fixed broken unit tests in `ViolationDetectorService`, `RolesGuard`, and `DriversService` caused by type mismatches (timestamp), missing enum members (`UserRole.OPERATOR`), and DTO class-to-object compatibility.
 - **Frontend (Admin Dashboard)**:
     - Resolved build parser errors in `tracking/page.tsx` caused by redundant text tokens.
     - Fixed layout shifting issues in the tracking sidebar when expanding vehicle details.

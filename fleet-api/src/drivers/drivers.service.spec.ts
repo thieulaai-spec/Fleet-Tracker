@@ -132,7 +132,7 @@ describe('DriversService', () => {
 
   describe('findAll', () => {
     it('should return paginated drivers', async () => {
-      const result = await service.findAll({ page: 1, limit: 10 });
+      const result = await service.findAll({ page: 1, limit: 10 } as any);
       expect(result.data).toEqual([mockDriver]);
       expect(result.total).toBe(1);
     });

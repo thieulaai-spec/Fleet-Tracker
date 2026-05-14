@@ -19,9 +19,17 @@ export default function DispatchPage() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [vehicleSearchQuery, setVehicleSearchQuery] = React.useState('');
 
+  // Object của đơn hàng đang được chọn — để truyền vào Sidebar kiểm tra tải trọng
+  const selectedOrderData = React.useMemo(
+    () => pendingOrders.find((o) => o.id === selectedOrder) ?? null,
+    [pendingOrders, selectedOrder],
+  );
+
   // ===== SPEC: A-06 — Smart vehicle suggestions (AC-DIS-01, TC-02) =====
-  // Chỉ gọi API khi đã chọn đơn hàng
-  const { data: suggestions, isLoading: isSuggestLoading } = useDispatchSuggest(selectedOrder);
+  // Chỉ gọi API khi đã chọn đơn hàng và đơn hàng đó đang trong danh sách PENDING
+  const { data: suggestions, isLoading: isSuggestLoading, error: suggestError } = useDispatchSuggest(
+    selectedOrderData ? selectedOrder : null
+  );
 
   // ===== SPEC: Module 4 — Gom đơn (Clustering within 3km radius) =====
   // Dùng API /dispatch/cluster thay thế string-split cũ
@@ -42,11 +50,7 @@ export default function DispatchPage() {
     }
   }, [searchParams]);
 
-  // Object của đơn hàng đang được chọn — để truyền vào Sidebar kiểm tra tải trọng
-  const selectedOrderData = React.useMemo(
-    () => pendingOrders.find((o) => o.id === selectedOrder) ?? null,
-    [pendingOrders, selectedOrder],
-  );
+
 
   const filteredPendingOrders = React.useMemo(() => {
     return pendingOrders.filter((order) =>

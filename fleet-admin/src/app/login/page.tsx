@@ -5,6 +5,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/Button';
 import { Truck, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 
+import { toast } from 'sonner';
+
 export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -19,9 +21,11 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+      toast.success('Welcome back, Admin');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
       setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

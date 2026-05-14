@@ -33,11 +33,11 @@ async function seed() {
     const orderRepository = dataSource.getRepository(Order);
 
     // 1. Seed Admin
-    const adminEmail = 'admin@fleettracker.com';
+    const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@fleettracker.com';
     let admin = await userRepository.findOne({ where: { email: adminEmail } });
     if (!admin) {
       const salt = await bcrypt.genSalt();
-      const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
+      const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@123';
       const passwordHash = await bcrypt.hash(adminPassword, salt);
       admin = userRepository.create({
         email: adminEmail,
@@ -91,13 +91,13 @@ async function seed() {
           email: data.email,
           passwordHash: await bcrypt.hash(driverPassword, salt),
           role: UserRole.DRIVER,
+          fullName: data.fullName,
+          phone: data.phone,
         });
         user = await userRepository.save(user);
 
         const driver = driverRepository.create({
           user,
-          fullName: data.fullName,
-          phone: data.phone,
           licenseClass: data.licenseClass,
           licenseExpiry: new Date('2030-01-01'),
           status: DriverStatus.AVAILABLE,

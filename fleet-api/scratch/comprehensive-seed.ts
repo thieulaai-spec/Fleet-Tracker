@@ -37,7 +37,7 @@ async function seedComprehensive() {
     const gpsLocationRepository = dataSource.getRepository(GpsLocation);
 
     // 1. Fetch some drivers, vehicles, and orders
-    const drivers = await driverRepository.find({ take: 5 });
+    const drivers = await driverRepository.find({ take: 5, relations: ['user'] });
     const vehicles = await vehicleRepository.find({ take: 5 });
     const orders = await orderRepository.find({ take: 10 });
 
@@ -61,7 +61,7 @@ async function seedComprehensive() {
           kpiScore: 85 + Math.random() * 15,
         });
         await driverKpiRepository.save(kpi);
-        console.log(`Created KPI for driver ${driver.fullName}`);
+        console.log(`Created KPI for driver ${driver.user?.fullName || 'Unknown'}`);
       }
     }
 

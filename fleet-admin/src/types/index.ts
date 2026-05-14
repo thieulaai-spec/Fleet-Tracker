@@ -42,8 +42,9 @@ export interface Vehicle {
   type: VehicleType;
   maxCapacityKg: number;
   currentLoadKg: number;
-  driverId?: string;
-  driver?: Driver;
+  driverId?: string | null;
+  driver?: Driver | null;
+  deviceId?: string | null;
   status: VehicleStatus;
   imageUrl?: string;
   lastKnownLocation?: GeoPoint;

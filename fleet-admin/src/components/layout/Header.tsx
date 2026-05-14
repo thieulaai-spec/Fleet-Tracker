@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Dropdown } from '@/components/ui/Dropdown';
+import Link from 'next/link';
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -62,9 +63,9 @@ export function Header() {
               </div>
             }
           >
-            <button className="dropdown-item" onClick={() => console.log('Go to profile')}>
+            <Link href="/settings/profile" className="dropdown-item no-underline text-inherit flex items-center gap-md">
               <UserIcon size={18} /> Profile Settings
-            </button>
+            </Link>
             <button className="dropdown-item" onClick={() => console.log('Go to system config')}>
               <Settings size={18} /> System Config
             </button>

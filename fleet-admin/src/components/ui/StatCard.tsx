@@ -19,8 +19,8 @@ export function StatCard({ label, value, icon: Icon, trend, color = 'var(--color
     <div className={`
       flex flex-col gap-lg p-lg 
       bg-surface border border-border rounded-xl 
-      transition-all duration-200 group
-      ${(onClick || href) ? 'cursor-pointer hover:-translate-y-0.5 hover:border-primary-light' : ''}
+      transition-all duration-300 group hover:-translate-y-1 hover:shadow-glow hover:border-primary/30
+      ${(onClick || href) ? 'cursor-pointer hover:border-primary-light' : ''}
     `}>
       <div className="flex justify-between items-start">
         <div 

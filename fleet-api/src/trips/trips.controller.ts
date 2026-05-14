@@ -5,12 +5,13 @@ import {
   Body,
   Patch,
   Param,
+  Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TripsService } from './trips.service';
-import { ReportIncidentDto, UpdateTripStatusDto } from './dto/trip.dto';
+import { ReportIncidentDto, UpdateTripStatusDto, FindTripsQueryDto } from './dto/trip.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -32,8 +33,8 @@ export class TripsController {
   @Roles(UserRole.ADMIN, UserRole.DISPATCHER)
   @ApiOperation({ summary: 'List all trips (Admin only)' })
   @Get()
-  findAll() {
-    return this.tripsService.findAll();
+  findAll(@Query() query: FindTripsQueryDto) {
+    return this.tripsService.findAll(query);
   }
 
   @ApiOperation({ summary: 'Get trip details' })

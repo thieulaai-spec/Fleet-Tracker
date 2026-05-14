@@ -34,4 +34,9 @@ export class CreateVehicleDto {
   @IsNumber()
   @IsOptional()
   year?: number;
+
+  @ApiProperty({ example: 'GPS-DEVICE-001', nullable: true })
+  @IsString()
+  @IsOptional()
+  deviceId?: string | null;
 }

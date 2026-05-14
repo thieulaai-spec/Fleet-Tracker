@@ -49,7 +49,8 @@ export class AuthService {
     const { email, password } = loginDto;
     const user = await this.userRepository.findOne({
       where: { email, isActive: true },
-      select: ['id', 'email', 'passwordHash', 'role'],
+      select: ['id', 'email', 'passwordHash', 'role', 'fullName', 'phone', 'avatarUrl'],
+      relations: ['driver'],
     });
 
     if (
@@ -65,6 +66,10 @@ export class AuthService {
           id: user.id,
           email: user.email,
           role: user.role,
+          fullName: user.fullName,
+          phone: user.phone,
+          avatarUrl: user.avatarUrl,
+          driver: user.driver,
         },
       };
     }
@@ -81,7 +86,8 @@ export class AuthService {
       const userId = payload.sub;
       const user = await this.userRepository.findOne({
         where: { id: userId, isActive: true },
-        select: ['id', 'email', 'role', 'refreshTokenHash'],
+        select: ['id', 'email', 'role', 'refreshTokenHash', 'fullName', 'phone', 'avatarUrl'],
+        relations: ['driver'],
       });
 
       if (!user || !user.refreshTokenHash) {
@@ -103,6 +109,10 @@ export class AuthService {
           id: user.id,
           email: user.email,
           role: user.role,
+          fullName: user.fullName,
+          phone: user.phone,
+          avatarUrl: user.avatarUrl,
+          driver: user.driver,
         },
       };
     } catch (e) {
@@ -148,6 +158,7 @@ export class AuthService {
   async validateUser(payload: any): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { id: payload.sub, isActive: true },
+      relations: ['driver'],
     });
   }
 

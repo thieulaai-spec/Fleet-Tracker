@@ -30,6 +30,7 @@ describe('TrackingService', () => {
         execute: jest.fn().mockResolvedValue({}),
       }),
       find: jest.fn(),
+      findOne: jest.fn(),
     };
 
     driverRepo = {

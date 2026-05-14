@@ -46,7 +46,7 @@ export class CreateDriverDto {
   @IsOptional()
   licenseExpiry?: string;
 
-  @ApiProperty({ enum: DriverStatus, default: DriverStatus.OFF_DUTY })
+  @ApiProperty({ enum: DriverStatus, default: DriverStatus.AVAILABLE })
   @IsEnum(DriverStatus)
   @IsOptional()
   status?: DriverStatus;

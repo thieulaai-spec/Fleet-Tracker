@@ -42,6 +42,7 @@ const { width, height } = Dimensions.get('window');
 export default function ActiveTripMap() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('standard');
   
   const activeTrip = useTripStore(state => state.activeTrip);
   const updateTripStatus = useTripStore(state => state.updateTripStatus);
@@ -237,10 +238,30 @@ export default function ActiveTripMap() {
     }
   };
 
+  const toggleMapType = () => {
+    const types: ('standard' | 'satellite' | 'hybrid')[] = ['standard', 'satellite', 'hybrid'];
+    const currentIndex = types.indexOf(mapType);
+    const nextIndex = (currentIndex + 1) % types.length;
+    setMapType(types[nextIndex]);
+    
+    Toast.show({
+      type: 'info',
+      text1: 'Map View Updated',
+      text2: `Switched to ${types[nextIndex].toUpperCase()} mode`,
+      position: 'bottom',
+      bottomOffset: 120
+    });
+  };
+
+  const currentOrder = activeTrip?.orders.find(o => o.status !== OrderStatus.DELIVERED);
+  
   const openNavigation = () => {
-    if (!activeTrip || activeTrip.orders.length === 0) return;
-    const nextOrder = activeTrip.orders.find(o => o.status !== OrderStatus.DELIVERED) || activeTrip.orders[0];
-    const { latitude, longitude } = nextOrder.deliveryLocation || { latitude: 0, longitude: 0 };
+    if (!currentOrder) return;
+    const isPickingUp = currentOrder.status === OrderStatus.ASSIGNED || currentOrder.status === OrderStatus.PENDING;
+    const targetLocation = isPickingUp ? currentOrder.pickupLocation : currentOrder.deliveryLocation;
+    
+    if (!targetLocation) return;
+    const { latitude, longitude } = targetLocation;
     
     const url = Platform.select({
       ios: `maps:0,0?q=${latitude},${longitude}`,
@@ -300,23 +321,29 @@ export default function ActiveTripMap() {
     );
   }
 
-  const currentOrder = activeTrip.orders.find(o => o.status !== OrderStatus.DELIVERED);
+
+
+  // Calculate dynamic progress
+  const totalOrders = activeTrip.orders.length;
+  const completedOrders = activeTrip.orders.filter(o => o.status === OrderStatus.DELIVERED).length;
+  const progressPercent = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
 
   return (
-    <View className="flex-1 bg-[#020617]">
+    <View className="flex-1 bg-slate-950">
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       
       <MapComponent
         ref={mapRef as any}
         style={{ width: width, height: height }}
         provider={PROVIDER_GOOGLE}
+        mapType={mapType}
         initialRegion={{
           latitude: location?.coords.latitude || 21.0285,
           longitude: location?.coords.longitude || 105.8542,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
-        customMapStyle={darkMapStyle}
+        customMapStyle={mapType === 'standard' ? darkMapStyle : []}
       >
         {location && (
           <MarkerComponent
@@ -382,7 +409,7 @@ export default function ActiveTripMap() {
 
       {/* Top Floating Dashboard */}
       <SafeAreaView className="absolute top-0 left-0 right-0 pointer-events-none">
-        <View className="px-5 pt-4 pointer-events-auto">
+        <View className="px-5 pt-20 pointer-events-auto">
           <BlurView intensity={35} tint="dark" className="rounded-[32px] border border-white/10 shadow-2xl overflow-hidden">
             <View className="p-5 bg-slate-900/40">
               <View className="flex-row justify-between items-center">
@@ -394,11 +421,17 @@ export default function ActiveTripMap() {
                     <Navigation size={28} color="#fff" strokeWidth={2} />
                   </LinearGradient>
                   <View>
-                    <Text className="text-white font-black text-xl tracking-tight uppercase">Operational Intelligence</Text>
-                    <View className="flex-row items-center gap-2 mt-0.5">
-                      <View className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-                      <Text className="text-slate-400 text-[10px] font-black uppercase tracking-widest">MISSION ID #{activeTrip.id.substring(0, 8)}</Text>
+                    <View className="flex-row items-center gap-2 mb-1">
+                      <View className="bg-indigo-500/20 px-2 py-0.5 rounded-full border border-indigo-500/30">
+                        <Text className="text-indigo-400 text-[8px] font-black uppercase tracking-widest">In Progress</Text>
+                      </View>
+                      <View className="flex-row items-center gap-1.5 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                        <View className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <Text className="text-emerald-400 text-[8px] font-black uppercase tracking-widest">Live</Text>
+                      </View>
                     </View>
+                    <Text className="text-white font-black text-xl tracking-tighter uppercase">Mission Intel</Text>
+                    <Text className="text-slate-500 text-[9px] font-black uppercase tracking-[1.5px] mt-0.5">ID #{activeTrip.id.substring(0, 8).toUpperCase()}</Text>
                   </View>
                 </View>
                 <ConnectionStatus />
@@ -419,7 +452,7 @@ export default function ActiveTripMap() {
                     <Target size={18} color="#818cf8" />
                   </View>
                   <View>
-                    <Text className="text-slate-500 text-[9px] font-black uppercase tracking-wider">Distance</Text>
+                    <Text className="text-slate-500 text-[9px] font-black uppercase tracking-wider">Est. Distance</Text>
                     <Text className="text-slate-100 text-sm font-black tracking-tight">3.8 KM</Text>
                   </View>
                 </View>
@@ -441,13 +474,14 @@ export default function ActiveTripMap() {
       </SafeAreaView>
 
       {/* Map System Controls */}
-      <View className="absolute right-5 bottom-[400px] gap-4">
+      <View className="absolute right-5 bottom-[480px] gap-4">
         <TouchableOpacity 
           className="overflow-hidden rounded-[20px] shadow-2xl"
+          onPress={toggleMapType}
           activeOpacity={0.8}
         >
           <BlurView intensity={45} tint="dark" className="w-14 h-14 justify-center items-center border border-white/10">
-            <Layers size={24} color="#94a3b8" />
+            <Layers size={24} color={mapType !== 'standard' ? '#6366f1' : '#94a3b8'} strokeWidth={mapType !== 'standard' ? 2.5 : 2} />
           </BlurView>
         </TouchableOpacity>
         <TouchableOpacity 
@@ -462,12 +496,15 @@ export default function ActiveTripMap() {
       </View>
 
       {/* Bottom Mission Panel */}
-      <View className="absolute bottom-10 left-5 right-5">
+      <View className="absolute bottom-32 left-5 right-5">
         <BlurView intensity={45} tint="dark" className="rounded-[44px] border border-white/10 shadow-2xl overflow-hidden">
           <View className="p-6 bg-slate-900/60">
             {/* Mission Progress Indicator */}
             <View className="absolute top-0 left-0 right-0 h-1.5 bg-white/5">
-               <View className="h-full bg-indigo-500 w-[65%] shadow-[0_0_15px_rgba(99,102,241,0.9)]" />
+               <View 
+                className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.9)]" 
+                style={{ width: `${progressPercent}%` }}
+               />
             </View>
 
             <View className="flex-row items-center mb-8 pt-3">
@@ -480,16 +517,26 @@ export default function ActiveTripMap() {
                 </LinearGradient>
               </View>
               <View className="flex-1 ml-5">
-                <Text className="text-indigo-400 text-[10px] font-black uppercase tracking-[2.5px] mb-1.5">Active Destination</Text>
+                <Text className="text-indigo-400 text-[10px] font-black uppercase tracking-[2.5px] mb-1.5">
+                  {currentOrder?.status === OrderStatus.PICKED_UP || currentOrder?.status === OrderStatus.DELIVERING ? 'Delivery Point' : 'Pickup Point'}
+                </Text>
                 <Text className="text-white text-2xl font-black tracking-tight" numberOfLines={1}>
-                  {currentOrder?.address || 'Trip Completed'}
+                  {currentOrder 
+                    ? (currentOrder.status === OrderStatus.PICKED_UP || currentOrder.status === OrderStatus.DELIVERING 
+                      ? currentOrder.address 
+                      : currentOrder.pickupAddress)
+                    : 'Mission Accomplished'}
                 </Text>
                 {currentOrder && (
                   <View className="flex-row items-center gap-2 mt-2">
                     <View className="w-6 h-6 rounded-lg bg-white/5 items-center justify-center">
                         <User size={12} color="#94a3b8" />
                     </View>
-                    <Text className="text-slate-400 text-sm font-bold tracking-tight">{currentOrder.customerName}</Text>
+                    <Text className="text-slate-400 text-sm font-bold tracking-tight">
+                      {currentOrder.customerName && currentOrder.customerName !== 'Unknown Customer' 
+                        ? currentOrder.customerName 
+                        : 'Elite Fleet Client'}
+                    </Text>
                     <View className="w-1.5 h-1.5 rounded-full bg-slate-700 mx-1" />
                     <ShieldCheck size={14} color="#10b981" />
                     <Text className="text-emerald-500 text-[10px] font-black uppercase">Verified</Text>
@@ -508,6 +555,7 @@ export default function ActiveTripMap() {
                 <TouchableOpacity 
                   className="bg-white/5 w-12 h-12 rounded-[18px] justify-center items-center border border-white/10 shadow-lg"
                   activeOpacity={0.7}
+                  onPress={() => currentOrder?.customerPhone && Linking.openURL(`tel:${currentOrder.customerPhone}`)}
                 >
                   <Phone size={22} color="#fff" strokeWidth={2} />
                 </TouchableOpacity>
@@ -515,10 +563,10 @@ export default function ActiveTripMap() {
             </View>
 
             {/* Tactical Actions */}
-            <View className="flex-row gap-4">
+            <View className="flex-row gap-3">
               {activeTrip.status === TripStatus.ACCEPTED && (
                 <TouchableOpacity 
-                  className="flex-1 h-[72px] rounded-xl overflow-hidden shadow-2xl shadow-indigo-500/30"
+                  className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-indigo-500/30"
                   onPress={() => handleStatusUpdate(TripStatus.IN_PROGRESS)}
                   activeOpacity={0.8}
                 >
@@ -526,10 +574,10 @@ export default function ActiveTripMap() {
                     colors={['#6366f1', '#4f46e5']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    className="flex-1 flex-row justify-center items-center gap-3.5"
+                    className="flex-1 flex-row justify-center items-center gap-2"
                   >
-                    <Truck size={24} color="#fff" strokeWidth={2.5} />
-                    <Text className="text-white font-black text-base uppercase tracking-[2px]">Deploy Trip</Text>
+                    <Truck size={20} color="#fff" strokeWidth={2.5} />
+                    <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Deploy Trip</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               )}
@@ -538,7 +586,7 @@ export default function ActiveTripMap() {
                 if (!currentOrder) {
                   return (
                     <TouchableOpacity 
-                      className="flex-1 h-[72px] rounded-xl overflow-hidden shadow-2xl shadow-blue-500/30"
+                      className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-blue-500/30"
                       onPress={() => handleStatusUpdate(TripStatus.COMPLETED)}
                       activeOpacity={0.8}
                     >
@@ -546,10 +594,10 @@ export default function ActiveTripMap() {
                         colors={['#3b82f6', '#2563eb']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        className="flex-1 flex-row justify-center items-center gap-3.5"
+                        className="flex-1 flex-row justify-center items-center gap-2"
                       >
-                        <CheckCircle2 size={24} color="#fff" strokeWidth={2.5} />
-                        <Text className="text-white font-black text-base uppercase tracking-[2px]">Finalize Mission</Text>
+                        <CheckCircle2 size={20} color="#fff" strokeWidth={2.5} />
+                        <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Finalize</Text>
                       </LinearGradient>
                     </TouchableOpacity>
                   );
@@ -558,7 +606,7 @@ export default function ActiveTripMap() {
                 if (currentOrder.status === OrderStatus.ASSIGNED || currentOrder.status === OrderStatus.PENDING) {
                   return (
                     <TouchableOpacity 
-                      className="flex-1 h-[72px] rounded-xl overflow-hidden shadow-2xl shadow-amber-500/30"
+                      className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-amber-500/30"
                       onPress={() => handleOrderStatusUpdate(currentOrder.id, OrderStatus.PICKED_UP)}
                       activeOpacity={0.8}
                     >
@@ -566,10 +614,10 @@ export default function ActiveTripMap() {
                         colors={['#f59e0b', '#d97706']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        className="flex-1 flex-row justify-center items-center gap-3.5"
+                        className="flex-1 flex-row justify-center items-center gap-2"
                       >
-                        <Truck size={24} color="#fff" strokeWidth={2.5} />
-                        <Text className="text-white font-black text-base uppercase tracking-[2px]">Confirm Cargo</Text>
+                        <Truck size={20} color="#fff" strokeWidth={2.5} />
+                        <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Pickup</Text>
                       </LinearGradient>
                     </TouchableOpacity>
                   );
@@ -578,7 +626,7 @@ export default function ActiveTripMap() {
                 if (currentOrder.status === OrderStatus.PICKED_UP) {
                   return (
                     <TouchableOpacity 
-                      className="flex-1 h-[72px] rounded-xl overflow-hidden shadow-2xl shadow-violet-500/30"
+                      className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-violet-500/30"
                       onPress={() => handleOrderStatusUpdate(currentOrder.id, OrderStatus.DELIVERING)}
                       activeOpacity={0.8}
                     >
@@ -586,10 +634,10 @@ export default function ActiveTripMap() {
                         colors={['#8b5cf6', '#7c3aed']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        className="flex-1 flex-row justify-center items-center gap-3.5"
+                        className="flex-1 flex-row justify-center items-center gap-2"
                       >
-                        <Navigation size={24} color="#fff" strokeWidth={2.5} />
-                        <Text className="text-white font-black text-base uppercase tracking-[2px]">Set Delivering</Text>
+                        <Navigation size={20} color="#fff" strokeWidth={2.5} />
+                        <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Delivering</Text>
                       </LinearGradient>
                     </TouchableOpacity>
                   );
@@ -597,7 +645,7 @@ export default function ActiveTripMap() {
 
                 return (
                   <TouchableOpacity 
-                    className="flex-1 h-[72px] rounded-xl overflow-hidden shadow-2xl shadow-emerald-500/30"
+                    className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-emerald-500/30"
                     onPress={() => {
                       router.push({
                         pathname: '/camera',
@@ -610,16 +658,18 @@ export default function ActiveTripMap() {
                       colors={['#10b981', '#059669']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
-                      className="flex-1 flex-row justify-center items-center gap-3.5"
+                      className="flex-1 flex-row justify-center items-center gap-2"
                     >
-                      <CheckCircle2 size={24} color="#fff" strokeWidth={2.5} />
-                      <Text className="text-white font-black text-base uppercase tracking-[2px]">Proof of Delivery</Text>
+                      <CheckCircle2 size={20} color="#fff" strokeWidth={2.5} />
+                      <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Proof of Delivery</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 );
               })()}
 
-              <SosButton tripId={activeTrip.id} />
+              <View className="flex-1">
+                <SosButton tripId={activeTrip.id} />
+              </View>
             </View>
           </View>
         </BlurView>

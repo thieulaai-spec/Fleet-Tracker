@@ -91,13 +91,13 @@ async function seed() {
           email: data.email,
           passwordHash: await bcrypt.hash(driverPassword, salt),
           role: UserRole.DRIVER,
+          fullName: data.fullName,
+          phone: data.phone,
         });
         user = await userRepository.save(user);
 
         const driver = driverRepository.create({
           user,
-          fullName: data.fullName,
-          phone: data.phone,
           licenseClass: data.licenseClass,
           licenseExpiry: new Date('2030-01-01'),
           status: DriverStatus.AVAILABLE,

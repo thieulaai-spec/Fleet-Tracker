@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { DatePicker } from '@/components/ui/DatePicker';
 
 interface DateRange {
   from: string;
@@ -25,6 +26,20 @@ export function DateRangeFilter({ onRangeChange }: DateRangeFilterProps) {
   const [selectedLabel, setSelectedLabel] = useState('Last 7 Days');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
 
   const handlePresetClick = (preset: typeof PRESET_RANGES[0]) => {
     const to = new Date();
@@ -55,7 +70,7 @@ export function DateRangeFilter({ onRangeChange }: DateRangeFilterProps) {
   };
 
   return (
-    <div className="relative w-[220px]">
+    <div className="relative w-[220px]" ref={containerRef}>
       <div 
         className="flex items-center gap-sm py-[10px] px-md bg-surface-high border border-border rounded-default cursor-pointer text-text font-medium text-sm transition-all duration-200 hover:border-primary"
         onClick={() => setIsOpen(!isOpen)}
@@ -66,42 +81,45 @@ export function DateRangeFilter({ onRangeChange }: DateRangeFilterProps) {
       </div>
 
       {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] right-0 w-[280px] bg-surface border border-border rounded-md shadow-lg z-100 p-sm animate-in fade-in slide-in-from-top-2 duration-200">
-          {PRESET_RANGES.map((preset) => (
-            <div 
-              key={preset.label} 
-              className="py-[10px] px-md rounded-sm cursor-pointer text-text-dim transition-all duration-200 hover:bg-surface-high hover:text-text"
-              onClick={() => handlePresetClick(preset)}
-            >
-              {preset.label}
-            </div>
-          ))}
-          <div className="h-px bg-border my-sm" />
-          <div className="py-sm px-md">
-            <span className="block text-[12px] color-text-muted mb-2 uppercase font-semibold">Custom Range</span>
-            <div className="flex items-center gap-xs text-[12px] text-text-muted">
-              <input 
-                type="date" 
-                className="flex-1 bg-surface-high border border-border rounded-sm p-[6px] text-text text-[12px] outline-none focus:border-primary" 
+        <div className="absolute top-[calc(100%+8px)] left-0 w-[320px] bg-surface/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl z-200 p-md animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-2 gap-2 mb-md">
+            {PRESET_RANGES.map((preset) => (
+              <div 
+                key={preset.label} 
+                className="py-2.5 px-3 rounded-lg cursor-pointer text-text-dim text-xs font-medium transition-all duration-200 hover:bg-white/10 hover:text-text border border-transparent hover:border-white/10"
+                onClick={() => handlePresetClick(preset)}
+              >
+                {preset.label}
+              </div>
+            ))}
+          </div>
+
+          <div className="h-px bg-border/50 mb-md" />
+          
+          <div className="flex flex-col gap-sm">
+            <span className="block text-[10px] text-text-dim mb-1 uppercase font-bold tracking-wider">Custom Range</span>
+            <div className="flex flex-col gap-sm">
+              <DatePicker 
                 value={customFrom}
-                onChange={(e) => setCustomFrom(e.target.value)}
+                onChange={setCustomFrom}
+                placeholder="From date"
+                className="w-full"
               />
-              <span>to</span>
-              <input 
-                type="date" 
-                className="flex-1 bg-surface-high border border-border rounded-sm p-[6px] text-text text-[12px] outline-none focus:border-primary" 
+              <DatePicker 
                 value={customTo}
-                onChange={(e) => setCustomTo(e.target.value)}
+                onChange={setCustomTo}
+                placeholder="To date"
+                className="w-full"
               />
             </div>
             <Button 
-              size="sm" 
+              size="md" 
               fullWidth 
-              className="mt-3"
+              className="mt-2"
               onClick={handleApply}
               disabled={!customFrom || !customTo}
             >
-              Apply
+              Apply Range
             </Button>
           </div>
         </div>

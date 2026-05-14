@@ -6,6 +6,9 @@ export interface User {
   email: string;
   role: 'admin' | 'driver';
   isActive: boolean;
+  fullName?: string;
+  phone?: string;
+  avatarUrl?: string;
 }
 
 export interface AuthTokens {
@@ -23,12 +26,10 @@ export interface LoginResponse {
 export interface Driver {
   id: string;
   userId: string;
-  fullName: string;
-  phone: string;
+  user?: User;
   licenseClass: string;
   licenseExpiry: string;
   status: DriverStatus;
-  avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,8 +43,9 @@ export interface Vehicle {
   type: VehicleType;
   maxCapacityKg: number;
   currentLoadKg: number;
-  driverId?: string;
-  driver?: Driver;
+  driverId?: string | null;
+  driver?: Driver | null;
+  deviceId?: string | null;
   status: VehicleStatus;
   imageUrl?: string;
   lastKnownLocation?: GeoPoint;

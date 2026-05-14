@@ -20,18 +20,12 @@ export class Driver {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+  @OneToOne(() => User, (user) => user.driver, { cascade: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ name: 'user_id' })
   userId: string;
-
-  @Column({ name: 'full_name' })
-  fullName: string;
-
-  @Column()
-  phone: string;
 
   @Column({ name: 'license_class', nullable: true })
   licenseClass: string;
@@ -42,12 +36,9 @@ export class Driver {
   @Column({
     type: 'enum',
     enum: DriverStatus,
-    default: DriverStatus.OFF_DUTY,
+    default: DriverStatus.AVAILABLE,
   })
   status: DriverStatus;
-
-  @Column({ name: 'avatar_url', nullable: true })
-  avatarUrl: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

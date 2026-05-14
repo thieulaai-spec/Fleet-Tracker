@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Order } from '@/types';
 
+import { toast } from 'sonner';
+
 export function useOrders() {
   const queryClient = useQueryClient();
 
@@ -14,7 +16,11 @@ export function useOrders() {
     mutationFn: (data: Partial<Order>) => api.post<Order>('/orders', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Order created successfully');
     },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to create order');
+    }
   });
 
   const updateOrderMutation = useMutation({
@@ -22,7 +28,11 @@ export function useOrders() {
       api.patch<Order>(`/orders/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Order updated successfully');
     },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to update order');
+    }
   });
 
   const cancelOrderMutation = useMutation({
@@ -30,7 +40,11 @@ export function useOrders() {
       api.post<Order>(`/orders/${id}/cancel`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Order cancelled');
     },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to cancel order');
+    }
   });
 
   const assignOrderMutation = useMutation({
@@ -38,7 +52,12 @@ export function useOrders() {
       api.post<Order>(`/dispatch/assign`, { orderId, vehicleId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      toast.success('Order assigned to vehicle');
     },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to assign order');
+    }
   });
 
   return {

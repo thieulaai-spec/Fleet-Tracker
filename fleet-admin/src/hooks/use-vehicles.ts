@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Vehicle } from '@/types';
 
+import { toast } from 'sonner';
+
 export function useVehicles(queryParams?: Record<string, any>) {
   const queryClient = useQueryClient();
 
@@ -20,7 +22,11 @@ export function useVehicles(queryParams?: Record<string, any>) {
     mutationFn: (data: Partial<Vehicle>) => api.post<Vehicle>('/vehicles', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      toast.success('Vehicle created successfully');
     },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to create vehicle');
+    }
   });
 
   const updateVehicleMutation = useMutation({
@@ -28,14 +34,22 @@ export function useVehicles(queryParams?: Record<string, any>) {
       api.patch<Vehicle>(`/vehicles/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      toast.success('Vehicle updated successfully');
     },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to update vehicle');
+    }
   });
 
   const deleteVehicleMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/vehicles/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      toast.success('Vehicle deleted');
     },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to delete vehicle');
+    }
   });
 
   return {

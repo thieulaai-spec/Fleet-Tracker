@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
+import { Driver } from './driver.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -56,6 +58,18 @@ export class User {
 
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
+
+  @Column({ name: 'full_name', nullable: true })
+  fullName: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ name: 'avatar_url', nullable: true })
+  avatarUrl: string;
+
+  @OneToOne(() => Driver, (driver) => driver.user)
+  driver: Driver;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

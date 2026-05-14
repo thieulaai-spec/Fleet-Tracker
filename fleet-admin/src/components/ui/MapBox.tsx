@@ -42,6 +42,9 @@ interface MapBoxProps {
   onClick?: (coord: Coordinate) => void;
   showSearch?: boolean;
   onSearchSelect?: (coord: Coordinate, address: string) => void;
+  pitch?: number;
+  mapStyle?: string;
+  showTraffic?: boolean;
 }
 
 /**
@@ -80,15 +83,24 @@ export function MapBox({
   className = "",
   onClick,
   showSearch = false,
-  onSearchSelect
+  onSearchSelect,
+  pitch = 0,
+  mapStyle = "mapbox://styles/mapbox/streets-v12",
+  showTraffic = false
 }: MapBoxProps) {
   const mapRef = React.useRef<any>(null);
   const [webGLSupported, setWebGLSupported] = useState(true);
   const [viewState, setViewState] = useState({
     latitude: 21.0285,
     longitude: 105.8542,
-    zoom: zoom
+    zoom: zoom,
+    pitch: pitch
   });
+
+  // Sync pitch when prop changes
+  useEffect(() => {
+    setViewState(prev => ({ ...prev, pitch }));
+  }, [pitch]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,7 +148,7 @@ export function MapBox({
         });
       }
     }
-  }, [selectedMarkerId]);
+  }, [selectedMarkerId, markers.length]);
 
   // Create GeoJSON for path rendering
   const routeData: any = useMemo(() => {
@@ -219,7 +231,7 @@ export function MapBox({
         onClick={handleMapClick}
         mapboxAccessToken={MAPBOX_TOKEN}
         mapLib={mapboxgl}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
+        mapStyle={mapStyle}
         style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
       >
         <NavigationControl position="top-right" />
@@ -239,6 +251,30 @@ export function MapBox({
               layout={{
                 'line-join': 'round',
                 'line-cap': 'round'
+              }}
+            />
+          </Source>
+        )}
+
+        {/* Traffic Layer */}
+        {showTraffic && (
+          <Source id="traffic" type="vector" url="mapbox://mapbox.mapbox-traffic-v1">
+            <Layer
+              id="traffic-layer"
+              type="line"
+              source-layer="traffic"
+              paint={{
+                'line-color': [
+                  'match',
+                  ['get', 'congestion'],
+                  'low', '#22c55e',
+                  'moderate', '#f59e0b',
+                  'heavy', '#ef4444',
+                  'severe', '#7f1d1d',
+                  '#6366f1'
+                ],
+                'line-width': 2,
+                'line-opacity': 0.8
               }}
             />
           </Source>

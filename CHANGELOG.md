@@ -1,3 +1,16 @@
+## [2026-05-14] - Tracking UI Refinement & Map Optimization
+### Added
+- **Frontend (Admin Dashboard)**:
+    - **Enhanced Tracking UI**: Refined vehicle cards with modern glassmorphism design and real-time "ping" status animations for active transport.
+    - **Responsive Map Control**: Optimized map container height (3/4 h-screen) and implemented automatic `map.resize()` on selection events to ensure visual stability.
+- **Backend (API)**:
+    - **Operational State Mapping**: Synchronized `statusMap` to include `transporting`, `off_duty`, and `completed` states, improving tracking accuracy.
+
+### Fixed
+- **Frontend (Admin Dashboard)**:
+    - Resolved build parser errors in `tracking/page.tsx` caused by redundant text tokens.
+    - Fixed layout shifting issues in the tracking sidebar when expanding vehicle details.
+
 ## [2026-05-13] - Driver Status Synchronization & API Hardening
 ### Added
 - **Backend (API)**:

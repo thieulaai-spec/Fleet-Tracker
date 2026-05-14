@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useEffect, useRef, useCallback } from 'react';
-import { Map, Marker, NavigationControl, FullscreenControl, Source, Layer } from 'react-map-gl/mapbox';
+import { Map, Marker, Popup, NavigationControl, FullscreenControl } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Truck, Activity, Users } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Truck, Activity } from 'lucide-react';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
@@ -17,7 +16,7 @@ interface VehiclePosition {
   longitude: number;
   speed: number;
   heading: number;
-  status: 'active' | 'idle' | 'offline' | 'maintenance';
+  status: 'active' | 'idle' | 'offline';
   lastUpdate: string;
   currentTripId?: string;
   ordersCount?: number;
@@ -51,13 +50,6 @@ const STATUS_CONFIG = {
     lightBgClass: 'bg-text-dim/20',
     label: 'Offline'
   },
-  maintenance: {
-    color: 'var(--color-error)',
-    bgClass: 'bg-error',
-    textClass: 'text-error',
-    lightBgClass: 'bg-error/20',
-    label: 'Bảo trì'
-  },
 };
 
 export default function LiveTrackingMap({
@@ -66,43 +58,18 @@ export default function LiveTrackingMap({
   onVehicleSelect,
 }: LiveTrackingMapProps) {
   const mapRef = useRef<any>(null);
-  const [pitch, setPitch] = React.useState(0);
-  const [mapStyle, setMapStyle] = React.useState('mapbox://styles/mapbox/streets-v12');
-  const [showTraffic, setShowTraffic] = React.useState(false);
 
-  const togglePitch = () => setPitch(p => p === 0 ? 60 : 0);
-  const toggleStyle = () => setMapStyle(s => 
-    s.includes('satellite') 
-      ? 'mapbox://styles/mapbox/streets-v12' 
-      : 'mapbox://styles/mapbox/satellite-streets-v12'
-  );
-  const toggleTraffic = () => setShowTraffic(t => !t);
-
-  // Auto-center and resize on selected vehicle
+  // Auto-center on selected vehicle
   useEffect(() => {
-    if (mapRef.current) {
-      const map = mapRef.current.getMap();
-      
-      // Force resize to fill container growth
-      map.resize();
-
-      if (selectedVehicle) {
-        map.flyTo({
-          center: [selectedVehicle.longitude, selectedVehicle.latitude],
-          zoom: 15,
-          duration: 1500,
-          essential: true
-        });
-      }
+    if (selectedVehicle && mapRef.current) {
+      mapRef.current.flyTo({
+        center: [selectedVehicle.longitude, selectedVehicle.latitude],
+        zoom: 15,
+        duration: 1500,
+        essential: true
+      });
     }
   }, [selectedVehicle?.vehicleId]);
-
-  // Resize when list changes
-  useEffect(() => {
-    if (mapRef.current) {
-      mapRef.current.getMap().resize();
-    }
-  }, [vehicles.length]);
   if (!MAPBOX_TOKEN) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-background text-text-dim">
@@ -158,38 +125,12 @@ export default function LiveTrackingMap({
           longitude: center.lng,
           latitude: center.lat,
           zoom: 12,
-          pitch: pitch
         }}
-        pitch={pitch}
         style={{ width: '100%', height: '100%' }}
-        mapStyle={mapStyle}
+        mapStyle="mapbox://styles/mapbox/streets-v12"
       >
         <NavigationControl position="top-right" />
         <FullscreenControl position="top-right" />
-
-        {/* Traffic Layer */}
-        {showTraffic && (
-          <Source id="traffic" type="vector" url="mapbox://mapbox.mapbox-traffic-v1">
-            <Layer
-              id="traffic-layer"
-              type="line"
-              source-layer="traffic"
-              paint={{
-                'line-color': [
-                  'match',
-                  ['get', 'congestion'],
-                  'low', '#22c55e',
-                  'moderate', '#f59e0b',
-                  'heavy', '#ef4444',
-                  'severe', '#7f1d1d',
-                  '#6366f1'
-                ],
-                'line-width': 2,
-                'line-opacity': 0.8
-              }}
-            />
-          </Source>
-        )}
 
         {vehicles.map(vehicle => (
           <React.Fragment key={vehicle.vehicleId}>
@@ -221,41 +162,53 @@ export default function LiveTrackingMap({
               </div>
             </Marker>
 
+            {selectedVehicle?.vehicleId === vehicle.vehicleId && (
+              <Popup
+                longitude={vehicle.longitude}
+                latitude={vehicle.latitude}
+                anchor="bottom"
+                offset={24}
+                closeButton={true}
+                onClose={() => onVehicleSelect(null)}
+                maxWidth="300px"
+              >
+                <div className="p-3 min-w-[200px] bg-surface-high text-text rounded-lg border border-border shadow-2xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Truck size={16} className={STATUS_CONFIG[vehicle.status].textClass} />
+                    <strong className="text-sm font-bold truncate">{vehicle.licensePlate}</strong>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap ml-auto ${STATUS_CONFIG[vehicle.status].lightBgClass} ${STATUS_CONFIG[vehicle.status].textClass}`}>
+                      {STATUS_CONFIG[vehicle.status].label}
+                    </span>
+                  </div>
+                  
+                  <div className="text-[12px] text-text-muted space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-text-dim">Tài xế:</span>
+                      <span className="font-medium text-text">{vehicle.driverName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-dim">Tốc độ:</span>
+                      <span className="font-medium text-text">{vehicle.speed.toFixed(0)} km/h</span>
+                    </div>
+                    {vehicle.ordersCount !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-text-dim">Đơn hàng:</span>
+                        <span className="font-medium text-text">{vehicle.ordersCount} đơn</span>
+                      </div>
+                    )}
+                    {vehicle.currentTripId && (
+                      <div className="flex justify-between">
+                        <span className="text-text-dim">Mã chuyến:</span>
+                        <span className="font-medium text-primary-light">#{vehicle.currentTripId.slice(0, 8)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Popup>
+            )}
           </React.Fragment>
         ))}
       </Map>
-
-      {/* Map Controls */}
-      <div className="absolute bottom-4 right-4 z-10">
-        <div className="flex gap-1.5 p-2 bg-surface/80 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl">
-          <Button 
-            variant={pitch > 0 ? "primary" : "secondary"} 
-            size="sm" 
-            onClick={togglePitch}
-            className="h-8 text-[10px] font-bold px-3"
-          >
-            2D/3D
-          </Button>
-          <Button 
-            variant={mapStyle.includes('satellite') ? "primary" : "secondary"} 
-            size="sm" 
-            onClick={toggleStyle}
-            className="h-8 text-[10px] font-bold px-3"
-          >
-            Satellite
-          </Button>
-          <div className="w-px bg-white/10 my-1.5" />
-          <Button 
-            variant={showTraffic ? "primary" : "secondary"} 
-            size="sm" 
-            onClick={toggleTraffic}
-            className="h-8 text-[10px] font-bold px-3"
-          >
-            Traffic
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
-

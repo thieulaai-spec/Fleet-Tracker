@@ -6,7 +6,6 @@ import * as bcrypt from 'bcrypt';
 import { DriversService } from './drivers.service';
 import { Driver, DriverStatus } from '../entities/driver.entity';
 import { User } from '../entities/user.entity';
-import { DriverKpi } from '../entities/driver-kpi.entity';
 
 jest.mock('bcrypt');
 
@@ -18,13 +17,9 @@ describe('DriversService', () => {
 
   const mockDriver = {
     id: 'd1',
+    fullName: 'John Doe',
     status: DriverStatus.AVAILABLE,
     userId: 'u1',
-    user: {
-      id: 'u1',
-      fullName: 'John Doe',
-      phone: '123456789',
-    },
   };
 
   const mockQueryRunner = {
@@ -73,14 +68,6 @@ describe('DriversService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
-        },
-        {
-          provide: getRepositoryToken(DriverKpi),
-          useValue: {
-            findOne: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn(),
-          },
         },
         {
           provide: DataSource,
@@ -153,7 +140,7 @@ describe('DriversService', () => {
       expect(
         mockDriverRepository.createQueryBuilder().andWhere,
       ).toHaveBeenCalledWith(
-        expect.stringContaining('user.fullName ILIKE :search'),
+        expect.stringContaining('driver.fullName ILIKE :search'),
         { search: '%John%' },
       );
     });
@@ -179,7 +166,7 @@ describe('DriversService', () => {
 
       const result = await service.update('d1', updateDto);
 
-      expect(mockUserRepository.save).toHaveBeenCalled();
+      expect(result.phone).toBe('987654321');
       expect(mockDriverRepository.save).toHaveBeenCalled();
     });
   });
@@ -215,7 +202,7 @@ describe('DriversService', () => {
     it('getKpi should return default values', async () => {
       mockDriverRepository.findOne.mockResolvedValue(mockDriver);
       const result = await service.getKpi('d1');
-      expect(result.kpiScore).toBe(100);
+      expect(result.averageRating).toBe(5.0);
     });
 
     it('getTrips should return empty array', async () => {

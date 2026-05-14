@@ -34,7 +34,6 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function TripsScreen() {
-  const router = useRouter();
   const pendingTrips = useTripStore(state => state.pendingTrips);
   const activeTrip = useTripStore(state => state.activeTrip);
   const tripHistory = useTripStore(state => state.tripHistory);
@@ -44,7 +43,7 @@ export default function TripsScreen() {
   const isLoading = useTripStore(state => state.isLoading);
 
   const [refreshing, setRefreshing] = useState(false);
-
+  const router = useRouter();
 
   useEffect(() => {
     fetchTrips();
@@ -148,15 +147,7 @@ export default function TripsScreen() {
                 </View>
                 <View>
                   <Text className="text-white font-black text-lg tracking-tight">Trip #{item.id.substring(0, 8).toUpperCase()}</Text>
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-slate-500 text-[10px] font-black uppercase tracking-[1.5px]">{dateStr} • {timeStr}</Text>
-                    {item.orders?.[0] && (
-                      <>
-                        <View className="w-1 h-1 rounded-full bg-slate-700" />
-                        <Text className="text-indigo-400 text-[10px] font-black uppercase tracking-widest">{item.orders[0].customerName}</Text>
-                      </>
-                    )}
-                  </View>
+                  <Text className="text-slate-500 text-[10px] font-black uppercase tracking-[1.5px]">{dateStr} • {timeStr}</Text>
                 </View>
               </View>
               
@@ -182,7 +173,7 @@ export default function TripsScreen() {
                 <View className="w-px flex-1 bg-slate-800 my-1 border-l border-white/10" />
                 <View className="w-4 h-4 rounded-lg bg-emerald-500 border-4 border-slate-900 z-10 shadow-sm" />
               </View>
-              <View className="flex-1 gap-6 justify-center">
+              <View className="flex-1 gap-6">
                 <View>
                   <Text className="text-slate-500 text-[9px] font-black uppercase tracking-[2px] mb-1">Origin Hub</Text>
                   <Text className="text-white text-[15px] font-bold" numberOfLines={1}>Global Logistics Center - A4</Text>
@@ -190,9 +181,7 @@ export default function TripsScreen() {
                 <View>
                   <Text className="text-slate-500 text-[9px] font-black uppercase tracking-[2px] mb-1">Final Destination</Text>
                   <Text className="text-white text-[15px] font-bold" numberOfLines={1}>
-                    {item.orders?.length > 0 && item.orders[item.orders.length - 1].address && !['No address', 'unknown', ''].includes(item.orders[item.orders.length - 1].address.toLowerCase())
-                      ? item.orders[item.orders.length - 1].address 
-                      : 'Target Location Pending'}
+                    {item.orders?.length > 0 ? item.orders[item.orders.length - 1].address : 'Unassigned Destination'}
                   </Text>
                 </View>
               </View>
@@ -272,7 +261,7 @@ export default function TripsScreen() {
         </TouchableOpacity>
       </View>
     );
-  }, [isLoading]);
+  }, [isLoading, router]);
 
   const sections = [
     ...(activeTrip ? [{ title: 'Active Trip', data: [activeTrip] }] : []),
@@ -293,7 +282,7 @@ export default function TripsScreen() {
         <View className="px-8 pt-8 pb-4 flex-row justify-between items-end">
           <View>
             <View className="flex-row items-center gap-2 mb-2">
-              <View className="w-2.5 h-2.5 rounded-full bg-indigo-500 border border-indigo-400/50" />
+              <View className="w-2 h-2 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500" />
               <Text className="text-slate-500 text-[10px] font-black uppercase tracking-[3px]">Operation Center</Text>
             </View>
             <Text className="text-5xl font-black text-white tracking-tighter">My Trips</Text>
@@ -317,17 +306,7 @@ export default function TripsScreen() {
             renderSectionHeader={({ section: { title } }) => (
               <View className="px-8 pt-10 pb-6 flex-row items-center justify-between">
                 <View className="flex-row items-center gap-3">
-                  <View 
-                    key={`status-dot-${title}`} 
-                    className={`w-2 h-2 rounded-full ${title === 'Active Trip' ? 'bg-indigo-500' : 'bg-slate-700'}`} 
-                    style={{ 
-                      elevation: title === 'Active Trip' ? 10 : 0,
-                      shadowColor: title === 'Active Trip' ? '#6366f1' : 'transparent',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: title === 'Active Trip' ? 0.5 : 0,
-                      shadowRadius: 10
-                    }} 
-                  />
+                  <View className={`w-2 h-2 rounded-full ${title === 'Active Trip' ? 'bg-indigo-500 shadow-lg shadow-indigo-500' : 'bg-slate-700'}`} />
                   <Text className="text-[12px] font-black text-slate-400 uppercase tracking-[2px]">{title}</Text>
                 </View>
                 {title === 'Trip History' && (

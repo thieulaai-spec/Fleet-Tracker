@@ -44,8 +44,6 @@ export class DriversService {
       email,
       passwordHash,
       role: UserRole.DRIVER,
-      fullName,
-      phone,
     });
 
     await this.usersRepository.save(user);
@@ -53,6 +51,8 @@ export class DriversService {
     // Create Driver entity
     const driver = this.driversRepository.create({
       ...driverData,
+      fullName,
+      phone,
       user,
       userId: user.id,
     });
@@ -74,7 +74,7 @@ export class DriversService {
 
     if (search) {
       query.andWhere(
-        '(user.fullName ILIKE :search OR user.phone ILIKE :search)',
+        '(driver.fullName ILIKE :search OR driver.phone ILIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -105,17 +105,7 @@ export class DriversService {
 
   async update(id: string, updateDriverDto: UpdateDriverDto): Promise<Driver> {
     const driver = await this.findOne(id);
-    const { fullName, phone, ...driverData } = updateDriverDto;
-
-    // Update User profile if needed
-    if (fullName || phone) {
-      if (fullName) driver.user.fullName = fullName;
-      if (phone) driver.user.phone = phone;
-      await this.usersRepository.save(driver.user);
-    }
-
-    // Update Driver specific data
-    Object.assign(driver, driverData);
+    Object.assign(driver, updateDriverDto);
     return this.driversRepository.save(driver);
   }
 
@@ -173,29 +163,5 @@ export class DriversService {
     await this.findOne(id);
     // Placeholder logic for Phase 03
     return [];
-  }
-
-  async findByUserId(userId: string): Promise<Driver> {
-    const driver = await this.driversRepository.findOne({
-      where: { userId },
-    });
-
-    if (!driver) {
-      throw new NotFoundException(`Driver for user ID ${userId} not found`);
-    }
-
-    return driver;
-  }
-
-  async updateStatusByUserId(userId: string, status: DriverStatus): Promise<Driver> {
-    const driver = await this.findByUserId(userId);
-
-    // Prevent manual status change if currently on a trip
-    if (driver.status === DriverStatus.ON_TRIP) {
-      throw new ConflictException('Cannot change status while on a trip');
-    }
-
-    driver.status = status;
-    return this.driversRepository.save(driver);
   }
 }

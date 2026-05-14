@@ -18,8 +18,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
-import { GetUser } from '../auth/decorators/current-user.decorator';
-import { UpdateStatusDto } from './dto/update-status.dto';
 
 @ApiTags('Drivers')
 @ApiBearerAuth()
@@ -86,12 +84,5 @@ export class DriversController {
   })
   remove(@Param('id') id: string) {
     return this.driversService.remove(id);
-  }
-
-  @Patch('status/me')
-  @Roles(UserRole.DRIVER)
-  @ApiOperation({ summary: 'Update my own status (Driver only)' })
-  updateMyStatus(@GetUser('id') userId: string, @Body() updateStatusDto: UpdateStatusDto) {
-    return this.driversService.updateStatusByUserId(userId, updateStatusDto.status);
   }
 }

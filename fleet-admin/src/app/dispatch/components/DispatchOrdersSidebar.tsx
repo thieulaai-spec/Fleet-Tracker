@@ -41,18 +41,9 @@ export function DispatchOrdersSidebar({
 }: DispatchOrdersSidebarProps) {
   return (
     <aside className="flex flex-col glass rounded-md overflow-hidden h-full">
-      <div className="p-md border-b border-border flex-none flex flex-col gap-md">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold">Pending Orders</h3>
-          <Badge variant="warning">{pendingOrderCount}</Badge>
-        </div>
-        {(pendingOrderCount > 0 || searchQuery) && (
-          <SearchInput
-            placeholder="Search pending orders..."
-            value={searchQuery}
-            onChange={(event) => onSearchQueryChange(event.target.value)}
-          />
-        )}
+      <div className="p-md border-b border-border flex-none flex justify-between items-center">
+        <h3 className="font-semibold">Pending Orders</h3>
+        <Badge variant="warning">{pendingOrderCount}</Badge>
       </div>
       <div className="flex-1 overflow-y-auto min-h-0 p-md flex flex-col gap-md">
         {isLoading ? (
@@ -61,6 +52,15 @@ export function DispatchOrdersSidebar({
           </div>
         ) : (
           <>
+            {(pendingOrderCount > 0 || searchQuery) && (
+              <div className="sticky top-0 bg-surface pb-md -mt-md pt-md z-10">
+                <SearchInput
+                  placeholder="Search pending orders..."
+                  value={searchQuery}
+                  onChange={(event) => onSearchQueryChange(event.target.value)}
+                />
+              </div>
+            )}
             
             {groups.length === 0 ? (
               <div className="text-center py-8 text-text-dim">

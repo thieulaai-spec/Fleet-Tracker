@@ -13,7 +13,7 @@ import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
 import { Alert, AlertType, AlertSeverity } from '../entities/alert.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ReportIncidentDto, FindTripsQueryDto } from './dto/trip.dto';
+import { ReportIncidentDto } from './dto/trip.dto';
 
 @Injectable()
 export class TripsService {
@@ -36,16 +36,9 @@ export class TripsService {
     });
   }
 
-  async findAll(query?: FindTripsQueryDto) {
-    const { driverId, vehicleId, status } = query || {};
+  async findAll() {
     return this.tripRepository.find({
-      where: {
-        driverId,
-        vehicleId,
-        status,
-      },
       relations: ['vehicle', 'driver', 'tripOrders', 'tripOrders.order'],
-      order: { createdAt: 'DESC' },
     });
   }
 

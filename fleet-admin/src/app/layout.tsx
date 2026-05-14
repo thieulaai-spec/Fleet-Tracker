@@ -21,8 +21,6 @@ export const metadata: Metadata = {
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Providers } from "@/components/providers/Providers";
 
-import { Toaster } from "sonner";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,7 +31,6 @@ export default function RootLayout({
       <body>
         <Providers>
           <AppLayout>{children}</AppLayout>
-          <Toaster richColors position="top-right" />
         </Providers>
       </body>
     </html>

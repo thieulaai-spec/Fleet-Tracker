@@ -6,7 +6,6 @@ import { Vehicle } from '../entities/vehicle.entity';
 import { Trip, TripStatus } from '../entities/trip.entity';
 import { Driver } from '../entities/driver.entity';
 import { GpsUpdateDto } from './dto/gps-update.dto';
-import { DeviceGpsUpdateDto } from './dto/device-gps-update.dto';
 import { ViolationDetectorService } from '../alerts/violation-detector.service';
 
 @Injectable()
@@ -117,12 +116,7 @@ export class TrackingService implements OnModuleDestroy {
         );
     }
 
-    // 5. Fetch vehicle details for broadcasting
-    const vehicle = await this.vehicleRepository.findOne({
-      where: { id: vehicleId },
-      relations: ['driver', 'driver.user'],
-    });
-
+    // 5. Return processed data for broadcasting
     return {
       vehicleId,
       tripId,
@@ -131,9 +125,6 @@ export class TrackingService implements OnModuleDestroy {
       speed,
       heading,
       timestamp,
-      status: vehicle?.status || 'available',
-      licensePlate: vehicle?.plateNumber || `VH-${vehicleId.slice(0, 6)}`,
-      driverName: vehicle?.driver?.user?.fullName || 'Unknown Driver',
     };
   }
 
@@ -196,83 +187,6 @@ export class TrackingService implements OnModuleDestroy {
       .execute();
 
     return results;
-  }
-
-  async processDeviceGpsUpdate(data: DeviceGpsUpdateDto) {
-    const { deviceId, latitude, longitude, speed = 0, heading = 0 } = data;
-
-    // 1. Find vehicle by deviceId
-    const vehicle = await this.vehicleRepository.findOne({
-      where: { deviceId },
-      relations: ['driver', 'driver.user'],
-    });
-
-    if (!vehicle) {
-      throw new Error(`Vehicle with deviceId ${deviceId} not found`);
-    }
-
-    // 2. Check for active trip to link history
-    const activeTrip = await this.tripRepository.findOne({
-      where: { vehicleId: vehicle.id, status: TripStatus.IN_PROGRESS },
-    });
-
-    // 3. Create PostGIS Point
-    const point = {
-      type: 'Point',
-      coordinates: [longitude, latitude],
-    };
-
-    // 4. Add to buffer for batch insert
-    const gpsLocation = this.gpsRepository.create({
-      vehicleId: vehicle.id,
-      tripId: activeTrip?.id || null,
-      location: point,
-      speedKmh: speed,
-      heading,
-      recordedAt: new Date(),
-    });
-    this.gpsBuffer.push(gpsLocation);
-
-    // 5. Trigger Violation Detection (Async)
-    if (activeTrip) {
-      this.violationDetector
-        .checkViolations({
-          vehicleId: vehicle.id,
-          tripId: activeTrip.id,
-          latitude,
-          longitude,
-          speed,
-          heading,
-          timestamp: new Date().toISOString(),
-        })
-        .catch((err) =>
-          this.logger.error(`Violation check failed: ${err.message}`),
-        );
-    }
-
-    // 5. Update Vehicle's last known location
-    await this.vehicleRepository
-      .createQueryBuilder()
-      .update(Vehicle)
-      .set({
-        lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
-      })
-      .where('id = :vehicleId', { vehicleId: vehicle.id })
-      .setParameters({ lng: longitude, lat: latitude })
-      .execute();
-
-    return {
-      vehicleId: vehicle.id,
-      tripId: activeTrip?.id || null,
-      latitude,
-      longitude,
-      speed,
-      heading,
-      timestamp: new Date().toISOString(),
-      status: vehicle.status,
-      licensePlate: vehicle.plateNumber,
-      driverName: vehicle.driver?.user?.fullName || 'Unknown Driver',
-    };
   }
 
   async getVehicleHistory(vehicleId: string, from?: Date, to?: Date) {

@@ -80,18 +80,18 @@ export const SosButton: React.FC<SosButtonProps> = ({ tripId }) => {
       <TouchableOpacity 
         onPress={handleOpenModal}
         activeOpacity={0.85}
-        className="flex-1 w-full shadow-2xl shadow-red-500/50"
+        className="shadow-2xl shadow-red-500/50"
       >
         <LinearGradient
           colors={['#ef4444', '#b91c1c']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="h-16 rounded-xl flex-row items-center justify-center gap-2"
+          className="h-16 rounded-2xl flex-row items-center justify-center gap-3 px-6"
         >
-          <View className="bg-white/20 p-1.5 rounded-full">
-            <AlertTriangle size={18} color="#fff" strokeWidth={2.5} />
+          <View className="bg-white/20 p-2 rounded-full">
+            <AlertTriangle size={24} color="#fff" strokeWidth={2.5} />
           </View>
-          <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Emergency SOS</Text>
+          <Text className="text-white font-black text-lg uppercase tracking-widest">Emergency SOS</Text>
         </LinearGradient>
       </TouchableOpacity>
 
@@ -103,8 +103,7 @@ export const SosButton: React.FC<SosButtonProps> = ({ tripId }) => {
         onRequestClose={() => !isSending && setIsModalVisible(false)}
       >
         <View className="flex-1">
-          <View className="absolute inset-0 bg-black/60" />
-          <BlurView intensity={80} tint="dark" className="flex-1 justify-center p-6">
+          <BlurView intensity={40} tint="dark" className="flex-1 justify-center p-6">
             <View className="bg-[#0f172a] rounded-[40px] p-8 border border-white/10 shadow-2xl overflow-hidden">
               <View className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl" />
               

@@ -31,20 +31,3 @@ export class ReportIncidentDto {
   @IsOptional()
   longitude?: number;
 }
-
-export class FindTripsQueryDto {
-  @ApiPropertyOptional()
-  @IsString()
-  @IsOptional()
-  driverId?: string;
-
-  @ApiPropertyOptional()
-  @IsString()
-  @IsOptional()
-  vehicleId?: string;
-
-  @ApiPropertyOptional({ enum: TripStatus })
-  @IsEnum(TripStatus)
-  @IsOptional()
-  status?: TripStatus;
-}

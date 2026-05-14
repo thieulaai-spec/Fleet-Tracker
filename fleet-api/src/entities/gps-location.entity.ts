@@ -25,10 +25,10 @@ export class GpsLocation {
 
   @ManyToOne(() => Trip, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'trip_id' })
-  trip: Trip | null;
+  trip: Trip;
 
   @Column({ name: 'trip_id', nullable: true })
-  tripId: string | null;
+  tripId: string;
 
   @Column({
     type: 'geography',

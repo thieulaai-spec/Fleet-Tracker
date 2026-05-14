@@ -80,7 +80,7 @@ export function DispatchVehiclesSidebar({
         {/* Tài xế */}
         <div className="flex items-center gap-1.5 text-xs text-text-dim mt-1.5">
           <Users size={13} className="text-text-muted shrink-0" />
-          <span>{vehicle.driver?.user?.fullName || 'Chưa gán tài xế'}</span>
+          <span>{vehicle.driver?.fullName || 'Chưa gán tài xế'}</span>
           {!licenseOk && (
             <span className="flex items-center gap-1 text-[11px] text-danger font-semibold ml-auto">
               <AlertTriangle size={12} /> Bằng lái hết hạn
@@ -181,32 +181,9 @@ export function DispatchVehiclesSidebar({
 
   return (
     <aside className="flex flex-col glass rounded-md overflow-hidden h-full">
-      <div className="p-md border-b border-border flex-none flex flex-col gap-md">
-        <div className="flex justify-between items-center">
-          <h3 className="font-bold text-text">Available Fleet</h3>
-          <Badge variant="success">{totalVisibleCount}</Badge>
-        </div>
-        
-        <SearchInput
-          placeholder="Search vehicles..."
-          value={searchQuery}
-          onChange={(event) => onSearchQueryChange(event.target.value)}
-        />
-        
-        {/* === Smart Suggest Mode: hiện khi đã chọn đơn hàng === */}
-        {selectedOrder && (
-          <div className="flex items-center gap-xs p-xs px-sm glass border border-primary/30 rounded-md text-xs text-primary-light shadow-sm">
-            <Zap size={14} className="text-primary" />
-            <span>
-              {isSuggestLoading
-                ? 'Đang tìm xe phù hợp...'
-                : isSmartMode
-                ? `Top ${filteredSuggestions.length} xe phù hợp nhất (gần nhất + đủ tải)`
-                : 'Sắp xếp theo khoảng cách & tải trọng'}
-            </span>
-            {isSuggestLoading && <LoadingSpinner size={14} />}
-          </div>
-        )}
+      <div className="p-md border-b border-border shrink-0 flex justify-between items-center">
+        <h3 className="font-bold text-text">Available Fleet</h3>
+        <Badge variant="success">{totalVisibleCount}</Badge>
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0 p-md flex flex-col gap-md">
@@ -216,6 +193,28 @@ export function DispatchVehiclesSidebar({
           </div>
         ) : (
           <>
+            <div className="sticky top-0 bg-surface pb-md -mt-md pt-md z-10">
+              <SearchInput
+                placeholder="Search vehicles..."
+                value={searchQuery}
+                onChange={(event) => onSearchQueryChange(event.target.value)}
+              />
+            </div>
+
+            {/* === Smart Suggest Mode: hiện khi đã chọn đơn hàng === */}
+            {selectedOrder && (
+              <div className="sticky top-[54px] z-9 flex items-center gap-xs p-xs px-sm glass border border-primary/30 rounded-md text-xs text-primary-light mb-sm shadow-sm">
+                <Zap size={14} className="text-primary" />
+                <span>
+                  {isSuggestLoading
+                    ? 'Đang tìm xe phù hợp...'
+                    : isSmartMode
+                    ? `Top ${filteredSuggestions.length} xe phù hợp nhất (gần nhất + đủ tải)`
+                    : 'Sắp xếp theo khoảng cách & tải trọng'}
+                </span>
+                {isSuggestLoading && <LoadingSpinner size={14} />}
+              </div>
+            )}
 
             {totalVisibleCount === 0 ? (
               <div className="text-center py-8 text-text-dim">

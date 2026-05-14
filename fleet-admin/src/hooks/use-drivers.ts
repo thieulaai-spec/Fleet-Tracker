@@ -6,8 +6,6 @@ interface DriverWithUser extends Driver {
   user?: { email: string };
 }
 
-import { toast } from 'sonner';
-
 export function useDrivers() {
   const queryClient = useQueryClient();
 
@@ -20,11 +18,7 @@ export function useDrivers() {
     mutationFn: (data: Partial<Driver> & { email?: string; password?: string }) => api.post<Driver>('/drivers', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
-      toast.success('Driver registered successfully');
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Failed to register driver');
-    }
   });
 
   const updateDriverMutation = useMutation({
@@ -33,22 +27,14 @@ export function useDrivers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
       queryClient.invalidateQueries({ queryKey: ['driver'] });
-      toast.success('Driver updated successfully');
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Failed to update driver');
-    }
   });
 
   const deleteDriverMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/drivers/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
-      toast.success('Driver deleted');
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Failed to delete driver');
-    }
   });
 
   return {

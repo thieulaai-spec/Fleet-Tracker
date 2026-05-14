@@ -234,7 +234,7 @@ export class ReportsService {
   async getTripSummary(from: Date, to: Date) {
     const trips = await this.tripRepository.find({
       where: { createdAt: Between(from, to) },
-      relations: ['vehicle', 'driver', 'driver.user', 'tripOrders', 'tripOrders.order'],
+      relations: ['vehicle', 'driver', 'tripOrders', 'tripOrders.order'],
       order: { createdAt: 'DESC' },
     });
 
@@ -275,7 +275,7 @@ export class ReportsService {
           id: t.id,
           date: t.createdAt.toISOString().split('T')[0],
           vehiclePlate: t.vehicle?.plateNumber || 'N/A',
-          driverName: t.driver?.user?.fullName || 'N/A',
+          driverName: t.driver?.fullName || 'N/A',
           status: t.status,
           distance: parseFloat(t.totalDistanceKm as any || 0),
           duration,

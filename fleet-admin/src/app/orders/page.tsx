@@ -13,20 +13,12 @@ import {
   Truck as TruckIcon,
   XCircle,
   LocateFixed,
-  Map as MapIcon,
-  Activity,
-  Zap,
-  Navigation,
-  CheckCircle,
-  Clock as ClockIcon,
-  Slash,
-  UserCheck
+  Map as MapIcon
 } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
-import { Select } from '@/components/ui/Select';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { MapBox, MapMarker } from '@/components/ui/MapBox';
@@ -227,11 +219,9 @@ export default function OrdersPage() {
         <Dropdown align="right" trigger={
           <Button variant="ghost" size="sm" icon={<MoreVertical size={16} />} />
         }>
-          {o.status === 'pending' && (
-            <button className="dropdown-item" onClick={() => router.push(`/dispatch?orderId=${o.id}`)}>
-              <TruckIcon size={16} /> Dispatch Order
-            </button>
-          )}
+          <button className="dropdown-item" onClick={() => router.push(`/dispatch?orderId=${o.id}`)}>
+            <TruckIcon size={16} /> Dispatch Order
+          </button>
           <button className="dropdown-item" onClick={() => setViewingOrder(o)}>
             <Eye size={16} /> View Details
           </button>
@@ -422,27 +412,23 @@ export default function OrdersPage() {
         />
         <div className="flex items-center gap-lg">
           <div className="flex items-center gap-md">
-            <div className="flex items-center gap-2 mr-2 text-text-dim">
-              <Filter size={16} />
-              <span className="text-xs font-semibold uppercase tracking-wider">Filters</span>
-            </div>
-            <Select
-              options={[
-                { label: 'All Status', value: 'all', icon: <Activity size={14} /> },
-                { label: 'Pending', value: 'pending', icon: <ClockIcon size={14} className="text-warning" /> },
-                { label: 'Assigned', value: 'assigned', icon: <UserCheck size={14} className="text-success" /> },
-                { label: 'Delivering', value: 'delivering', icon: <Navigation size={14} className="text-primary" /> },
-                { label: 'Delivered', value: 'delivered', icon: <CheckCircle size={14} className="text-success" /> },
-                { label: 'Failed', value: 'failed', icon: <XCircle size={14} className="text-danger" /> },
-                { label: 'Cancelled', value: 'cancelled', icon: <Slash size={14} className="text-dim" /> },
-              ]}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              className="min-w-[160px]"
-            />
+            <Filter size={16} className="text-dim" />
+            <select 
+              className="bg-surface-low border border-border rounded-default text-text px-lg py-md font-medium text-sm outline-none cursor-pointer transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 shadow-sm" 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="assigned">Assigned</option>
+              <option value="delivering">Delivering</option>
+              <option value="delivered">Delivered</option>
+              <option value="failed">Failed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
-          <div className="hidden md:block w-px h-8 bg-border mx-1" />
-          <span className="text-xs text-dim font-medium whitespace-nowrap">Total <b className="text-text">{filteredOrders.length}</b> orders</span>
+          <div className="w-px h-8 bg-border" />
+          <span className="text-xs text-dim font-medium">Total <b className="text-text">{filteredOrders.length}</b> orders</span>
         </div>
       </section>
 

@@ -2,8 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VehiclesService } from './vehicles.service';
-import { Vehicle, VehicleStatus, VehicleType } from '../entities/vehicle.entity';
-import { Driver } from '../entities/driver.entity';
+import {
+  Vehicle,
+  VehicleStatus,
+  VehicleType,
+} from '../entities/vehicle.entity';
 import { UploadService } from '../upload/upload.service';
 import {
   ConflictException,
@@ -56,13 +59,6 @@ describe('VehiclesService', () => {
         {
           provide: UploadService,
           useValue: mockUploadService,
-        },
-        {
-          provide: getRepositoryToken(Driver),
-          useValue: {
-            findOne: jest.fn(),
-            save: jest.fn(),
-          },
         },
       ],
     }).compile();

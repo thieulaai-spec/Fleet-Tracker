@@ -25,10 +25,8 @@ interface Order {
   id: string;
   customerName: string;
   address: string;
-  customerPhone?: string;
   status: string;
   photoUrl?: string;
-  pickupAddress: string;
   pickupLocation?: { latitude: number; longitude: number };
   deliveryLocation?: { latitude: number; longitude: number };
 }
@@ -115,12 +113,10 @@ export const useTripStore = create<TripState>()(
                 return {
                   id: to.order.id,
                   customerName: to.order.customerName || 'Unknown Customer',
-                  address: to.order.deliveryAddress || to.order.address || 'No address',
-                  pickupAddress: to.order.pickupAddress || 'Origin Hub',
+                  address: to.order.address || 'No address',
                   status: to.order.status || 'pending',
                   pickupLocation: parsePoint(to.order.pickupLocation),
                   deliveryLocation: parsePoint(to.order.deliveryLocation),
-                  customerPhone: to.order.customerPhone,
                   photoUrl: to.order.photoUrl,
                   signatureUrl: to.order.signatureUrl,
                 };

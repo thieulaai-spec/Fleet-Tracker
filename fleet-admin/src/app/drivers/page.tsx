@@ -11,12 +11,7 @@ import {
   Star,
   Mail,
   CreditCard,
-  Calendar,
-  Activity,
-  CheckCircle,
-  Navigation,
-  CloudOff,
-  Briefcase
+  Calendar
 } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
@@ -27,8 +22,6 @@ import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatCard } from '@/components/ui/StatCard';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { DatePicker } from '@/components/ui/DatePicker';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -39,11 +32,7 @@ import { useRouter } from 'next/navigation';
 
 // For typing the backend response which includes the joined user
 interface DriverWithUser extends Driver {
-  user?: { 
-    email: string;
-    fullName?: string;
-    phone?: string;
-  };
+  user?: { email: string };
 }
 
 const driverSchema = z.object({
@@ -67,7 +56,7 @@ export default function DriversPage() {
   const [driverToDelete, setDriverToDelete] = React.useState<DriverWithUser | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors }, setValue, watch } = useForm<DriverFormValues>({
+  const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm<DriverFormValues>({
     resolver: zodResolver(driverSchema),
   });
   const [mounted, setMounted] = React.useState(false);
@@ -80,10 +69,10 @@ export default function DriversPage() {
   React.useEffect(() => {
     if (editingDriver) {
       reset({
-        fullName: editingDriver.user?.fullName || '',
+        fullName: editingDriver.fullName,
         email: editingDriver.user?.email || '',
         password: '', // Password is never populated
-        phone: editingDriver.user?.phone || '',
+        phone: editingDriver.phone,
         licenseClass: editingDriver.licenseClass || '',
         licenseExpiry: editingDriver.licenseExpiry ? new Date(editingDriver.licenseExpiry).toISOString().split('T')[0] : '',
       });
@@ -92,12 +81,9 @@ export default function DriversPage() {
   }, [editingDriver, reset]);
 
   const filteredDrivers = (drivers as DriverWithUser[]).filter(d => {
-    const fullName = d.user?.fullName || '';
-    const phone = d.user?.phone || '';
-    
-    const matchesSearch = fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = d.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (d.user?.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      phone.includes(searchQuery);
+      d.phone.includes(searchQuery);
     
     const matchesStatus = statusFilter === 'all' || d.status === statusFilter;
     
@@ -130,13 +116,13 @@ export default function DriversPage() {
             <UserIcon size={16} />
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-text">{d.user?.fullName || 'N/A'}</span>
+            <span className="font-semibold text-text">{d.fullName}</span>
             <span className="text-xs text-dim">{d.user?.email || 'N/A'}</span>
           </div>
         </div>
       )
     },
-    { header: 'Phone', accessor: (d: DriverWithUser) => d.user?.phone || 'N/A' },
+    { header: 'Phone', accessor: 'phone' as keyof DriverWithUser },
     { 
       header: 'License', 
       accessor: (d: DriverWithUser) => (
@@ -162,7 +148,7 @@ export default function DriversPage() {
             variant="ghost" 
             size="sm" 
             icon={<Edit2 size={16} />} 
-            aria-label={`Edit ${d.user?.fullName || 'driver'}`}
+            aria-label={`Edit ${d.fullName}`}
             onClick={(e) => {
               e.stopPropagation();
               setEditingDriver(d);
@@ -173,7 +159,7 @@ export default function DriversPage() {
             size="sm" 
             icon={<Trash2 size={16} />} 
             className="text-danger hover:bg-danger/10" 
-            aria-label={`Delete ${d.user?.fullName || 'driver'}`}
+            aria-label={`Delete ${d.fullName}`}
             onClick={(e) => {
               e.stopPropagation();
               setDriverToDelete(d);
@@ -230,7 +216,7 @@ export default function DriversPage() {
         />
       </section>
 
-      <section className="card flex justify-between items-center px-xl py-lg gap-xl mb-xl shadow-glow border-primary/10 transition-all duration-300 hover:border-primary/30 hover:shadow-glow-lg">
+      <section className="card flex justify-between items-center px-xl py-lg gap-xl mb-xl shadow-glow border-primary/10">
         <SearchInput
           placeholder="Search by name, email or phone..."
           value={searchQuery}
@@ -239,17 +225,17 @@ export default function DriversPage() {
         />
         <div className="flex items-center gap-lg">
           <div className="flex items-center gap-md">
-            <Select
-              options={[
-                { label: 'All Status', value: 'all', icon: <Activity size={14} /> },
-                { label: 'Available', value: 'available', icon: <CheckCircle size={14} className="text-success" /> },
-                { label: 'On Trip', value: 'on_trip', icon: <Navigation size={14} className="text-primary" /> },
-                { label: 'Offline', value: 'offline', icon: <CloudOff size={14} className="text-dim" /> },
-              ]}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              className="min-w-[150px]"
-            />
+            <Filter size={16} className="text-dim" />
+            <select 
+              className="bg-surface-low border border-border rounded-default text-text px-lg py-md font-medium text-sm outline-none cursor-pointer transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 shadow-sm" 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="available">Available</option>
+              <option value="on_trip">On Trip</option>
+              <option value="offline">Offline</option>
+            </select>
           </div>
           <div className="w-px h-8 bg-border" />
           <span className="text-xs text-dim font-medium">Total <b className="text-text">{filteredDrivers.length}</b> drivers</span>
@@ -323,22 +309,16 @@ export default function DriversPage() {
               {...register('phone')}
               error={errors.phone?.message}
             />
-            <Select 
+            <Input 
               label="License Class" 
-              options={[
-                { label: 'Class B2', value: 'B2', icon: <CreditCard size={14} /> },
-                { label: 'Class C', value: 'C', icon: <CreditCard size={14} /> },
-                { label: 'Class D', value: 'D', icon: <CreditCard size={14} /> },
-                { label: 'Class E', value: 'E', icon: <CreditCard size={14} /> },
-                { label: 'Class F', value: 'F', icon: <CreditCard size={14} /> },
-              ]}
-              value={watch('licenseClass')}
-              onChange={(val) => setValue('licenseClass', val)}
+              placeholder="e.g. B2, C, D" 
+              {...register('licenseClass')}
+              error={errors.licenseClass?.message}
             />
-            <DatePicker 
+            <Input 
               label="License Expiry" 
-              value={watch('licenseExpiry')}
-              onChange={(val) => setValue('licenseExpiry', val)}
+              type="date"
+              {...register('licenseExpiry')}
               error={errors.licenseExpiry?.message}
             />
           </div>
@@ -368,32 +348,32 @@ export default function DriversPage() {
                 <UserIcon size={28} />
               </div>
               <div>
-                <h3 className="text-xl font-bold">{viewingDriver.user?.fullName || 'N/A'}</h3>
+                <h3 className="text-xl font-bold">{viewingDriver.fullName}</h3>
                 <p className="text-dim">{viewingDriver.user?.email}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-lg">
-              <div className="flex flex-col gap-md p-lg bg-surface-low border border-border rounded-default transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-glow">
+              <div className="flex flex-col gap-md p-lg bg-surface-low border border-border rounded-default">
                 <span className="text-xs font-bold text-dim uppercase tracking-wider">Phone</span>
                 <div className="flex items-center gap-md">
                   <Phone size={16} className="text-primary-light" />
-                  <span className="font-semibold">{viewingDriver.user?.phone || 'N/A'}</span>
+                  <span className="font-semibold">{viewingDriver.phone}</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-md p-lg bg-surface-low border border-border rounded-default transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-glow">
+              <div className="flex flex-col gap-md p-lg bg-surface-low border border-border rounded-default">
                 <span className="text-xs font-bold text-dim uppercase tracking-wider">Status</span>
                 <Badge variant={viewingDriver.status === 'available' ? 'success' : viewingDriver.status === 'on_trip' ? 'primary' : 'neutral'}>
                   {viewingDriver.status.replace('_', ' ')}
                 </Badge>
               </div>
-              <div className="flex flex-col gap-md p-lg bg-surface-low border border-border rounded-default transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-glow">
+              <div className="flex flex-col gap-md p-lg bg-surface-low border border-border rounded-default">
                 <span className="text-xs font-bold text-dim uppercase tracking-wider">License Class</span>
                 <div className="flex items-center gap-md">
                   <CreditCard size={16} className="text-primary-light" />
                   <span className="font-semibold">{viewingDriver.licenseClass || 'N/A'}</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-md p-lg bg-surface-low border border-border rounded-default transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-glow">
+              <div className="flex flex-col gap-md p-lg bg-surface-low border border-border rounded-default">
                 <span className="text-xs font-bold text-dim uppercase tracking-wider">Expiry Date</span>
                 <div className="flex items-center gap-md">
                   <Calendar size={16} className="text-primary-light" />
@@ -408,7 +388,7 @@ export default function DriversPage() {
       <ConfirmDialog
         open={Boolean(driverToDelete)}
         title="Delete driver"
-        description={`Are you sure you want to delete ${driverToDelete?.user?.fullName || 'this driver'}? This action cannot be undone.`}
+        description={`Are you sure you want to delete ${driverToDelete?.fullName}? This action cannot be undone.`}
         confirmLabel="Delete"
         confirmVariant="danger"
         isLoading={isDeleting}

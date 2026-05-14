@@ -7,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
-import { Driver, DriverStatus } from '../entities/driver.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehicleQueryDto } from './dto/vehicle-query.dto';
@@ -19,8 +18,6 @@ export class VehiclesService {
   constructor(
     @InjectRepository(Vehicle)
     private vehicleRepository: Repository<Vehicle>,
-    @InjectRepository(Driver)
-    private driverRepository: Repository<Driver>,
     private uploadService: UploadService,
   ) {}
 
@@ -98,33 +95,6 @@ export class VehiclesService {
           'Vehicle with this plate number already exists',
         );
       }
-    }
-
-    // Handle driver assignment explicitly to avoid relation conflicts
-    if (updateVehicleDto.driverId !== undefined) {
-      // 1. Check if vehicle is currently delivering
-      if (vehicle.status === VehicleStatus.DELIVERING) {
-        throw new BadRequestException(
-          'Cannot change driver while vehicle is delivering',
-        );
-      }
-
-      // 2. If assigning a new driver, check their status
-      if (updateVehicleDto.driverId) {
-        const newDriver = await this.driverRepository.findOne({
-          where: { id: updateVehicleDto.driverId },
-        });
-        if (!newDriver) {
-          throw new NotFoundException('Driver not found');
-        }
-        if (newDriver.status === DriverStatus.ON_TRIP) {
-          throw new ConflictException('Driver is already on another trip');
-        }
-      }
-
-      vehicle.driverId = updateVehicleDto.driverId;
-      vehicle.driver = null; // Clear the loaded relation to ensure driverId is used
-      delete updateVehicleDto.driverId;
     }
 
     Object.assign(vehicle, updateVehicleDto);

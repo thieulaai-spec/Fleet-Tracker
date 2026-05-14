@@ -7,7 +7,6 @@ import {
   Users 
 } from 'lucide-react';
 import { Order, Vehicle } from '@/types';
-import React from 'react';
 
 interface DispatchMapPanelProps {
   clusterView: boolean;
@@ -45,17 +44,6 @@ export function DispatchMapPanel({
   selectedOrderData,
   suggestedVehicles = [],
 }: DispatchMapPanelProps) {
-  const [pitch, setPitch] = React.useState(0);
-  const [mapStyle, setMapStyle] = React.useState('mapbox://styles/mapbox/streets-v12');
-  const [showTraffic, setShowTraffic] = React.useState(false);
-
-  const togglePitch = () => setPitch(p => p === 0 ? 60 : 0);
-  const toggleStyle = () => setMapStyle(s => 
-    s.includes('satellite') 
-      ? 'mapbox://styles/mapbox/streets-v12' 
-      : 'mapbox://styles/mapbox/satellite-streets-v12'
-  );
-  const toggleTraffic = () => setShowTraffic(t => !t);
   
   // ===== Vehicle markers =====
   const vehicleMarkers: MapMarker[] = vehicles.map(v => {
@@ -132,9 +120,6 @@ export function DispatchMapPanel({
             zoom={13} 
             selectedMarkerId={selectedMarkerId} 
             showSearch={true}
-            pitch={pitch}
-            mapStyle={mapStyle}
-            showTraffic={showTraffic}
           />
         </div>
 
@@ -144,28 +129,10 @@ export function DispatchMapPanel({
               {clusterView ? 'Cluster View' : 'List View'}
             </Button>
             <div className="w-px bg-border my-xs" />
-            <Button 
-              variant={pitch > 0 ? "primary" : "secondary"} 
-              size="sm" 
-              onClick={togglePitch}
-            >
-              2D/3D
-            </Button>
-            <Button 
-              variant={mapStyle.includes('satellite') ? "primary" : "secondary"} 
-              size="sm" 
-              onClick={toggleStyle}
-            >
-              Satellite
-            </Button>
+            <Button variant="secondary" size="sm">2D/3D</Button>
+            <Button variant="secondary" size="sm">Satellite</Button>
             <div className="w-px bg-border my-xs" />
-            <Button 
-              variant={showTraffic ? "primary" : "secondary"} 
-              size="sm" 
-              onClick={toggleTraffic}
-            >
-              Traffic
-            </Button>
+            <Button variant="secondary" size="sm">Traffic</Button>
           </div>
         </div>
       </div>

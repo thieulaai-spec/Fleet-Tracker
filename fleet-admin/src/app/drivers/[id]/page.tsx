@@ -16,8 +16,7 @@ import {
   TrendingUp,
   Clock,
   ExternalLink,
-  ChevronRight,
-  Truck
+  ChevronRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { 
@@ -40,7 +39,6 @@ import { DataTable, Column } from '@/components/ui/DataTable';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ReportChartWrapper } from '@/app/reports/components/ReportChartWrapper';
 import { Trip, Alert } from '@/types';
-import { Modal } from '@/components/ui/Modal';
 
 // Mock performance trend data
 const performanceData = [
@@ -62,8 +60,6 @@ export default function DriverKpiDetailPage() {
   const { data: kpi, isLoading: kpiLoading } = useDriverKpi(id);
   const { alerts, isLoading: alertsLoading } = useAlerts({ driverId: id });
   const { data: trips, isLoading: tripsLoading } = useTrips({ driverId: id });
-
-  const [selectedTrip, setSelectedTrip] = React.useState<Trip | null>(null);
 
   const isLoading = driverLoading || kpiLoading || alertsLoading || tripsLoading;
 
@@ -117,13 +113,8 @@ export default function DriverKpiDetailPage() {
     },
     {
       header: 'Actions',
-      accessor: (trip) => (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          icon={<ExternalLink size={14} />}
-          onClick={() => setSelectedTrip(trip)}
-        >
+      accessor: () => (
+        <Button variant="ghost" size="sm" icon={<ExternalLink size={14} />}>
           Details
         </Button>
       )
@@ -146,11 +137,11 @@ export default function DriverKpiDetailPage() {
           <div className="flex items-center gap-xl">
             <div className="relative">
               <div className="w-20 h-20 rounded-2xl bg-surface-high border border-border flex items-center justify-center overflow-hidden shadow-glow/10">
-                {driver.user?.avatarUrl ? (
-                  <img src={driver.user?.avatarUrl} alt={driver.user?.fullName} className="w-full h-full object-cover" />
+                {driver.avatarUrl ? (
+                  <img src={driver.avatarUrl} alt={driver.fullName} className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-2xl font-bold text-primary">
-                    {driver.user?.fullName?.charAt(0) || '?'}
+                    {driver.fullName.charAt(0)}
                   </div>
                 )}
               </div>
@@ -160,7 +151,7 @@ export default function DriverKpiDetailPage() {
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-md">
-                <h1 className="text-3xl font-bold tracking-tight">{driver.user?.fullName}</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{driver.fullName}</h1>
                 <Badge variant={driver.status === 'on_trip' ? 'success' : driver.status === 'available' ? 'primary' : 'neutral'}>
                   {driver.status.replace('_', ' ')}
                 </Badge>
@@ -172,11 +163,11 @@ export default function DriverKpiDetailPage() {
                 </span>
                 <span className="flex items-center gap-md">
                   <Star size={14} className="text-warning fill-warning" />
-                  {kpi?.kpiScore != null ? Number(kpi.kpiScore).toFixed(1) : 'N/A'} Performance Rating
+                  {kpi?.kpiScore != null ? kpi.kpiScore.toFixed(1) : 'N/A'} Performance Rating
                 </span>
                 <span className="flex items-center gap-md">
                   <Phone size={14} />
-                  {driver.user?.phone}
+                  {driver.phone}
                 </span>
               </div>
             </div>
@@ -213,7 +204,7 @@ export default function DriverKpiDetailPage() {
         />
         <StatCard 
           label="Performance Score" 
-          value={`${kpi?.kpiScore != null ? Number(kpi.kpiScore).toFixed(1) : 0}`} 
+          value={`${kpi?.kpiScore || 0}`} 
           icon={TrendingUp} 
           color="var(--color-warning)" 
           trend={{ value: 1.2, isUp: true }}
@@ -278,7 +269,7 @@ export default function DriverKpiDetailPage() {
 
         {/* Recent Violations */}
         <div className="lg:col-span-1">
-          <div className="card h-full flex flex-col gap-xl p-xl transition-all duration-300 hover:shadow-glow hover:border-primary/30">
+          <div className="card h-full flex flex-col gap-xl p-xl">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-bold">Recent Violations</h3>
               <Badge variant="danger">{alerts.length} New</Badge>
@@ -292,7 +283,7 @@ export default function DriverKpiDetailPage() {
                 </div>
               ) : (
                 alerts.slice(0, 5).map((alert: Alert) => (
-                  <div key={alert.id} className="flex flex-col gap-md p-lg bg-surface-low rounded-xl border border-border group hover:shadow-glow hover:border-primary/50 transition-all duration-300 cursor-pointer">
+                  <div key={alert.id} className="flex flex-col gap-md p-lg bg-surface-low rounded-xl border border-border group hover:border-primary/50 transition-all cursor-pointer">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-md text-danger">
                         <AlertTriangle size={16} />
@@ -335,83 +326,6 @@ export default function DriverKpiDetailPage() {
           isLoading={tripsLoading}
         />
       </section>
-
-      {/* Trip Details Modal */}
-      <Modal
-        isOpen={Boolean(selectedTrip)}
-        onClose={() => setSelectedTrip(null)}
-        title="Trip Details"
-      >
-        {selectedTrip && (
-          <div className="flex flex-col gap-xl">
-            <div className="flex justify-between items-center">
-              <Badge variant={
-                selectedTrip.status === 'completed' ? 'success' : 
-                selectedTrip.status === 'in_progress' ? 'primary' : 'warning'
-              }>
-                {selectedTrip.status.toUpperCase()}
-              </Badge>
-              <span className="font-mono text-xs text-text-dim">ID: {selectedTrip.id}</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-xl">
-              <div className="space-y-1">
-                <p className="text-xs text-text-dim uppercase font-bold tracking-wider">Vehicle</p>
-                <p className="font-semibold flex items-center gap-md">
-                  <Truck size={16} className="text-primary" />
-                  {selectedTrip.vehicle?.plateNumber || 'N/A'}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs text-text-dim uppercase font-bold tracking-wider">Distance</p>
-                <p className="font-semibold flex items-center gap-md">
-                  <Navigation size={16} className="text-primary" />
-                  {selectedTrip.totalDistanceKm || 0} km
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs text-text-dim uppercase font-bold tracking-wider">Timeline</p>
-              <div className="p-md bg-surface-low rounded-xl border border-border space-y-md transition-all duration-300 hover:shadow-glow hover:border-primary/30">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-text-dim">Created At</span>
-                  <span className="text-sm font-medium">{format(new Date(selectedTrip.createdAt), 'MMM dd, HH:mm')}</span>
-                </div>
-                {selectedTrip.startedAt && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-text-dim">Started At</span>
-                    <span className="text-sm font-medium">{format(new Date(selectedTrip.startedAt), 'MMM dd, HH:mm')}</span>
-                  </div>
-                )}
-                {selectedTrip.completedAt && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-text-dim">Completed At</span>
-                    <span className="text-sm font-medium">{format(new Date(selectedTrip.completedAt), 'MMM dd, HH:mm')}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {selectedTrip.orders && selectedTrip.orders.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs text-text-dim uppercase font-bold tracking-wider">Orders ({selectedTrip.orders.length})</p>
-                <div className="max-h-[200px] overflow-y-auto space-y-md pr-md">
-                  {selectedTrip.orders.map((order, i) => (
-                    <div key={order.id} className="p-md bg-surface-low rounded-xl border border-border flex justify-between items-start transition-all duration-300 hover:shadow-glow hover:border-primary/30">
-                      <div className="space-y-1">
-                        <p className="text-sm font-bold">Order #{order.id.substring(0, 8)}</p>
-                        <p className="text-xs text-text-dim">{order.deliveryAddress}</p>
-                      </div>
-                      <Badge variant="neutral">{order.status}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

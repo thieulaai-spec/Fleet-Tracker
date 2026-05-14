@@ -2,34 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2026-05-14] - Profile & Security Refinement
-### Added
-- **Profile Settings**: Implemented modern profile page with read-only email restriction for enhanced security.
-- **Security**: Finalized `ChangePasswordModal` with full-screen overlay and smooth animations.
-- **UX**: Added glassmorphic design and `animate-fade-in` transitions to profile module.
-
-## [2026-05-14] - UI Refinement
-### Refactored
-- `DatePicker`: Implemented dynamic viewport-aware positioning.
-- `DatePicker`: Added horizontal overflow protection and automatic vertical flipping (above/below trigger).
-- `DatePicker`: Fixed state synchronization bugs and added window resize/scroll listeners for stable portal placement.
-
-## [2026-05-14] - Reports UX & Select Fixes
-### Fixed
-- **Reports**: Implemented click-outside-to-close for `DateRangeFilter` dropdown to improve UI consistency.
-- **Reports**: Refined dropdown positioning and layering to ensure they are not obscured by the sidebar.
-- **Reports**: Standardized event propagation handling to ensure clean closure when interacting with nested dropdown elements.
-- **Select Component**: Standardized `useRef` + `useEffect` pattern for reliable dropdown closure across the app.
-- **Build**: Fixed critical build-time errors in `DateRangeFilter.tsx` caused by missing imports and state regressions.
-
-## [2026-05-14] - Maps & Dispatch
-### Fixed
-- **Dispatch UI**: Resolved search bar overlap issue in `DispatchOrdersSidebar` and `DispatchVehiclesSidebar` by moving search inputs and status banners out of the scrollable container.
-- **Dispatch Logic**: Fixed the "Available Fleet" synchronization bug where assigned vehicles remained in the list. Added React Query cache invalidation (`vehicles`) on successful order assignment.
-### Added
-- **Map Enhancements**: Implemented unified map controls (2D/3D toggle, Satellite/Streets style, and Traffic layer visibility) for both Dispatch and Tracking modules.
-- **Mapbox Integration**: Added support for `mapbox-traffic-v1` vector tiles with dynamic congestion coloring (Low, Moderate, Heavy, Severe).
-
 ## [2026-05-12]
 ### Fixed
 - **UI Styling**: Resolved critical layout issues where padding and margins were not being applied in Tailwind CSS v4.

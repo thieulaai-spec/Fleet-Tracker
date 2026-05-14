@@ -27,7 +27,6 @@ import { AlertsModule } from './alerts/alerts.module';
 import { ReportsModule } from './reports/reports.module';
 import { OptimizationModule } from './optimization/optimization.module';
 import { HealthModule } from './common/health/health.module';
-import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -106,7 +105,6 @@ import { UsersModule } from './users/users.module';
     ReportsModule,
     OptimizationModule,
     HealthModule,
-    UsersModule,
 
     // Modules to be added in future phases
     // TripsModule will be added in Phase 04

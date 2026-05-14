@@ -44,10 +44,10 @@ export class Vehicle {
 
   @ManyToOne(() => Driver, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'driver_id' })
-  driver: Driver | null;
+  driver: Driver;
 
   @Column({ name: 'driver_id', nullable: true })
-  driverId: string | null;
+  driverId: string;
 
   @Column({
     type: 'enum',
@@ -58,10 +58,6 @@ export class Vehicle {
 
   @Column({ name: 'image_url', nullable: true })
   imageUrl: string;
-
-  @Index()
-  @Column({ name: 'device_id', type: 'varchar', nullable: true, unique: true })
-  deviceId: string | null;
 
   @Column({
     name: 'last_known_location',

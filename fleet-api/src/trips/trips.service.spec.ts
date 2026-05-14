@@ -12,8 +12,6 @@ import { Trip, TripStatus } from '../entities/trip.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
-import { Alert } from '../entities/alert.entity';
-
 
 describe('TripsService', () => {
   let service: TripsService;
@@ -72,15 +70,7 @@ describe('TripsService', () => {
           provide: EventEmitter2,
           useValue: mockEventEmitter,
         },
-        {
-          provide: getRepositoryToken(Alert),
-          useValue: {
-            create: jest.fn(),
-            save: jest.fn(),
-          },
-        },
       ],
-
     }).compile();
 
     service = module.get<TripsService>(TripsService);

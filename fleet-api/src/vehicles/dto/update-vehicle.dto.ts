@@ -9,8 +9,8 @@ export class UpdateVehicleDto extends PartialType(CreateVehicleDto) {
   @IsOptional()
   status?: VehicleStatus;
 
-  @ApiPropertyOptional({ example: 'uuid-of-driver', nullable: true })
+  @ApiPropertyOptional({ example: 'uuid-of-driver' })
   @IsUUID()
   @IsOptional()
-  driverId?: string | null;
+  driverId?: string;
 }

@@ -19,21 +19,10 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
-import { Select } from '@/components/ui/Select';
-import { 
-  ChevronDown, 
-  Truck, 
-  Activity, 
-  ShieldAlert, 
-  LayoutGrid,
-  Box,
-  Container,
-  Zap
-} from 'lucide-react';
 
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useVehicles } from '@/hooks/use-vehicles';
@@ -47,7 +36,6 @@ const vehicleSchema = z.object({
   status: z.enum(['available', 'delivering', 'maintenance']),
   maxCapacityKg: z.number().min(100, 'Minimum capacity is 100kg'),
   driverId: z.string().uuid().or(z.literal('')).optional().nullable(),
-  deviceId: z.string().optional().nullable(),
 });
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -102,14 +90,13 @@ export default function VehiclesPage() {
   }, [typeFilter, statusFilter]);
   const isEditing = Boolean(selectedVehicle);
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<VehicleFormValues>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
       status: 'available',
       type: 'medium',
       maxCapacityKg: 1000,
       driverId: '',
-      deviceId: '',
     }
   });
 
@@ -128,7 +115,7 @@ export default function VehiclesPage() {
 
   const openCreateModal = () => {
     setSelectedVehicle(null);
-    reset({ plateNumber: '', type: 'medium', status: 'available', maxCapacityKg: 1000, driverId: '', deviceId: '' });
+    reset({ plateNumber: '', type: 'medium', status: 'available', maxCapacityKg: 1000, driverId: '' });
     setIsModalOpen(true);
   };
 
@@ -140,7 +127,6 @@ export default function VehiclesPage() {
       status: vehicle.status,
       maxCapacityKg: vehicle.maxCapacityKg || 1000,
       driverId: vehicle.driverId || '',
-      deviceId: vehicle.deviceId || '',
     });
     setIsModalOpen(true);
   };
@@ -168,7 +154,7 @@ export default function VehiclesPage() {
       if (selectedVehicle) {
         const payload = {
           ...data,
-          driverId: data.driverId || null,
+          driverId: data.driverId || undefined,
         };
         await updateVehicle({ id: selectedVehicle.id, ...payload });
       } else {
@@ -177,7 +163,6 @@ export default function VehiclesPage() {
           plateNumber: data.plateNumber,
           type: data.type,
           maxCapacityKg: data.maxCapacityKg,
-          deviceId: data.deviceId || null,
         };
         await createVehicle(payload);
         
@@ -197,7 +182,7 @@ export default function VehiclesPage() {
 
       await updateVehicle({
         id: vehicleToAssign.id,
-        driverId: assignedDriverId || null,
+        driverId: assignedDriverId || undefined,
       });
 
       closeAssignModal();
@@ -224,30 +209,27 @@ export default function VehiclesPage() {
       )
     },
     { header: 'Driver', accessor: (v: Vehicle) => v.driver?.fullName || 'Unassigned' },
-    { header: 'Device ID', accessor: (v: Vehicle) => v.deviceId || <span className="text-text-dim italic">No hardware</span> },
     { header: 'Capacity (kg)', accessor: 'maxCapacityKg' as keyof Vehicle },
     {
       header: 'Actions',
       accessor: (v: Vehicle) => (
-        <div onClick={(e) => e.stopPropagation()}>
-          <Dropdown align="right" trigger={
-            <Button variant="ghost" size="sm" icon={<MoreVertical size={16} />} />
-          }>
-              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); openAssignModal(v); }}>
-                <UserPlus size={16} /> {v.driver ? 'Change Driver' : 'Assign Driver'}
-              </button>
-            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); router.push(`/dispatch?vehicleId=${v.id}`); }}>
-              <Navigation size={16} /> Track Vehicle
+        <Dropdown align="right" trigger={
+          <Button variant="ghost" size="sm" icon={<MoreVertical size={16} />} />
+        }>
+            <button className="dropdown-item" onClick={() => openAssignModal(v)}>
+              <UserPlus size={16} /> {v.driver ? 'Change Driver' : 'Assign Driver'}
             </button>
-            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); openEditModal(v); }}>
-              <Edit2 size={16} /> Edit Details
-            </button>
-            <div className="dropdown-divider" />
-            <button className="dropdown-item danger" onClick={(e) => { e.stopPropagation(); setVehicleToDelete(v); }}>
-              <Trash2 size={16} /> Delete Vehicle
-            </button>
-          </Dropdown>
-        </div>
+          <button className="dropdown-item" onClick={() => router.push(`/dispatch?vehicleId=${v.id}`)}>
+            <Navigation size={16} /> Track Vehicle
+          </button>
+          <button className="dropdown-item" onClick={() => openEditModal(v)}>
+            <Edit2 size={16} /> Edit Details
+          </button>
+          <div className="dropdown-divider" />
+          <button className="dropdown-item danger" onClick={() => setVehicleToDelete(v)}>
+            <Trash2 size={16} /> Delete Vehicle
+          </button>
+        </Dropdown>
       )
     }
   ];
@@ -289,72 +271,43 @@ export default function VehiclesPage() {
               {...register('maxCapacityKg', { valueAsNumber: true })}
               error={errors.maxCapacityKg?.message}
             />
-            <Input 
-              label="Hardware Device ID" 
-              placeholder="e.g. GPS-V1-001" 
-              {...register('deviceId')}
-              error={errors.deviceId?.message}
-              helpText="Identifier for the physical GPS tracking chip."
-            />
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-text-dim">Vehicle Type</label>
-              <Controller
-                name="type"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={[
-                      { label: 'Small', value: 'small', icon: <Box size={14} /> },
-                      { label: 'Medium', value: 'medium', icon: <Truck size={14} /> },
-                      { label: 'Large', value: 'large', icon: <Container size={14} /> },
-                    ]}
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
+              <select 
+                className="bg-surface-low border border-border rounded-lg text-text px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" 
+                {...register('type')}
+              >
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+              </select>
               {errors.type && <p className="text-danger text-xs mt-1">{errors.type.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-text-dim">Status</label>
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={[
-                      { label: 'Available', value: 'available', icon: <Zap size={14} className="text-success" /> },
-                      { label: 'Delivering', value: 'delivering', icon: <Navigation size={14} className="text-primary" /> },
-                      { label: 'Maintenance', value: 'maintenance', icon: <ShieldAlert size={14} className="text-warning" /> },
-                    ]}
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
+              <select 
+                className="bg-surface-low border border-border rounded-lg text-text px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" 
+                {...register('status')}
+              >
+                <option value="available">Available</option>
+                <option value="delivering">Delivering</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
               {errors.status && <p className="text-danger text-xs mt-1">{errors.status.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5 md:col-span-2">
               <label className="text-sm font-medium text-text-dim">Assigned Driver</label>
-              <Controller
-                name="driverId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={[
-                      { label: 'Unassigned', value: '', icon: <UserPlus size={14} /> },
-                      ...sortedDrivers.map(driver => ({
-                        label: `${driver.user?.fullName || 'Unknown'} (${driver.status.replace('_', ' ')})`,
-                        value: driver.id,
-                        icon: <UserPlus size={14} className={driver.status === 'available' ? 'text-success' : 'text-text-dim'} />
-                      }))
-                    ]}
-                    value={field.value || ''}
-                    onChange={field.onChange}
-                    placeholder="Select a driver"
-                  />
-                )}
-              />
+              <select 
+                className="bg-surface-low border border-border rounded-lg text-text px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer" 
+                {...register('driverId')}
+              >
+                <option value="">Unassigned</option>
+                {sortedDrivers.map((driver) => (
+                  <option key={driver.id} value={driver.id}>
+                    {driver.fullName} ({driver.status.replace('_', ' ')})
+                  </option>
+                ))}
+              </select>
               {errors.driverId && <p className="text-danger text-xs mt-1">Invalid driver selection</p>}
             </div>
           </div>
@@ -376,19 +329,18 @@ export default function VehiclesPage() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-text-dim">Select Driver</label>
-            <Select
-              options={[
-                { label: 'Unassigned', value: '', icon: <UserPlus size={14} /> },
-                ...sortedDrivers.map(driver => ({
-                  label: `${driver.user?.fullName || 'Unknown'} (${driver.status.replace('_', ' ')})`,
-                  value: driver.id,
-                  icon: <UserPlus size={14} className={driver.status === 'available' ? 'text-success' : 'text-text-dim'} />
-                }))
-              ]}
+            <select
+              className="bg-surface-low border border-border rounded-lg text-text px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors cursor-pointer"
               value={assignedDriverId}
-              onChange={setAssignedDriverId}
-              placeholder="Select a driver"
-            />
+              onChange={(e) => setAssignedDriverId(e.target.value)}
+            >
+              <option value="">Unassigned</option>
+              {sortedDrivers.map((driver) => (
+                <option key={driver.id} value={driver.id}>
+                  {driver.fullName} ({driver.status.replace('_', ' ')})
+                </option>
+              ))}
+            </select>
           </div>
           <p className="text-xs text-text-dim">
             This will update the vehicle&apos;s assigned driver without changing other vehicle details.
@@ -419,34 +371,28 @@ export default function VehiclesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 mr-2 text-text-dim">
-            <Filter size={16} />
-            <span className="text-xs font-semibold uppercase tracking-wider">Filters</span>
-          </div>
-          <Select
-            options={[
-              { label: 'All Types', value: 'all', icon: <LayoutGrid size={14} /> },
-              { label: 'Small', value: 'small', icon: <Box size={14} /> },
-              { label: 'Medium', value: 'medium', icon: <Truck size={14} /> },
-              { label: 'Large', value: 'large', icon: <Container size={14} /> },
-            ]}
-            value={typeFilter}
-            onChange={setTypeFilter}
-            className="min-w-[140px]"
-          />
-          <Select
-            options={[
-              { label: 'All Status', value: 'all', icon: <Activity size={14} /> },
-              { label: 'Available', value: 'available', icon: <Zap size={14} className="text-success" /> },
-              { label: 'Delivering', value: 'delivering', icon: <Navigation size={14} className="text-primary" /> },
-              { label: 'Maintenance', value: 'maintenance', icon: <ShieldAlert size={14} className="text-warning" /> },
-            ]}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            className="min-w-[140px]"
-          />
-          <div className="hidden md:block w-px h-6 bg-border mx-1" />
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <select 
+            className="bg-surface-low border border-border rounded-lg text-text px-3 py-2 text-sm font-medium outline-none cursor-pointer focus:border-primary transition-colors flex-1 md:flex-none" 
+            value={typeFilter} 
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option value="all">All Types</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+          </select>
+          <select 
+            className="bg-surface-low border border-border rounded-lg text-text px-3 py-2 text-sm font-medium outline-none cursor-pointer focus:border-primary transition-colors flex-1 md:flex-none" 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="available">Available</option>
+            <option value="delivering">Delivering</option>
+            <option value="maintenance">Maintenance</option>
+          </select>
+          <div className="hidden md:block w-px h-6 bg-border" />
           <span className="text-xs font-medium text-text-dim whitespace-nowrap">Total <b>{total}</b> vehicles</span>
         </div>
       </section>

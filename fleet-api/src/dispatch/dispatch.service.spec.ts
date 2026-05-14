@@ -154,8 +154,7 @@ describe('DispatchService', () => {
 
       mockQueryRunner.manager.findOne
         .mockResolvedValueOnce(mockOrder)
-        .mockResolvedValueOnce(mockVehicle)
-        .mockResolvedValueOnce(mockVehicle.driver);
+        .mockResolvedValueOnce(mockVehicle);
 
       const result = await service.assignOrder('o1', 'v1');
 
@@ -190,9 +189,7 @@ describe('DispatchService', () => {
         { id: 'o2', status: OrderStatus.PENDING, weightKg: 200 },
       ];
 
-      mockQueryRunner.manager.findOne
-        .mockResolvedValueOnce(mockVehicle)
-        .mockResolvedValueOnce(mockVehicle.driver);
+      mockQueryRunner.manager.findOne.mockResolvedValue(mockVehicle);
       mockQueryRunner.manager.find.mockResolvedValue(mockOrders);
 
       const result = await service.assignBulkOrders(orderIds, vehicleId);

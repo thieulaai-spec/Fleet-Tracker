@@ -186,7 +186,7 @@ export class TrackingGateway
       const result = await this.trackingService.processGpsUpdate(data);
 
       // Broadcast to all admins
-      this.server.to('admin').emit('gps:update', result);
+      this.server.to('admin').emit('vehicle:location', result);
 
       // Also broadcast to the specific trip room if implemented
       this.server.to(`trip:${data.tripId}`).emit('trip:location', result);
@@ -219,7 +219,7 @@ export class TrackingGateway
       // Broadcast the LATEST location to admins to keep dashboard snappy
       if (results.length > 0) {
         const latest: any = results[results.length - 1];
-        this.server.to('admin').emit('gps:update', latest);
+        this.server.to('admin').emit('vehicle:location', latest);
         this.server.to(`trip:${latest.tripId}`).emit('trip:location', latest);
       }
 

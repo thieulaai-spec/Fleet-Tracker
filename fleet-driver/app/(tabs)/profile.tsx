@@ -12,8 +12,7 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
-  StyleSheet,
-  Switch
+  StyleSheet
 } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTripStore } from '@/store/useTripStore';
@@ -36,8 +35,7 @@ import {
   Check,
   Award,
   Bell,
-  Navigation,
-  Power
+  Navigation
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
@@ -55,70 +53,6 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChanging, setIsChanging] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-
-  // Fetch current status on mount
-  React.useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const response = await authFetch('/auth/me');
-        const data = await response.json();
-        const userData = data?.data ?? data;
-        if (userData?.driver?.status) {
-          setIsOnline(userData.driver.status === 'available');
-        }
-      } catch (error) {
-        console.error('Failed to fetch status:', error);
-      }
-    };
-    fetchStatus();
-  }, []);
-
-  const toggleStatus = async () => {
-    if (activeTrip) {
-      Toast.show({
-        type: 'error',
-        text1: 'Lỗi',
-        text2: 'Không thể đổi trạng thái khi đang trong chuyến đi',
-      });
-      return;
-    }
-
-    const newStatus = !isOnline ? 'available' : 'off_duty';
-    setIsUpdatingStatus(true);
-
-    try {
-      const response = await authFetch('/drivers/status/me', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: newStatus,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Cập nhật trạng thái thất bại');
-      }
-
-      setIsOnline(!isOnline);
-      Toast.show({
-        type: 'success',
-        text1: 'Thành công',
-        text2: `Bạn đang ${!isOnline ? 'Trực tuyến' : 'Ngoại tuyến'}`,
-      });
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Lỗi',
-        text2: error.message || 'Cập nhật trạng thái thất bại',
-      });
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -442,31 +376,6 @@ export default function ProfileScreen() {
           </View>
           
           <View className="bg-slate-900/40 rounded-[32px] overflow-hidden border border-white/5">
-            <View className="flex-row items-center justify-between p-5">
-              <View className="flex-row items-center gap-4">
-                <View className={`w-10 h-10 rounded-2xl ${isOnline ? 'bg-emerald-500/10' : 'bg-slate-800'} items-center justify-center border border-white/5`}>
-                  <Power size={20} color={isOnline ? '#10b981' : '#94a3b8'} />
-                </View>
-                <View>
-                  <Text className="text-slate-100 text-base font-bold tracking-tight">
-                    Duty Status
-                  </Text>
-                  <Text className={`text-[10px] font-bold uppercase tracking-wider ${isOnline ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    {isOnline ? 'Online & Available' : 'Offline / Off Duty'}
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={isOnline}
-                onValueChange={toggleStatus}
-                disabled={isUpdatingStatus || !!activeTrip}
-                trackColor={{ false: '#1e293b', true: '#10b981' }}
-                thumbColor={Platform.OS === 'ios' ? '#ffffff' : isOnline ? '#ffffff' : '#94a3b8'}
-              />
-            </View>
-
-            <View className="h-px bg-white/5 mx-5" />
-
             <TouchableOpacity className="flex-row items-center justify-between p-5">
               <View className="flex-row items-center gap-4">
                 <View className="w-10 h-10 rounded-2xl bg-slate-800 items-center justify-center border border-white/5">
@@ -532,8 +441,8 @@ export default function ProfileScreen() {
         animationType="slide"
         onRequestClose={() => !isChanging && setShowPasswordModal(false)}
       >
-        <View className="flex-1 justify-end bg-black/80">
-          <BlurView intensity={100} tint="dark" className="bg-slate-900 rounded-t-[40px] p-8 border-t border-white/10">
+        <View className="flex-1 justify-end bg-black/60">
+          <BlurView intensity={80} tint="dark" className="bg-slate-900/90 rounded-t-[40px] p-8 border-t border-white/10">
             <View className="flex-row justify-between items-center mb-10">
               <View>
                 <Text className="text-2xl font-black text-white tracking-tight">Security</Text>
@@ -551,7 +460,7 @@ export default function ProfileScreen() {
             <View className="gap-6">
               <View>
                 <Text className="text-slate-500 text-[10px] font-black mb-2 uppercase tracking-[2px] ml-1">Current Password</Text>
-                <View className="flex-row items-center bg-slate-950 rounded-2xl px-5 border border-white/10 focus:border-indigo-500">
+                <View className="flex-row items-center bg-black/40 rounded-2xl px-5 border border-white/5 focus:border-indigo-500">
                   <Lock size={18} color="#475569" />
                   <TextInput
                     className="flex-1 text-white text-base py-4 ml-4"
@@ -567,7 +476,7 @@ export default function ProfileScreen() {
 
               <View>
                 <Text className="text-slate-500 text-[10px] font-black mb-2 uppercase tracking-[2px] ml-1">New Access Key</Text>
-                <View className="flex-row items-center bg-slate-950 rounded-2xl px-5 border border-white/10 focus:border-indigo-500">
+                <View className="flex-row items-center bg-black/40 rounded-2xl px-5 border border-white/5 focus:border-indigo-500">
                   <Lock size={18} color="#475569" />
                   <TextInput
                     className="flex-1 text-white text-base py-4 ml-4"
@@ -583,7 +492,7 @@ export default function ProfileScreen() {
 
               <View>
                 <Text className="text-slate-500 text-[10px] font-black mb-2 uppercase tracking-[2px] ml-1">Confirm Identity</Text>
-                <View className="flex-row items-center bg-slate-950 rounded-2xl px-5 border border-white/10 focus:border-indigo-500">
+                <View className="flex-row items-center bg-black/40 rounded-2xl px-5 border border-white/5 focus:border-indigo-500">
                   <Lock size={18} color="#475569" />
                   <TextInput
                     className="flex-1 text-white text-base py-4 ml-4"

@@ -3,14 +3,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { api } from '@/lib/api';
-import { toast } from 'sonner';
 
 interface User {
   id: string;
   email: string;
   fullName?: string;
-  phone?: string;
-  avatarUrl?: string;
   role: 'admin' | 'dispatcher' | 'driver' | 'ADMIN' | 'DISPATCHER' | 'DRIVER';
 }
 
@@ -20,7 +17,6 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,7 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await api.post('/auth/logout');
-      toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout request failed', error);
     }
@@ -73,12 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  const updateUser = (data: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...data } : null);
-  };
-
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

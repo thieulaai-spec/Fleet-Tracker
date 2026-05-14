@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-05-14]
+### Fixed
+- **E2E Authentication:** Khắc phục lỗi 401 Unauthorized trong bộ test E2E (`auth.e2e-spec.ts`, `orders.e2e-spec.ts`) bằng cách đồng bộ credentials với database seed.
+- **Unit Testing:** Sửa các lỗi unit test liên quan đến `ViolationDetectorService`, `RolesGuard` và `DriversService`.
+
+### Changed
+- **Database Seeding:** Cập nhật script seed (`seed.ts`) để sử dụng biến môi trường `SEED_ADMIN_EMAIL` và `SEED_ADMIN_PASSWORD`, giúp linh hoạt hơn trong cấu hình testing.
+- **Environment Configuration:** Thêm các biến seed vào `.env.example`.
+
+
 ## [2026-05-10]
 ### Added
 - **Dockerization:** Thêm `Dockerfile` (multi-stage), `.dockerignore` và `docker-compose.prod.yml`.

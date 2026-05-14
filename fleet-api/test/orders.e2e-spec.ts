@@ -11,8 +11,8 @@ describe('OrdersModule (e2e)', () => {
   let driverToken: string;
 
   const adminCredentials = {
-    email: 'admin@fleettracker.com',
-    password: 'Admin@123',
+    email: 'admin2@fleettracker.com',
+    password: 'Admin@456',
   };
 
   const driverCredentials = {

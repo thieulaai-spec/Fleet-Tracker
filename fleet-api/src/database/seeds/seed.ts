@@ -33,11 +33,11 @@ async function seed() {
     const orderRepository = dataSource.getRepository(Order);
 
     // 1. Seed Admin
-    const adminEmail = 'admin@fleettracker.com';
+    const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@fleettracker.com';
     let admin = await userRepository.findOne({ where: { email: adminEmail } });
     if (!admin) {
       const salt = await bcrypt.genSalt();
-      const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
+      const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@123';
       const passwordHash = await bcrypt.hash(adminPassword, salt);
       admin = userRepository.create({
         email: adminEmail,

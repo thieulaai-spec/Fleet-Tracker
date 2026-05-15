@@ -7,16 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { Order } from '@/types';
-
-export interface DispatchOrderGroup {
-  key: string;
-  label: string;
-  orders: Order[];
-  /** True khi nhóm này do API /dispatch/cluster tạo ra (PostGIS ST_DWithin 3km) */
-  isClusterGroup?: boolean;
-  /** Tọa độ trung tâm của cluster (từ API) */
-  centroid?: { lat: number; lng: number };
-}
+import { DispatchOrderGroup } from '../types';
 
 interface DispatchOrdersSidebarProps {
   pendingOrderCount: number;

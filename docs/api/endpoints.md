@@ -154,4 +154,32 @@ const socket = io(URL, {
 
 ---
 
- # API Documentation - Dispatch Module
+## 📟 Hardware GPS Ingestion
+
+### POST `/tracking/device`
+Endpoint dành cho các thiết bị GPS phần cứng (Hardware modules) để cập nhật vị trí trực tiếp.
+
+**Authentication:**
+Yêu cầu mã định danh `apiKey` trong header để xác thực thiết bị.
+- **Header:** `X-Device-API-Key: <your_device_api_key>`
+
+**Request Body:**
+```json
+{
+  "deviceId": "string (Unique Identifier)",
+  "lat": number,
+  "lng": number,
+  "speed": number (Optional),
+  "heading": number (Optional),
+  "timestamp": "ISO8601 string (Optional, default is now)"
+}
+```
+
+**Actions:**
+1. Xác thực `apiKey` khớp với cấu hình hệ thống.
+2. Tìm xe (`Vehicle`) được gán với `deviceId` này.
+3. Cập nhật `lastKnownLocation` của xe.
+4. Phát sự kiện `vehicle:location` qua Socket.io tới Admin dashboard.
+5. Lưu vào lịch sử `gps_locations`.
+
+---

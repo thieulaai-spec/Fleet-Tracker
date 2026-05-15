@@ -77,8 +77,8 @@ export function DatePicker({
     if (left < 16) left = 16;
 
     setCoords({
-      top: top + window.scrollY,
-      left: left + window.scrollX,
+      top: top,
+      left: left,
       width: rect.width,
       placement
     });
@@ -344,7 +344,7 @@ export function DatePicker({
             id="datepicker-portal-content"
             ref={pickerRef}
             style={{ 
-              position: 'absolute',
+              position: 'fixed',
               top: coords.top,
               left: coords.left,
               minWidth: 320,

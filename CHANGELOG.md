@@ -1,3 +1,18 @@
+## [2026-05-15] - Massive Fleet Admin Refactoring & Modularization
+### Changed
+- **Frontend (Admin Dashboard)**:
+    - **Module Refactoring**: Completed a massive refactor of `Tracking`, `Dispatch`, `Vehicles`, `Drivers`, `Orders`, and `Dashboard` modules to improve maintainability and performance.
+    - **Hook-based Logic**: Introduced custom hooks (`useTracking`, `useDispatchLogic`) to encapsulate business logic, socket listeners, and state management, keeping UI components clean.
+    - **Component Modularization**: Extracted UI elements into local `components/` subfolders within each module directory (e.g., `VehicleDispatchCard`, `OrderTable`, `DriverFilters`).
+    - **Type Standardization**: Unified coordinate naming conventions across the project, standardizing on `{ lat, lng }` to prevent runtime and build-time errors.
+    - **Build Stability**: Resolved all TypeScript errors and ensured a 100% successful production build (`next build`).
+
+### Added
+- **Frontend (Admin Dashboard)**:
+    - **useTracking Hook**: Manages WebSocket connections and real-time vehicle movement logic.
+    - **useDispatchLogic Hook**: Handles complex order clustering, vehicle filtering, and assignment states.
+    - **New Components**: Created over 30 new modular components to replace large, monolithic page files.
+
 ## [2026-05-14] - UI Standardization & Premium Components
 ### Added
 - **Frontend (Admin Dashboard)**:

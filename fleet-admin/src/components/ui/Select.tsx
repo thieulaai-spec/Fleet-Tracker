@@ -37,26 +37,48 @@ export function Select({
   const selectedOption = options.find(opt => opt.value === value);
 
   useEffect(() => {
-    if (isOpen && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
+    const updatePosition = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        const dropdownHeight = 300; // Estimated max height
+        
+        const showAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+        
+        const styles: React.CSSProperties = {
+          position: 'fixed',
+          width: `${Math.max(rect.width, 200)}px`,
+          zIndex: 9999,
+        };
 
-      const styles: React.CSSProperties = {
-        position: 'absolute',
-        top: `${rect.bottom + scrollY + 8}px`,
-        width: `${Math.max(rect.width, 200)}px`,
-        zIndex: 9999,
-      };
+        if (showAbove) {
+          styles.bottom = `${window.innerHeight - rect.top + 8}px`;
+        } else {
+          styles.top = `${rect.bottom + 8}px`;
+        }
 
-      if (align === 'left') {
-        styles.left = `${rect.left + scrollX}px`;
-      } else {
-        styles.right = `${window.innerWidth - (rect.right + scrollX)}px`;
+        if (align === 'left') {
+          styles.left = `${rect.left}px`;
+        } else {
+          styles.left = `${rect.right - Math.max(rect.width, 200)}px`;
+        }
+
+        setDropdownStyles(styles);
       }
+    };
 
-      setDropdownStyles(styles);
+    if (isOpen) {
+      updatePosition();
+      // Use capture phase to catch scrolls on any element (like Modal body)
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
     }
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [isOpen, align]);
 
   useEffect(() => {

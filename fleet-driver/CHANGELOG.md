@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-05-15] - Driver App Polish & UI Standardization
+### Refactored
+- Unified all component imports (Themed, StyledText, ExternalLink) to `@/components/ui`.
+- Tidied up codebase by removing deprecated component files (`Themed.tsx`, `StyledText.tsx`, etc.).
+- Modularized component structure: moved components to `components/map`, `components/trip`, `components/ui`, etc.
+
+### Fixed
+- Prop name mismatches in `MapControls`, `MissionDashboard`, and `MissionPanel`.
+- Login screen TypeScript error by integrating `toggleForgotMode` from `useAuthFlow`.
+- Broken import paths in `app/+not-found.tsx`.
+- Safety checks in `MissionPanel` for progress calculation and optional callbacks.
+
+### Improved
+- `TripCard` now features `Accept` and `Pass` action buttons for pending trips with loading states.
+- Centralized status color mapping (Pending: Orange, Accepted: Indigo, In-Progress: Blue-Indigo, Completed: Green).
+- Full repository type safety verified with `tsc --noEmit`.
+
 ## [2026-05-13]
 ### Fixed
 - Socket.io connection rejection due to "Bearer " prefix in token auth.

@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
 import '../global.css';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from '../components/useColorScheme';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,7 +50,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useTripStore, TripStatus } from '../store/useTripStore';
 import { useRouter, useSegments } from 'expo-router';
 import { startBackgroundLocation, stopBackgroundLocation } from '../lib/backgroundTasks';
-import { NetworkBanner } from '../components/NetworkBanner';
+import { NetworkBanner } from '../components/ui/NetworkBanner';
 import { socketService } from '../lib/socket';
 
 import Toast from 'react-native-toast-message';

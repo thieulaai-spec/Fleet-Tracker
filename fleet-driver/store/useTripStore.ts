@@ -3,48 +3,36 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authFetch } from '@/lib/authFetch';
 
-export enum TripStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-}
+export { Trip, TripStatus, OrderStatus } from '@/types/trip';
+import { Trip, TripStatus, OrderStatus } from '@/types/trip';
+import { parsePoint, parseLineString } from '@/utils/geo';
 
-export enum OrderStatus {
-  PENDING = 'pending',
-  ASSIGNED = 'assigned',
-  PICKED_UP = 'picked_up',
-  DELIVERING = 'delivering',
-  DELIVERED = 'delivered',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-}
-
-interface Order {
-  id: string;
-  customerName: string;
-  address: string;
-  customerPhone?: string;
-  status: string;
-  photoUrl?: string;
-  pickupAddress: string;
-  pickupLocation?: { latitude: number; longitude: number };
-  deliveryLocation?: { latitude: number; longitude: number };
-}
-
-interface Trip {
-  id: string;
-  vehicleId: string;
-  driverId: string;
-  status: TripStatus;
-  totalDistanceKm: number;
-  orders: Order[];
-  plannedRoute?: { latitude: number; longitude: number }[];
-  createdAt: string;
-  startedAt?: string;
-  completedAt?: string;
-}
+const transformTripData = (t: any): Trip | null => {
+  if (!t) return null;
+  
+  return {
+    ...t,
+    plannedRoute: t.plannedRoute ? parseLineString(t.plannedRoute) : undefined,
+    startedAt: t.startedAt,
+    completedAt: t.completedAt,
+    orders: (t.tripOrders || []).map((to: any) => {
+      if (!to || !to.order) return null;
+      
+      return {
+        id: to.order.id,
+        customerName: to.order.customerName || 'Unknown Customer',
+        address: to.order.deliveryAddress || to.order.address || 'No address',
+        pickupAddress: to.order.pickupAddress || 'Origin Hub',
+        status: to.order.status || 'pending',
+        pickupLocation: parsePoint(to.order.pickupLocation),
+        deliveryLocation: parsePoint(to.order.deliveryLocation),
+        customerPhone: to.order.customerPhone,
+        photoUrl: to.order.photoUrl,
+        signatureUrl: to.order.signatureUrl,
+      };
+    }).filter(Boolean) || []
+  } as Trip;
+};
 
 interface TripState {
   activeTrip: Trip | null;
@@ -80,61 +68,22 @@ export const useTripStore = create<TripState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authFetch('/trips/my');
-          
           if (!response.ok) throw new Error('Failed to fetch trips');
           
           const result = await response.json();
-          const trips = result?.data ?? result;
+          const rawTrips = result?.data ?? result;
           
-          // Helper to parse GeoJSON from PostGIS
-          const parsePoint = (geo: any) => {
-            if (!geo || !geo.coordinates) return undefined;
-            return { latitude: geo.coordinates[1], longitude: geo.coordinates[0] };
-          };
+          const transformedTrips = (Array.isArray(rawTrips) ? rawTrips : [])
+            .map(transformTripData)
+            .filter((t): t is Trip => t !== null);
 
-          const parseLineString = (geo: any) => {
-            if (!geo || !Array.isArray(geo.coordinates)) return undefined;
-            return geo.coordinates.map((coord: any) => ({
-              latitude: coord[1],
-              longitude: coord[0],
-            }));
-          };
-
-          // Transform backend response with defensive checks
-          const transformedTrips = (Array.isArray(trips) ? trips : []).map((t: any) => {
-            if (!t) return null;
-            
-            return {
-              ...t,
-              plannedRoute: t.plannedRoute ? parseLineString(t.plannedRoute) : undefined,
-              startedAt: t.startedAt,
-              completedAt: t.completedAt,
-              orders: (t.tripOrders || []).map((to: any) => {
-                if (!to || !to.order) return null;
-                
-                return {
-                  id: to.order.id,
-                  customerName: to.order.customerName || 'Unknown Customer',
-                  address: to.order.deliveryAddress || to.order.address || 'No address',
-                  pickupAddress: to.order.pickupAddress || 'Origin Hub',
-                  status: to.order.status || 'pending',
-                  pickupLocation: parsePoint(to.order.pickupLocation),
-                  deliveryLocation: parsePoint(to.order.deliveryLocation),
-                  customerPhone: to.order.customerPhone,
-                  photoUrl: to.order.photoUrl,
-                  signatureUrl: to.order.signatureUrl,
-                };
-              }).filter(Boolean) || []
-            };
-          }).filter(Boolean);
-
-          const active = transformedTrips.find((t: any) => 
+          const active = transformedTrips.find((t) => 
             t.status === TripStatus.ACCEPTED || t.status === TripStatus.IN_PROGRESS
           );
           
-          const pending = transformedTrips.filter((t: any) => t.status === TripStatus.PENDING);
+          const pending = transformedTrips.filter((t) => t.status === TripStatus.PENDING);
           const history = transformedTrips
-            .filter((t: any) => t.status === TripStatus.COMPLETED || t.status === TripStatus.CANCELLED)
+            .filter((t) => t.status === TripStatus.COMPLETED || t.status === TripStatus.CANCELLED)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 20);
 
@@ -151,49 +100,11 @@ export const useTripStore = create<TripState>()(
       },
 
       acceptTrip: async (id: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await authFetch(`/trips/${id}/status`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: TripStatus.ACCEPTED }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to accept trip');
-          }
-          
-          await get().fetchTrips();
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          throw error;
-        }
+        await get().updateTripStatus(id, TripStatus.ACCEPTED);
       },
 
       rejectTrip: async (id: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await authFetch(`/trips/${id}/status`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: TripStatus.CANCELLED }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to reject trip');
-          }
-          
-          await get().fetchTrips();
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          throw error;
-        }
+        await get().updateTripStatus(id, TripStatus.CANCELLED);
       },
 
       updateTripStatus: async (id: string, status: TripStatus) => {

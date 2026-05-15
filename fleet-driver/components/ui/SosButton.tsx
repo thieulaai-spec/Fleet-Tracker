@@ -5,7 +5,7 @@ import * as Linking from 'expo-linking';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import Toast from 'react-native-toast-message';
-import { authFetch } from '../lib/authFetch';
+import { authFetch } from '../../lib/authFetch';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 

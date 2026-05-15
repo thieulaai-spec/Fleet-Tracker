@@ -37,7 +37,10 @@ export const useProfileFlow = () => {
   }, []);
 
   const toggleStatus = useCallback(async () => {
+    console.log('[useProfileFlow] toggleStatus called', { isOnline, isUpdatingStatus, hasActiveTrip: !!activeTrip });
+
     if (activeTrip) {
+      console.log('[useProfileFlow] Blocked: Active trip exists');
       Toast.show({
         type: 'error',
         text1: 'Lỗi',
@@ -47,6 +50,7 @@ export const useProfileFlow = () => {
     }
 
     const newStatus = !isOnline ? 'available' : 'off_duty';
+    console.log('[useProfileFlow] Updating status to:', newStatus);
     setIsUpdatingStatus(true);
 
     try {
@@ -60,17 +64,22 @@ export const useProfileFlow = () => {
         }),
       });
 
+      console.log('[useProfileFlow] API Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Cập nhật trạng thái thất bại');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Cập nhật trạng thái thất bại');
       }
 
       setIsOnline(!isOnline);
+      console.log('[useProfileFlow] Status updated successfully');
       Toast.show({
         type: 'success',
         text1: 'Thành công',
         text2: `Bạn đang ${!isOnline ? 'Trực tuyến' : 'Ngoại tuyến'}`,
       });
     } catch (error: any) {
+      console.error('[useProfileFlow] Update failed:', error);
       Toast.show({
         type: 'error',
         text1: 'Lỗi',
@@ -79,7 +88,7 @@ export const useProfileFlow = () => {
     } finally {
       setIsUpdatingStatus(false);
     }
-  }, [isOnline, activeTrip]);
+  }, [isOnline, activeTrip, isUpdatingStatus]);
 
   const handleChangePassword = useCallback(async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {

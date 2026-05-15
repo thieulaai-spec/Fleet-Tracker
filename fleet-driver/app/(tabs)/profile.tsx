@@ -41,8 +41,8 @@ export default function ProfileScreen() {
       <StatusBar barStyle="light-content" />
       
       {/* Background Glows */}
-      <View style={styles.glow} />
-      <View style={[styles.glow, { top: 400, left: -150, backgroundColor: 'rgba(79, 70, 229, 0.05)' }]} />
+      <View style={styles.glow} pointerEvents="none" />
+      <View style={[styles.glow, { top: 400, left: -150, backgroundColor: 'rgba(79, 70, 229, 0.05)' }]} pointerEvents="none" />
 
       <ScrollView 
         className="flex-1" 

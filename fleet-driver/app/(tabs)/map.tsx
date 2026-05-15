@@ -20,11 +20,13 @@ export default function ActiveTripMap() {
     mapType,
     mapRef,
     currentOrder,
+    routeData,
     handleStatusUpdate,
     handleOrderStatusUpdate,
     centerOnLocation,
     toggleMapType,
     openNavigation,
+    zoomToDestination,
     fetchTrips,
   } = useMapFlow();
 
@@ -48,13 +50,22 @@ export default function ActiveTripMap() {
           longitudeDelta: 0.05,
         }}
       >
-        {/* Render Planned Route */}
+        {/* Render Planned Trip Route */}
         {activeTrip.plannedRoute && activeTrip.plannedRoute.length > 0 && (
           <PolylineComponent
             coordinates={activeTrip.plannedRoute}
             strokeColor="#6366f1"
             strokeWidth={4}
             lineDashPattern={[0]}
+          />
+        )}
+
+        {/* Render Live Dynamic Route (Google Maps style) */}
+        {routeData && (
+          <PolylineComponent
+            coordinates={routeData.coordinates}
+            strokeColor="#10b981"
+            strokeWidth={6}
           />
         )}
 
@@ -92,11 +103,13 @@ export default function ActiveTripMap() {
       <MissionDashboard 
         activeTrip={activeTrip} 
         currentOrder={currentOrder}
+        routeData={routeData}
       />
 
       <MapControls 
         onCenter={centerOnLocation}
         onToggleType={toggleMapType}
+        onZoomToDestination={zoomToDestination}
         mapType={mapType}
       />
 

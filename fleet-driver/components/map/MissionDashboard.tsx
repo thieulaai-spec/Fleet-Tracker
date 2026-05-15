@@ -9,6 +9,10 @@ import { Trip, Order } from '@/types/trip';
 interface MissionDashboardProps {
   activeTrip: Trip;
   currentOrder?: Order | null;
+  routeData?: {
+    distance: number;
+    duration: number;
+  } | null;
 }
 
 const getStatusColor = (status: string) => {
@@ -21,7 +25,15 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, currentOrder }) => {
+export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, currentOrder, routeData }) => {
+  const formattedDistance = routeData 
+    ? (routeData.distance / 1000).toFixed(1) + ' KM'
+    : activeTrip.totalDistanceKm ? activeTrip.totalDistanceKm.toFixed(1) + ' KM' : '-- KM';
+    
+  const formattedETA = routeData
+    ? Math.round(routeData.duration / 60) + ' MIN'
+    : '24 MIN'; // Default or calculated fallback
+
   return (
     <SafeAreaView className="absolute top-0 left-0 right-0 pointer-events-none">
       <View className="px-5 pt-20 pointer-events-auto">
@@ -61,7 +73,7 @@ export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, 
                 </View>
                 <View>
                   <Text className="text-slate-500 text-[9px] font-black uppercase tracking-wider">ETA</Text>
-                  <Text className="text-slate-100 text-sm font-black tracking-tight">24 MIN</Text>
+                  <Text className="text-slate-100 text-sm font-black tracking-tight">{formattedETA}</Text>
                 </View>
               </View>
               <View className="flex-1 flex-row items-center gap-3">
@@ -70,7 +82,7 @@ export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, 
                 </View>
                 <View>
                   <Text className="text-slate-500 text-[9px] font-black uppercase tracking-wider">Est. Distance</Text>
-                  <Text className="text-slate-100 text-sm font-black tracking-tight">3.8 KM</Text>
+                  <Text className="text-slate-100 text-sm font-black tracking-tight">{formattedDistance}</Text>
                 </View>
               </View>
               

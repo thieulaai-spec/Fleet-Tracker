@@ -72,9 +72,16 @@ export const startBackgroundLocation = async () => {
     return;
   }
 
-  const { status } = await Location.requestBackgroundPermissionsAsync();
-  if (status !== 'granted') {
-    console.error('Background location permission denied');
+  // Android 10+ requires Foreground permission BEFORE Background permission
+  const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+  if (fgStatus !== 'granted') {
+    console.error('Foreground location permission denied');
+    return;
+  }
+
+  const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+  if (bgStatus !== 'granted') {
+    console.error('Background location permission denied. Please enable "Allow all the time" in app settings.');
     return;
   }
 

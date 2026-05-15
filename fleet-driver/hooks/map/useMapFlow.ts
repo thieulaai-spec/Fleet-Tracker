@@ -5,9 +5,15 @@ import Toast from 'react-native-toast-message';
 import { useTripStore, TripStatus, OrderStatus } from '../../store/useTripStore';
 import { socketService } from '../../lib/socket';
 import { useLocationTracking } from '../useLocationTracking';
+import { getRoute } from '../../utils/geo';
 
 export const useMapFlow = () => {
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('standard');
+  const [routeData, setRouteData] = useState<{
+    coordinates: { latitude: number; longitude: number }[];
+    distance: number;
+    duration: number;
+  } | null>(null);
   
   const activeTrip = useTripStore(state => state.activeTrip);
   const updateTripStatus = useTripStore(state => state.updateTripStatus);
@@ -18,6 +24,38 @@ export const useMapFlow = () => {
   
   const mapRef = useRef<any>(null);
   const fitTimeoutRef = useRef<any>(null);
+
+  const currentOrder = useMemo(() => activeTrip?.orders.find(o => o.status !== OrderStatus.DELIVERED), [activeTrip]);
+
+  const destination = useMemo(() => {
+    if (!currentOrder) return null;
+    const isPickingUp = currentOrder.status === OrderStatus.ASSIGNED || currentOrder.status === OrderStatus.PENDING;
+    return isPickingUp ? currentOrder.pickupLocation : currentOrder.deliveryLocation;
+  }, [currentOrder]);
+
+  // Fetch route when location or destination changes
+  useEffect(() => {
+    if (!location || !destination) {
+      setRouteData(null);
+      return;
+    }
+
+    const fetchLiveRoute = async () => {
+      const origin = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      };
+      
+      const data = await getRoute(origin, destination as any);
+      if (data) {
+        setRouteData(data);
+      }
+    };
+
+    // Throttle routing requests to every 10 seconds or when destination changes
+    const timer = setTimeout(fetchLiveRoute, 1000);
+    return () => clearTimeout(timer);
+  }, [location?.coords.latitude, location?.coords.longitude, destination?.latitude, destination?.longitude]);
 
   useEffect(() => {
     if (activeTrip?.plannedRoute && activeTrip.plannedRoute.length > 0) {
@@ -155,15 +193,9 @@ export const useMapFlow = () => {
     });
   }, [mapType]);
 
-  const currentOrder = useMemo(() => activeTrip?.orders.find(o => o.status !== OrderStatus.DELIVERED), [activeTrip]);
-  
   const openNavigation = useCallback(() => {
-    if (!currentOrder) return;
-    const isPickingUp = currentOrder.status === OrderStatus.ASSIGNED || currentOrder.status === OrderStatus.PENDING;
-    const targetLocation = isPickingUp ? currentOrder.pickupLocation : currentOrder.deliveryLocation;
-    
-    if (!targetLocation) return;
-    const { latitude, longitude } = targetLocation;
+    if (!destination) return;
+    const { latitude, longitude } = destination;
     
     const url = Platform.select({
       ios: `maps:0,0?q=${latitude},${longitude}`,
@@ -175,7 +207,18 @@ export const useMapFlow = () => {
         Alert.alert('Error', 'Could not open map application');
       });
     }
-  }, [currentOrder]);
+  }, [destination]);
+
+  const zoomToDestination = useCallback(() => {
+    if (destination && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: destination.latitude,
+        longitude: destination.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 1000);
+    }
+  }, [destination]);
 
   return {
     activeTrip,
@@ -184,11 +227,13 @@ export const useMapFlow = () => {
     mapRef,
     errorMsg,
     currentOrder,
+    routeData,
     handleStatusUpdate,
     handleOrderStatusUpdate,
     centerOnLocation,
     toggleMapType,
     openNavigation,
+    zoomToDestination,
     fetchTrips,
   };
 };

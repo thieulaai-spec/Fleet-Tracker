@@ -39,3 +39,18 @@
 ### Improved
 - Optimized Mission Control navigation button to automatically lead to the correct destination.
 
+## [2026-05-15] - Maps & Profile Refinement
+### Added
+- "Zoom to Destination" button in Map Controls.
+- Dynamic route distance calculation (Pickup/Delivery point based on trip status).
+
+### Fixed
+- **Background location permissions**: Corrected Android 10+ flow by requesting Foreground before Background permissions.
+- **Profile Switch Accessibility**: Removed blocking decorative glows and improved `SettingsItem` hit area.
+- **Duty Status Toggle**: Fixed logic to allow user feedback even when disabled, and ensured row remains clickable.
+- **Map Viewport**: Ensured `MapView` fills the container properly with `absoluteFillObject`.
+
+### Improved
+- Better UI positioning for Map Controls (centered vertically/horizontally as requested).
+- Enhanced debug logging for `Duty Status` transitions.
+

@@ -14,6 +14,8 @@ export const useMapFlow = () => {
     distance: number;
     duration: number;
   } | null>(null);
+  const [isFollowing, setIsFollowing] = useState(true);
+  const [isNavMode, setIsNavMode] = useState(false);
   
   const activeTrip = useTripStore(state => state.activeTrip);
   const updateTripStatus = useTripStore(state => state.updateTripStatus);
@@ -29,8 +31,9 @@ export const useMapFlow = () => {
 
   const destination = useMemo(() => {
     if (!currentOrder) return null;
-    const isPickingUp = currentOrder.status === OrderStatus.ASSIGNED || currentOrder.status === OrderStatus.PENDING;
-    return isPickingUp ? currentOrder.pickupLocation : currentOrder.deliveryLocation;
+    // Only go to delivery location if order is ALREADY picked up or currently delivering
+    const isHeadingToDelivery = currentOrder.status === OrderStatus.PICKED_UP || currentOrder.status === OrderStatus.DELIVERING;
+    return isHeadingToDelivery ? currentOrder.deliveryLocation : currentOrder.pickupLocation;
   }, [currentOrder]);
 
   // Fetch route when location or destination changes
@@ -56,6 +59,30 @@ export const useMapFlow = () => {
     const timer = setTimeout(fetchLiveRoute, 1000);
     return () => clearTimeout(timer);
   }, [location?.coords.latitude, location?.coords.longitude, destination?.latitude, destination?.longitude]);
+
+  // Auto-center/rotate when location updates
+  useEffect(() => {
+    if (!location || !mapRef.current) return;
+
+    if (isNavMode) {
+      mapRef.current.animateCamera({
+        center: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        },
+        heading: location.coords.heading || 0,
+        pitch: 0,
+        zoom: 18,
+      }, { duration: 600 });
+    } else if (isFollowing) {
+      mapRef.current.animateToRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 600);
+    }
+  }, [location?.coords.latitude, location?.coords.longitude, location?.coords.heading, isFollowing, isNavMode]);
 
   useEffect(() => {
     if (activeTrip?.plannedRoute && activeTrip.plannedRoute.length > 0) {
@@ -83,8 +110,8 @@ export const useMapFlow = () => {
     let message = `Are you sure you want to change status to ${newStatus}?`;
 
     if (newStatus === TripStatus.IN_PROGRESS) {
-      title = 'Start Delivery';
-      message = 'Confirm that you have picked up all items and are starting the delivery route.';
+      title = 'Deploy Mission';
+      message = 'Start your journey to the pickup point? This will activate real-time tracking.';
     } else if (newStatus === TripStatus.COMPLETED) {
       title = 'Complete Trip';
       message = 'Confirm that all orders have been delivered successfully.';
@@ -168,14 +195,25 @@ export const useMapFlow = () => {
 
   const centerOnLocation = useCallback(() => {
     if (location && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      }, 1000);
+      if (isFollowing && !isNavMode) {
+        setIsNavMode(true);
+      } else {
+        setIsFollowing(true);
+        setIsNavMode(false);
+      }
+      
+      const camera = {
+        center: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        },
+        heading: isNavMode ? (location.coords.heading || 0) : 0,
+        pitch: 0,
+        zoom: isNavMode ? 18 : 15,
+      };
+      mapRef.current.animateCamera(camera, { duration: 600 });
     }
-  }, [location]);
+  }, [location, isFollowing, isNavMode]);
 
   const toggleMapType = useCallback(() => {
     const types: ('standard' | 'satellite' | 'hybrid')[] = ['standard', 'satellite', 'hybrid'];
@@ -235,5 +273,9 @@ export const useMapFlow = () => {
     openNavigation,
     zoomToDestination,
     fetchTrips,
+    isFollowing,
+    setIsFollowing,
+    isNavMode,
+    setIsNavMode,
   };
 };

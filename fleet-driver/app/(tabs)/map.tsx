@@ -28,6 +28,10 @@ export default function ActiveTripMap() {
     openNavigation,
     zoomToDestination,
     fetchTrips,
+    isFollowing,
+    setIsFollowing,
+    isNavMode,
+    setIsNavMode,
   } = useMapFlow();
 
   if (!activeTrip) {
@@ -43,6 +47,10 @@ export default function ActiveTripMap() {
         provider={PROVIDER_GOOGLE}
         mapType={mapType}
         style={StyleSheet.absoluteFillObject}
+        onPanDrag={() => {
+          setIsFollowing(false);
+          setIsNavMode(false);
+        }}
         initialRegion={{
           latitude: location?.coords.latitude || 10.762622,
           longitude: location?.coords.longitude || 106.660172,
@@ -78,6 +86,10 @@ export default function ActiveTripMap() {
             }}
             title="Your Location"
             rotation={location.coords.heading || 0}
+            onPress={() => {
+              setIsFollowing(true);
+              setIsNavMode(!isNavMode);
+            }}
           />
         )}
 
@@ -111,6 +123,8 @@ export default function ActiveTripMap() {
         onToggleType={toggleMapType}
         onZoomToDestination={zoomToDestination}
         mapType={mapType}
+        isFollowing={isFollowing}
+        isNavMode={isNavMode}
       />
 
       <MissionPanel 

@@ -54,3 +54,17 @@
 - Better UI positioning for Map Controls (centered vertically/horizontally as requested).
 - Enhanced debug logging for `Duty Status` transitions.
 
+
+## [2026-05-16] - Navigation & Trip Flow Optimization
+### Added
+- **2D Navigation Mode**: Map now rotates based on vehicle heading (`heading-up` view).
+- **Auto-Follow Mode**: Integrated with navigation mode to keep driver centered.
+- **Dynamic Route Refresh**: throttled route data fetching (1s) to balance performance and battery.
+
+### Fixed
+- **Deploy Trip Logic**: Corrected premature destination switching. The map now maintains the Pickup Point destination after "Deploy Trip" until the order is explicitly marked as "Picked Up".
+- **Misleading Alert**: Updated "Deploy Trip" confirmation message to be about starting the mission rather than finishing pickup.
+
+### Improved
+- **Map Responsiveness**: Reduced map animation duration to 600ms for smoother tracking.
+- **UI Feedback**: Map controls now highlight when Follow or Navigation modes are active.

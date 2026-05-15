@@ -30,9 +30,9 @@ export const useLocationTracking = (activeTrip: Trip | null) => {
         }
 
         const trackingOptions = {
-          accuracy: Location.Accuracy.High,
-          timeInterval: activeTrip?.status === TripStatus.IN_PROGRESS ? 5000 : 30000,
-          distanceInterval: activeTrip?.status === TripStatus.IN_PROGRESS ? 10 : 100,
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: activeTrip?.status === TripStatus.IN_PROGRESS ? 1000 : 10000,
+          distanceInterval: activeTrip?.status === TripStatus.IN_PROGRESS ? 2 : 50,
         };
 
         const subscription = await Location.watchPositionAsync(

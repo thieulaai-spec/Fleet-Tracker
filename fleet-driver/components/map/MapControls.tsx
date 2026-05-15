@@ -8,9 +8,11 @@ interface MapControlsProps {
   onToggleType: () => void;
   onZoomToDestination: () => void;
   mapType: 'standard' | 'satellite' | 'hybrid';
+  isFollowing?: boolean;
+  isNavMode?: boolean;
 }
 
-export function MapControls({ onCenter, onToggleType, onZoomToDestination, mapType }: MapControlsProps) {
+export function MapControls({ onCenter, onToggleType, onZoomToDestination, mapType, isFollowing, isNavMode }: MapControlsProps) {
   return (
     <View className="absolute right-6 top-0 bottom-0 justify-center gap-4" style={{ zIndex: 9000 }}>
       <TouchableOpacity onPress={onToggleType} activeOpacity={0.7}>
@@ -26,8 +28,18 @@ export function MapControls({ onCenter, onToggleType, onZoomToDestination, mapTy
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onCenter} activeOpacity={0.7}>
-        <BlurView intensity={80} tint="dark" className="w-14 h-14 rounded-2xl items-center justify-center border border-indigo-500/30 overflow-hidden shadow-2xl bg-indigo-500/10">
-          <Target size={24} color="#818cf8" />
+        <BlurView 
+          intensity={80} 
+          tint="dark" 
+          className={`w-14 h-14 rounded-2xl items-center justify-center border overflow-hidden shadow-2xl ${
+            isNavMode 
+              ? 'border-emerald-400 bg-emerald-500/30' 
+              : isFollowing 
+                ? 'border-indigo-400 bg-indigo-500/30' 
+                : 'border-indigo-500/30 bg-indigo-500/10'
+          }`}
+        >
+          <Target size={24} color={isNavMode ? '#6ee7b7' : isFollowing ? '#a5b4fc' : '#818cf8'} />
         </BlurView>
       </TouchableOpacity>
     </View>

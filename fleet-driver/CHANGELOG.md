@@ -68,3 +68,9 @@
 ### Improved
 - **Map Responsiveness**: Reduced map animation duration to 600ms for smoother tracking.
 - **UI Feedback**: Map controls now highlight when Follow or Navigation modes are active.
+
+### Geofencing & Location Audit
+- **Added**: Enforced 200m geofencing for "Pick Up" and "Submit Proof" actions.
+- **Added**: `useGeofencing` hook for centralized, high-accuracy location checks.
+- **Refactored**: Moved inline location logic from `OrderCard` and `signature` to shared hook.
+- **Improved**: Added loading indicators during location verification to enhance UX.

@@ -14,7 +14,7 @@ import { TripSummaryCard } from '../../components/trip/TripSummaryCard';
 export default function TripDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { tripHistory, activeTrip, pendingTrips, updateTripStatus, isLoading } = useTripStore();
+  const { tripHistory, activeTrip, pendingTrips, updateTripStatus, updateOrderStatus, isLoading } = useTripStore();
   
   const trip = activeTrip?.id === id ? activeTrip : 
                pendingTrips.find(t => t.id === id) || 
@@ -155,6 +155,7 @@ export default function TripDetails() {
               index={index}
               onNavigate={openNavigation}
               onProof={(orderId) => router.push({ pathname: '/camera', params: { orderId } })}
+              onStatusUpdate={updateOrderStatus}
               canSubmitProof={trip.status === TripStatus.IN_PROGRESS}
             />
           ))}

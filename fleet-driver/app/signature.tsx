@@ -4,6 +4,7 @@ import SignatureScreen, { SignatureViewRef } from 'react-native-signature-canvas
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, Check, RotateCcw } from 'lucide-react-native';
 import { useTripStore, TripStatus, OrderStatus } from '@/store/useTripStore';
+import { useGeofencing } from '@/hooks/useGeofencing';
 import Toast from 'react-native-toast-message';
 import { cacheDirectory, writeAsStringAsync, EncodingType, deleteAsync } from 'expo-file-system/legacy';
 import { authFetch } from '@/lib/authFetch';
@@ -14,6 +15,7 @@ export default function SignatureCapture() {
   const router = useRouter();
   const { orderId, tripId, photoUrl } = useLocalSearchParams();
   const { updateTripStatus, updateOrderStatus, activeTrip } = useTripStore();
+  const { getCurrentLocation } = useGeofencing();
 
   const handleSignature = async (signature: string) => {
     if (!orderId) return;
@@ -49,12 +51,21 @@ export default function SignatureCapture() {
       if (!uploadRes.ok) throw new Error('Failed to upload signature');
       const { url: signatureUrl } = await uploadRes.json();
 
-      // 3. Finalize order status via store method
+      // 3. Get location for audit
+      const coords = await getCurrentLocation();
+      const actionLat = coords?.latitude;
+      const actionLng = coords?.longitude;
+
+      // 4. Finalize order status via store method
       await updateOrderStatus(
         orderId as string, 
         OrderStatus.DELIVERED, 
-        photoUrl as string, 
-        signatureUrl
+        {
+          photoUrl: photoUrl as string, 
+          signatureUrl,
+          actionLat,
+          actionLng
+        }
       );
 
       // 4. Check if all orders in the trip are delivered before completing the trip

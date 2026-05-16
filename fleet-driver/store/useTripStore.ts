@@ -48,7 +48,7 @@ interface TripState {
   acceptTrip: (id: string) => Promise<void>;
   rejectTrip: (id: string) => Promise<void>;
   updateTripStatus: (id: string, status: TripStatus) => Promise<void>;
-  updateOrderStatus: (id: string, status: OrderStatus, photoUrl?: string, signatureUrl?: string) => Promise<void>;
+  updateOrderStatus: (id: string, status: OrderStatus, options?: { photoUrl?: string, signatureUrl?: string, actionLat?: number, actionLng?: number }) => Promise<void>;
 }
 
 export const useTripStore = create<TripState>()(
@@ -130,7 +130,7 @@ export const useTripStore = create<TripState>()(
         }
       },
 
-      updateOrderStatus: async (id: string, status: OrderStatus, photoUrl?: string, signatureUrl?: string) => {
+      updateOrderStatus: async (id: string, status: OrderStatus, options?: { photoUrl?: string, signatureUrl?: string, actionLat?: number, actionLng?: number }) => {
         set({ isLoading: true, error: null });
         try {
           const response = await authFetch(`/orders/${id}/status`, {
@@ -138,7 +138,13 @@ export const useTripStore = create<TripState>()(
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ status, photoUrl, signatureUrl }),
+            body: JSON.stringify({ 
+              status, 
+              photoUrl: options?.photoUrl, 
+              signatureUrl: options?.signatureUrl,
+              actionLat: options?.actionLat,
+              actionLng: options?.actionLng
+            }),
           });
 
           if (!response.ok) {

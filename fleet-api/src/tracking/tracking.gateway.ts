@@ -52,10 +52,19 @@ export class TrackingGateway
   @OnEvent('trip.status_changed')
   handleTripStatusChange(payload: any) {
     this.logger.log(
-      `Broadcasting trip status change: ${payload.id} -> ${payload.status}`,
+      `Broadcasting trip status change: ${payload.id} -> ${payload.status} for vehicle ${payload.vehicleId}`,
     );
-    this.server.to('admin').emit('trip:status', payload);
-    this.server.to(`trip:${payload.id}`).emit('trip:status', payload);
+    // Broadcast to admins
+    this.server.to('admin').emit('trip:status-changed', payload);
+    
+    // Also emit as driver status change to satisfy existing frontend listeners if any
+    this.server.to('admin').emit('driver:status-changed', {
+      vehicleId: payload.vehicleId,
+      driverId: payload.driverId,
+      status: payload.status,
+    });
+
+    this.server.to(`trip:${payload.id}`).emit('trip:status-changed', payload);
   }
 
   @OnEvent('trip.assigned')

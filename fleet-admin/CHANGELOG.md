@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-16] - Real-time Tracking Optimization & Auto-centering
+### Added
+- **Auto-centering Map**: Map now automatically tracks and centers the selected vehicle as it moves, using smooth `easeTo` animations.
+- **Batched Tracking**: Implemented 100ms batching for GPS updates in `useTracking` hook to reduce UI thread load and improve FPS.
+
+### Fixed
+- **Trip Status Sync**: Fixed bug where vehicles remained in 'delivering' status after trip completion by aligning socket event names (`trip:status-changed`) and adding proper listeners.
+- **State Management**: Refactored `LiveTrackingPage` to use ID-based vehicle selection, preventing stale data issues during real-time updates.
+
+### Optimized
+- **Rendering**: Memoized `VehicleList`, `TrackingStatsCards`, and `AlertsPanel` to eliminate unnecessary re-renders during high-frequency GPS updates.
+- **Data Access**: Migrated to `Record`-based state in `useTracking` for O(1) vehicle lookups.
+
 ## [2026-05-14] - Profile & Security Refinement
 ### Added
 - **Profile Settings**: Implemented modern profile page with read-only email restriction for enhanced security.

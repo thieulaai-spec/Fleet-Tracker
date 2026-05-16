@@ -4,14 +4,55 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { connectSocket, disconnectSocket, SOCKET_EVENTS } from "@/lib/socket";
 import { api } from "@/lib/api";
 import { VehiclePosition, Alert, TrackingStats } from "../types";
-
 import { STATUS_MAP } from "../constants";
 
 export function useTracking() {
-  const [vehicles, setVehicles] = useState<VehiclePosition[]>([]);
+  // Use Record for O(1) updates
+  const [vehiclesMap, setVehiclesMap] = useState<Record<string, VehiclePosition>>({});
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  
   const socketRef = useRef<any>(null);
+  const pendingUpdatesRef = useRef<Record<string, Partial<VehiclePosition>>>({});
+  const flushTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Memoized array for UI
+  const vehicles = useMemo(() => Object.values(vehiclesMap), [vehiclesMap]);
+
+  const stats = useMemo<TrackingStats>(() => ({
+    total: vehicles.length,
+    active: vehicles.filter((v) => v.status === "active").length,
+    idle: vehicles.filter((v) => v.status === "idle").length,
+    offline: vehicles.filter((v) => v.status === "offline").length,
+    maintenance: vehicles.filter((v) => v.status === "maintenance").length,
+    alerts: alerts.filter((a) => !a.resolved).length,
+  }), [vehicles, alerts]);
+
+  // Batching logic: 100ms interval for UI updates
+  const startFlushTimer = useCallback(() => {
+    if (flushTimerRef.current) return;
+    
+    flushTimerRef.current = setInterval(() => {
+      const updates = pendingUpdatesRef.current;
+      if (Object.keys(updates).length === 0) return;
+
+      setVehiclesMap((prev) => {
+        const next = { ...prev };
+        Object.entries(updates).forEach(([id, data]) => {
+          const existing = next[id];
+          next[id] = {
+            ...existing,
+            ...data,
+            vehicleId: id,
+            lastUpdate: new Date().toISOString(),
+          } as VehiclePosition;
+        });
+        return next;
+      });
+      
+      pendingUpdatesRef.current = {};
+    }, 100); // 10fps is perfect for smooth tracking without lag
+  }, []);
 
   const initSocket = useCallback(async () => {
     const socket = await connectSocket();
@@ -27,40 +68,19 @@ export function useTracking() {
     });
 
     socket.on(SOCKET_EVENTS.GPS_UPDATE, (data: any) => {
-      setVehicles((prev) => {
-        const existing = prev.find((v) => v.vehicleId === data.vehicleId);
-
-        const update: VehiclePosition = {
-          vehicleId: data.vehicleId,
-          driverId: data.driverId || existing?.driverId || "",
-          licensePlate:
-            data.licensePlate ||
-            data.license_plate ||
-            data.plateNumber ||
-            existing?.licensePlate ||
-            `VH-${data.vehicleId.slice(0, 6)}`,
-          driverName:
-            data.driverName || existing?.driverName || "Unknown Driver",
-          latitude: data.latitude,
-          longitude: data.longitude,
-          speed: data.speed || 0,
-          heading: data.heading || 0,
-          status: STATUS_MAP[data.status] || existing?.status || "active",
-          lastUpdate: new Date().toISOString(),
-          currentTripId: data.currentTripId || existing?.currentTripId,
-          ordersCount:
-            data.ordersCount !== undefined
-              ? data.ordersCount
-              : existing?.ordersCount,
-        };
-
-        if (existing) {
-          return prev.map((v) =>
-            v.vehicleId === update.vehicleId ? update : v,
-          );
-        }
-        return [...prev, update];
-      });
+      // Direct property mapping for speed
+      pendingUpdatesRef.current[data.vehicleId] = {
+        driverId: data.driverId,
+        licensePlate: data.licensePlate || data.license_plate || data.plateNumber,
+        driverName: data.driverName,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        speed: data.speed,
+        heading: data.heading,
+        status: STATUS_MAP[data.status],
+        currentTripId: data.currentTripId,
+        ordersCount: data.ordersCount,
+      };
     });
 
     socket.on(SOCKET_EVENTS.ALERT_NEW, (data: any) => {
@@ -77,74 +97,65 @@ export function useTracking() {
     });
 
     socket.on(SOCKET_EVENTS.DRIVER_STATUS_CHANGED, (data: any) => {
-      setVehicles((prev) =>
-        prev.map((v) =>
-          v.driverId === data.driverId
-            ? { ...v, status: STATUS_MAP[data.status] || v.status }
-            : v,
-        ),
-      );
+      pendingUpdatesRef.current[data.vehicleId || data.id] = {
+        status: STATUS_MAP[data.status]
+      };
+    });
+
+    socket.on(SOCKET_EVENTS.TRIP_STATUS_CHANGED, (data: any) => {
+      if (data.vehicleId) {
+        pendingUpdatesRef.current[data.vehicleId] = {
+          status: STATUS_MAP[data.status],
+          ordersCount: data.status === 'completed' ? 0 : undefined,
+        };
+      }
     });
 
     return socket;
-  }, []);
+  }, [startFlushTimer]);
 
   useEffect(() => {
-    const loadVehicles = async () => {
+    const loadInitialData = async () => {
       try {
-        const [vehiclesDataResponse, driversDataResponse] = await Promise.all([
+        const [vehiclesRes, driversRes] = await Promise.all([
           api.get<any>("/vehicles"),
           api.get<any>("/drivers"),
         ]);
 
-        const vehiclesData = Array.isArray(vehiclesDataResponse)
-          ? vehiclesDataResponse
-          : (vehiclesDataResponse as any).data || [];
-        const driversData = Array.isArray(driversDataResponse)
-          ? driversDataResponse
-          : (driversDataResponse as any).data || [];
+        const vData = Array.isArray(vehiclesRes) ? vehiclesRes : vehiclesRes.data || [];
+        const dData = Array.isArray(driversRes) ? driversRes : driversRes.data || [];
 
-        const initial: VehiclePosition[] = vehiclesData.map((v: any) => {
-          const driver = driversData.find((d: any) => d.id === v.driverId);
-          return {
+        const initial: Record<string, VehiclePosition> = {};
+        vData.forEach((v: any) => {
+          const driver = dData.find((d: any) => d.id === v.driverId);
+          initial[v.id] = {
             vehicleId: v.id,
             driverId: v.driverId || "",
             licensePlate: v.plateNumber || v.licensePlate,
             driverName: driver ? driver.fullName : "Chưa phân công",
-            latitude:
-              v.lastKnownLocation?.coordinates?.[1] ||
-              10.762622 + (Math.random() - 0.5) * 0.05,
-            longitude:
-              v.lastKnownLocation?.coordinates?.[0] ||
-              106.660172 + (Math.random() - 0.5) * 0.05,
+            latitude: v.lastKnownLocation?.coordinates?.[1] || 10.762622,
+            longitude: v.lastKnownLocation?.coordinates?.[0] || 106.660172,
             speed: 0,
             heading: 0,
             status: STATUS_MAP[v.status] || "offline",
             lastUpdate: v.updatedAt || new Date().toISOString(),
           };
         });
-        setVehicles(initial);
+        setVehiclesMap(initial);
       } catch (err) {
-        console.error("Failed to load vehicles:", err);
+        console.error("Tracking initial load fail:", err);
       }
     };
 
-    loadVehicles();
+    loadInitialData();
     initSocket();
+    startFlushTimer();
 
     return () => {
+      if (flushTimerRef.current) clearInterval(flushTimerRef.current);
       disconnectSocket();
     };
-  }, [initSocket]);
-
-  const stats = useMemo<TrackingStats>(() => ({
-    total: vehicles.length,
-    active: vehicles.filter((v) => v.status === "active").length,
-    idle: vehicles.filter((v) => v.status === "idle").length,
-    offline: vehicles.filter((v) => v.status === "offline").length,
-    maintenance: vehicles.filter((v) => v.status === "maintenance").length,
-    alerts: alerts.filter((a) => !a.resolved).length,
-  }), [vehicles, alerts]);
+  }, [initSocket, startFlushTimer]);
 
   const resolveAlert = useCallback((id: string) => {
     setAlerts((prev) =>
@@ -160,3 +171,4 @@ export function useTracking() {
     resolveAlert
   };
 }
+

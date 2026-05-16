@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Alert } from '../types';
@@ -10,7 +10,7 @@ interface AlertsPanelProps {
   onResolve: (id: string) => void;
 }
 
-export function AlertsPanel({ alerts, onResolve }: AlertsPanelProps) {
+export const AlertsPanel = memo(({ alerts, onResolve }: AlertsPanelProps) => {
   const activeAlerts = alerts.filter((a) => !a.resolved);
 
   if (activeAlerts.length === 0) return null;
@@ -57,4 +57,7 @@ export function AlertsPanel({ alerts, onResolve }: AlertsPanelProps) {
       </div>
     </div>
   );
-}
+});
+
+AlertsPanel.displayName = 'AlertsPanel';
+

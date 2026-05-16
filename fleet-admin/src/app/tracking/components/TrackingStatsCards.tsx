@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Truck, Activity, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { TrackingStats } from '../types';
 
@@ -8,9 +8,10 @@ interface TrackingStatsCardsProps {
   stats: TrackingStats;
 }
 
-export function TrackingStatsCards({ stats }: TrackingStatsCardsProps) {
+export const TrackingStatsCards = memo(({ stats }: TrackingStatsCardsProps) => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 shrink-0">
+      {/* ... cards ... */}
       <div className="flex flex-col gap-1 p-4 bg-surface rounded-2xl border border-border relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
           <Truck size={48} className="text-info" />
@@ -70,4 +71,7 @@ export function TrackingStatsCards({ stats }: TrackingStatsCardsProps) {
       </div>
     </div>
   );
-}
+});
+
+TrackingStatsCards.displayName = 'TrackingStatsCards';
+

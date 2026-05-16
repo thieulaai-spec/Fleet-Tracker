@@ -39,12 +39,14 @@ export default function LiveTrackingPage() {
     resolveAlert 
   } = useTracking();
 
-  const [selectedVehicle, setSelectedVehicle] = useState<VehiclePosition | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "idle" | "offline" | "maintenance">("all");
 
   const filteredVehicles = vehicles.filter((v) =>
     filter === "all" ? true : v.status === filter,
   );
+
+  const selectedVehicle = vehicles.find(v => v.vehicleId === selectedVehicleId) || null;
 
   return (
     <div className="h-full flex flex-col gap-4 p-4 lg:p-5 bg-background min-h-0 overflow-y-auto lg:overflow-hidden">
@@ -63,12 +65,12 @@ export default function LiveTrackingPage() {
           <LiveTrackingMap
             vehicles={filteredVehicles}
             selectedVehicle={selectedVehicle}
-            onVehicleSelect={setSelectedVehicle}
+            onVehicleSelect={(v) => setSelectedVehicleId(v?.vehicleId || null)}
           />
 
           <VehicleDetail 
             vehicle={selectedVehicle}
-            onClose={() => setSelectedVehicle(null)}
+            onClose={() => setSelectedVehicleId(null)}
           />
         </div>
 
@@ -81,7 +83,7 @@ export default function LiveTrackingPage() {
           <VehicleList 
             vehicles={filteredVehicles}
             selectedVehicleId={selectedVehicle?.vehicleId}
-            onSelect={setSelectedVehicle}
+            onSelect={(v) => setSelectedVehicleId(v?.vehicleId || null)}
           />
         </div>
       </div>

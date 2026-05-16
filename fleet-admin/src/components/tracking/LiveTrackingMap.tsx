@@ -87,15 +87,17 @@ export default function LiveTrackingMap({
       map.resize();
 
       if (selectedVehicle) {
-        map.flyTo({
+        // If it's the first time selecting, fly to it
+        // If it's just a position update, ease to it
+        map.easeTo({
           center: [selectedVehicle.longitude, selectedVehicle.latitude],
           zoom: 15,
-          duration: 1500,
+          duration: 1000,
           essential: true
         });
       }
     }
-  }, [selectedVehicle?.vehicleId]);
+  }, [selectedVehicle?.vehicleId, selectedVehicle?.latitude, selectedVehicle?.longitude]);
 
   // Resize when list changes
   useEffect(() => {

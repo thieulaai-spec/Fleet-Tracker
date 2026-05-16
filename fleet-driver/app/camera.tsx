@@ -9,6 +9,7 @@ import { authFetch } from '@/lib/authFetch';
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
@@ -33,10 +34,19 @@ export default function CameraScreen() {
   }
 
   const takePicture = async () => {
-    if (cameraRef.current) {
-      const result = await cameraRef.current.takePictureAsync();
-      if (result) {
-        setPhoto(result.uri);
+    if (cameraRef.current && isCameraReady) {
+      try {
+        const result = await cameraRef.current.takePictureAsync();
+        if (result) {
+          setPhoto(result.uri);
+        }
+      } catch (error: any) {
+        console.error('Capture error:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Capture Failed',
+          text2: 'Camera not ready or layout invalid'
+        });
       }
     }
   };
@@ -118,8 +128,13 @@ export default function CameraScreen() {
           </View>
         </View>
       ) : (
-        <CameraView className="flex-1" ref={cameraRef}>
-          <View className="flex-1 bg-transparent justify-between p-5 pt-16">
+        <View className="flex-1">
+          <CameraView 
+            className="flex-1" 
+            ref={cameraRef} 
+            onCameraReady={() => setIsCameraReady(true)}
+          />
+          <View className="absolute inset-0 bg-transparent justify-between p-5 pt-16">
             <TouchableOpacity 
               className="self-start w-12 h-12 rounded-full bg-black/50 justify-center items-center" 
               onPress={() => router.back()}
@@ -133,16 +148,17 @@ export default function CameraScreen() {
 
             <View className="items-center mb-10">
               <TouchableOpacity 
-                className="w-20 h-20 rounded-full bg-white/20 justify-center items-center border-2 border-white/40" 
+                className={`w-20 h-20 rounded-full bg-white/20 justify-center items-center border-2 border-white/40 ${!isCameraReady ? 'opacity-50' : ''}`} 
                 onPress={takePicture}
+                disabled={!isCameraReady}
               >
-                <View className="w-16 h-16 rounded-full bg-indigo-500 justify-center items-center shadow-lg shadow-indigo-500/50">
+                <View className={`w-16 h-16 rounded-full justify-center items-center shadow-lg ${!isCameraReady ? 'bg-slate-500' : 'bg-indigo-500 shadow-indigo-500/50'}`}>
                   <Camera color="#fff" size={32} />
                 </View>
               </TouchableOpacity>
             </View>
           </View>
-        </CameraView>
+        </View>
       )}
     </View>
   );

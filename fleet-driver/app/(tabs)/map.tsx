@@ -23,6 +23,7 @@ export default function ActiveTripMap() {
     routeData,
     handleStatusUpdate,
     handleOrderStatusUpdate,
+    handleProofOfDelivery,
     centerOnLocation,
     toggleMapType,
     openNavigation,
@@ -132,6 +133,7 @@ export default function ActiveTripMap() {
         currentOrder={currentOrder}
         onUpdateTripStatus={handleStatusUpdate}
         onUpdateOrderStatus={handleOrderStatusUpdate}
+        onProofOfDelivery={handleProofOfDelivery}
         onNavigate={openNavigation}
       />
     </View>

@@ -2,12 +2,14 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Alert, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
+import { useRouter } from 'expo-router';
 import { useTripStore, TripStatus, OrderStatus } from '../../store/useTripStore';
 import { socketService } from '../../lib/socket';
 import { useLocationTracking } from '../useLocationTracking';
-import { getRoute } from '../../utils/geo';
+import { getRoute, calculateDistance } from '../../utils/geo';
 
 export const useMapFlow = () => {
+  const router = useRouter();
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('standard');
   const [routeData, setRouteData] = useState<{
     coordinates: { latitude: number; longitude: number }[];
@@ -258,6 +260,37 @@ export const useMapFlow = () => {
     }
   }, [destination]);
 
+  const handleProofOfDelivery = useCallback(() => {
+    if (!currentOrder || !location) {
+      Alert.alert('Error', 'Missing mission or location data');
+      return;
+    }
+
+    if (!currentOrder.deliveryLocation) {
+      Alert.alert('Error', 'Delivery location not specified for this order');
+      return;
+    }
+
+    const distance = calculateDistance(
+      location.coords.latitude,
+      location.coords.longitude,
+      currentOrder.deliveryLocation.latitude,
+      currentOrder.deliveryLocation.longitude
+    );
+
+    // Geofencing: Must be within 200m
+    if (distance > 200) {
+      Alert.alert(
+        'Proximity Warning',
+        `You are still ${Math.round(distance)}m away from the delivery point. Please arrive within 200m to submit proof.`
+      );
+      return;
+    }
+
+    // Skip camera step temporarily. Directly confirm delivery.
+    handleOrderStatusUpdate(currentOrder.id, OrderStatus.DELIVERED);
+  }, [currentOrder, location, handleOrderStatusUpdate]);
+
   return {
     activeTrip,
     location,
@@ -268,6 +301,7 @@ export const useMapFlow = () => {
     routeData,
     handleStatusUpdate,
     handleOrderStatusUpdate,
+    handleProofOfDelivery,
     centerOnLocation,
     toggleMapType,
     openNavigation,

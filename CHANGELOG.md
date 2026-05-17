@@ -1,3 +1,15 @@
+## [2026-05-17] - Admin Vehicle Creation Fix & Driver Checks
+### Added
+- **Driver Eligibility Validation (`fleet-api`)**:
+    - Implemented a check in `VehiclesService.create` to verify that when assigning a driver to a vehicle during creation, the driver exists in the database.
+    - Added validation to ensure the driver is not currently active on another trip (`DriverStatus.ON_TRIP`), throwing a `ConflictException` if violated.
+    - Wrote comprehensive unit tests in `vehicles.service.spec.ts` covering successful creation with a driver, `NotFoundException` for invalid driver IDs, and `ConflictException` for drivers already on a trip.
+
+### Fixed
+- **API Vehicle Creation Validation Failure (400 Bad Request)**:
+    - Fixed a bug where creating a vehicle from the mobile admin interface failed with a `400 Bad Request` validation error when `driverId` or `status` was supplied.
+    - Updated `CreateVehicleDto` in `create-vehicle.dto.ts` to allow and validate `status` and `driverId` fields using `IsEnum` and `IsUUID` validation decorators.
+
 ## [2026-05-17] - Mobile Live Tracking & Auth Refinements
 ### Added
 - **Mobile Fleet Tracking Refinements (`fleet-driver`)**:

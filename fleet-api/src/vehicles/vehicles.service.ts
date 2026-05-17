@@ -34,8 +34,23 @@ export class VehiclesService {
       );
     }
 
+    const { driverId, ...vehicleData } = createVehicleDto;
+
+    if (driverId) {
+      const driver = await this.driverRepository.findOne({
+        where: { id: driverId },
+      });
+      if (!driver) {
+        throw new NotFoundException('Driver not found');
+      }
+      if (driver.status === DriverStatus.ON_TRIP) {
+        throw new ConflictException('Driver is already on another trip');
+      }
+    }
+
     const vehicle = this.vehicleRepository.create({
-      ...createVehicleDto,
+      ...vehicleData,
+      driverId: driverId || null,
       lastKnownLocation: {
         type: 'Point',
         coordinates: [106.6353, 10.7838], // [lng, lat] — Warehouse location

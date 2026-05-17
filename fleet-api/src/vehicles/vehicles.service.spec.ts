@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VehiclesService } from './vehicles.service';
 import { Vehicle, VehicleStatus, VehicleType } from '../entities/vehicle.entity';
-import { Driver } from '../entities/driver.entity';
+import { Driver, DriverStatus } from '../entities/driver.entity';
 import { UploadService } from '../upload/upload.service';
 import {
   ConflictException,
@@ -17,6 +17,7 @@ describe('VehiclesService', () => {
   let service: VehiclesService;
   let repository: Repository<Vehicle>;
   let uploadService: UploadService;
+  let driverRepository: Repository<Driver>;
 
   const mockVehicle = {
     id: 'vehicle-1',
@@ -70,6 +71,7 @@ describe('VehiclesService', () => {
     service = module.get<VehiclesService>(VehiclesService);
     repository = module.get<Repository<Vehicle>>(getRepositoryToken(Vehicle));
     uploadService = module.get<UploadService>(UploadService);
+    driverRepository = module.get<Repository<Driver>>(getRepositoryToken(Driver));
   });
 
   afterEach(() => {
@@ -93,6 +95,54 @@ describe('VehiclesService', () => {
 
       expect(result.plateNumber).toBe(dto.plateNumber);
       expect(repository.save).toHaveBeenCalled();
+    });
+
+    it('should create a vehicle with driver successfully', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      const mockDriver = { id: 'driver-1', status: DriverStatus.AVAILABLE };
+      jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver as any);
+
+      const dto = {
+        plateNumber: '29A-12345',
+        type: VehicleType.LARGE,
+        maxCapacityKg: 5000,
+        driverId: 'driver-1',
+      };
+
+      const result = await service.create(dto);
+
+      expect(result.plateNumber).toBe(dto.plateNumber);
+      expect(result.driverId).toBe(dto.driverId);
+      expect(repository.save).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if driver is not found', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      jest.spyOn(driverRepository, 'findOne').mockResolvedValue(null);
+
+      const dto = {
+        plateNumber: '29A-12345',
+        type: VehicleType.LARGE,
+        maxCapacityKg: 5000,
+        driverId: 'invalid-driver',
+      };
+
+      await expect(service.create(dto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ConflictException if driver is already on trip', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      const mockDriver = { id: 'driver-1', status: DriverStatus.ON_TRIP };
+      jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver as any);
+
+      const dto = {
+        plateNumber: '29A-12345',
+        type: VehicleType.LARGE,
+        maxCapacityKg: 5000,
+        driverId: 'driver-1',
+      };
+
+      await expect(service.create(dto)).rejects.toThrow(ConflictException);
     });
 
     it('should throw ConflictException if plate number exists', async () => {

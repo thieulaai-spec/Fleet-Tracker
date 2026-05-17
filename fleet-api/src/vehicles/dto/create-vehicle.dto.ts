@@ -5,9 +5,10 @@ import {
   IsNumber,
   IsOptional,
   IsPositive,
+  IsUUID,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { VehicleType } from '../../entities/vehicle.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { VehicleType, VehicleStatus } from '../../entities/vehicle.entity';
 
 export class CreateVehicleDto {
   @ApiProperty({ example: '51A-123.45' })
@@ -39,4 +40,15 @@ export class CreateVehicleDto {
   @IsString()
   @IsOptional()
   deviceId?: string | null;
+
+  @ApiPropertyOptional({ enum: VehicleStatus, example: VehicleStatus.AVAILABLE })
+  @IsEnum(VehicleStatus)
+  @IsOptional()
+  status?: VehicleStatus;
+
+  @ApiPropertyOptional({ example: 'uuid-of-driver', nullable: true })
+  @IsUUID()
+  @IsOptional()
+  driverId?: string | null;
 }
+

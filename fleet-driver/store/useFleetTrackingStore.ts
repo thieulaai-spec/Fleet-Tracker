@@ -39,10 +39,11 @@ export const useFleetTrackingStore = create<FleetTrackingState>((set, get) => ({
       const response = await authFetch('/tracking/live');
       if (!response.ok) throw new Error('Failed to fetch fleet locations');
       
-      const data = await response.json();
+      const result = await response.json();
+      const rawVehicles = Array.isArray(result) ? result : (result?.data || []);
       
       const initialVehicles: Record<string, TrackedVehicle> = {};
-      data.forEach((v: any) => {
+      rawVehicles.forEach((v: any) => {
         const location = parsePoint(v.lastKnownLocation);
         initialVehicles[v.id] = {
           id: v.id,

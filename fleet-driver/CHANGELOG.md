@@ -1,5 +1,11 @@
 # Changelog
 
+## [2026-05-17] - Live Tracking & Coordinate Parsing Fixes
+### Fixed
+- **Admin Fleet Tracking**: Fixed blank map screen by correctly unpacking the API response structure `{ statusCode, message, data }` in `useFleetTrackingStore`.
+- **PostGIS Coordinate Parsing**: Built a custom high-precision hexadecimal decoder for WKB (Well-Known Binary) PostGIS Geography formats in `geo.ts` to decode hex-encoded coordinates without external binary libraries.
+- **Unit Test Coverage**: Added comprehensive test suite `geo.test.ts` validating standard GeoJSON, WKT, plain objects, and binary hex-encoded WKB PostGIS inputs.
+
 ## [2026-05-15] - Driver App Polish & UI Standardization
 ### Refactored
 - Unified all component imports (Themed, StyledText, ExternalLink) to `@/components/ui`.

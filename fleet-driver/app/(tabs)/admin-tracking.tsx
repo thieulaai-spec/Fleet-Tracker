@@ -8,6 +8,10 @@ import { Layers, Maximize, Search, Truck, User, Navigation } from 'lucide-react-
 import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
 
+const normalizePlate = (plate: string) => {
+  return plate.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+
 export default function AdminTrackingScreen() {
   const mapRef = useRef<any>(null);
   const { vehicles, isLoading, fetchLiveLocations, startTracking, stopTracking } = useFleetTrackingStore();
@@ -23,11 +27,18 @@ export default function AdminTrackingScreen() {
   const filteredVehicles = useMemo(() => {
     if (!searchQuery.trim()) return vehicleList;
     const query = searchQuery.toLowerCase().trim();
-    return vehicleList.filter(
-      (v) =>
-        (v.licensePlate || '').toLowerCase().includes(query) ||
-        (v.driverName || '').toLowerCase().includes(query)
-    );
+    const normalizedQuery = normalizePlate(query);
+
+    return vehicleList.filter((v) => {
+      const plate = v.licensePlate || '';
+      const driver = v.driverName || '';
+      
+      return (
+        normalizePlate(plate).includes(normalizedQuery) ||
+        plate.toLowerCase().includes(query) ||
+        driver.toLowerCase().includes(query)
+      );
+    });
   }, [vehicleList, searchQuery]);
 
   const displayedVehiclesForMap = useMemo(() => {

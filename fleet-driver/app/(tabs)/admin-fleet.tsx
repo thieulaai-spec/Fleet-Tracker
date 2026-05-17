@@ -49,6 +49,10 @@ const VEHICLE_TYPE_LABELS = {
   [VehicleType.LARGE]: 'Semi Truck',
 };
 
+const normalizePlate = (plate: string) => {
+  return plate.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+
 export default function AdminFleetScreen() {
   const router = useRouter();
   const { 
@@ -85,11 +89,17 @@ export default function AdminFleetScreen() {
   }, [drivers, searchQuery]);
 
   const filteredVehicles = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    const normalizedQuery = normalizePlate(query);
+
     return vehicles.filter(v => {
       const plateNumber = v?.plateNumber || '';
       const type = v?.type || '';
-      return plateNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             type.toLowerCase().includes(searchQuery.toLowerCase());
+      return (
+        normalizePlate(plateNumber).includes(normalizedQuery) ||
+        plateNumber.toLowerCase().includes(query) ||
+        type.toLowerCase().includes(query)
+      );
     });
   }, [vehicles, searchQuery]);
 

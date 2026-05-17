@@ -1,3 +1,16 @@
+## [2026-05-17] - Navigation Stabilization & Layout Remount
+### Added
+- **Multi-Role Nav Stabilization (`fleet-driver`)**:
+    - **Dynamic Tabs Remounting**: Added `key={user.id}` to `<Tabs>` component in `app/(tabs)/_layout.tsx` to force full React Navigation cache reset on role switch, preventing UI tab leak.
+    - **Flash Guard**: Added early return on `!isAuthenticated || !user` to block rendering stale/empty layout before store hydrates.
+    - **Tab Layout Clean Up**: Removed redundant `<Tabs.Screen options={{ href: null }}` configurations at bottom, replaced with dynamic `href` properties.
+- **Mapbox Config Template (`fleet-driver`)**:
+    - Added `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` entry to `fleet-driver/.env.example`.
+
+### Fixed
+- **Expo Router Layout Routing Collision**:
+    - Resolved `ERROR [Error: Cannot use href and tabBarButton together.]` runtime crash by using dynamic `href: isAdmin ? undefined : null` instead of dynamic component blocks or combining custom button structures.
+
 ## [2026-05-16] - Mobile Admin Mirror Phase 04 (Order Management)
 ### Added
 - **Mobile Admin Mirror Phase 04 (Order Management CRUD)**:

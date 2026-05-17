@@ -6,11 +6,17 @@ import { Platform, StyleSheet } from 'react-native';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export default function TabLayout() {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+  const { user, isAuthenticated } = useAuthStore();
+
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
+  const isAdmin = user.role?.toUpperCase() === 'ADMIN';
 
   return (
     <Tabs
+      key={user.id}
       screenOptions={{
         tabBarActiveTintColor: '#6366f1',
         tabBarInactiveTintColor: '#94a3b8',
@@ -57,72 +63,69 @@ export default function TabLayout() {
         ),
         headerShown: false,
       }}>
-      
       {/* Driver Tabs */}
-      {!isAdmin && (
-        <>
-          <Tabs.Screen
-            name="index"
-            options={{
-              title: 'Trips',
-              tabBarIcon: ({ color, focused }) => (
-                <Truck size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="map"
-            options={{
-              title: 'Active Map',
-              tabBarIcon: ({ color, focused }) => (
-                <Map size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
-              ),
-            }}
-          />
-        </>
-      )}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Trips',
+          href: !isAdmin ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <Truck size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Active Map',
+          href: !isAdmin ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <Map size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
 
       {/* Admin Tabs */}
-      {isAdmin && (
-        <>
-          <Tabs.Screen
-            name="admin-dashboard"
-            options={{
-              title: 'Dash',
-              tabBarIcon: ({ color, focused }) => (
-                <LayoutDashboard size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="admin-tracking"
-            options={{
-              title: 'Tracking',
-              tabBarIcon: ({ color, focused }) => (
-                <MapPin size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="admin-orders"
-            options={{
-              title: 'Orders',
-              tabBarIcon: ({ color, focused }) => (
-                <Package size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="admin-fleet"
-            options={{
-              title: 'Fleet',
-              tabBarIcon: ({ color, focused }) => (
-                <Users size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
-              ),
-            }}
-          />
-        </>
-      )}
+      <Tabs.Screen
+        name="admin-dashboard"
+        options={{
+          title: 'Dash',
+          href: isAdmin ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <LayoutDashboard size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin-tracking"
+        options={{
+          title: 'Tracking',
+          href: isAdmin ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <MapPin size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin-orders"
+        options={{
+          title: 'Orders',
+          href: isAdmin ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <Package size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin-fleet"
+        options={{
+          title: 'Fleet',
+          href: isAdmin ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <Users size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
 
       {/* Shared Tabs */}
       <Tabs.Screen
@@ -134,22 +137,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
-      {/* Hide index/map/etc from Admin navigation explicitly if needed, but condition above handles it */}
-      {isAdmin && (
-        <>
-          <Tabs.Screen name="index" options={{ href: null }} />
-          <Tabs.Screen name="map" options={{ href: null }} />
-        </>
-      )}
-      {!isAdmin && (
-        <>
-          <Tabs.Screen name="admin-dashboard" options={{ href: null }} />
-          <Tabs.Screen name="admin-tracking" options={{ href: null }} />
-          <Tabs.Screen name="admin-orders" options={{ href: null }} />
-          <Tabs.Screen name="admin-fleet" options={{ href: null }} />
-        </>
-      )}
     </Tabs>
   );
 }

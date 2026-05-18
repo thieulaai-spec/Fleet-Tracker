@@ -1,3 +1,14 @@
+## [2026-05-18] - Live Map Tracking Marker Bugfix & Tailwind CSS Migration
+### Added
+- **Tailwind CSS Styling**: Migrated custom marker component `FleetMarker.tsx` from raw React Native `StyleSheet` to unified Tailwind CSS (NativeWind) classes, matching the global premium logistics visual aesthetic.
+
+### Fixed
+- **Marker Cutoff and Disappearance on Live Map**:
+  - Solved the persistent bug where live tracking vehicle marker icons were partially cut off or disappeared completely during dynamic WebSocket telemetry updates.
+  - Hardened container dimensions using static, explicit width/height constraints (`w-[120px] h-[65px]`) combined with `overflow-visible` and `bg-transparent` properties to ensure all marker elements (vehicle icon, license plate card, anchor arrow) remain fully visible.
+  - Increased `tracksViewChanges` redraw delay timer from `300ms` to `1500ms` in the react-native-maps `useEffect` lifecycle to allow complex UI layouts and icons to completely paint before pausing expensive native map canvas redraw threads.
+  - Re-implemented vehicle movement orientation (heading) dynamic rotation through standard inline styles (`transform: [{ rotate: ... }]`) to rotate the indicator smoothly without breaking the layout bounds.
+
 ## [2026-05-17] - Driver Creation & Editing UI Improvements
 ### Added
 - **Tailwind CSS Styling**: Migrated legacy vanilla Stylesheets in `DriverForm.tsx` to utility-first Tailwind CSS classes, matching the glassmorphic dark-mode admin aesthetic.

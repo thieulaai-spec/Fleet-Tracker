@@ -4,8 +4,9 @@ import {
   StatusBar,
   StyleSheet
 } from 'react-native';
+import { MapPin, Calendar, Clock, ChevronLeft, Package, Truck, CheckCircle2, AlertTriangle, Navigation, Camera, Fuel, Route } from 'lucide-react-native';
+import { useTripStore, TripStatus } from '../../store/useTripStore';
 import { MapComponent, MarkerComponent, PolylineComponent, PROVIDER_GOOGLE } from '../../components/map/MapComponents';
-import { TripStatus } from '../../store/useTripStore';
 
 import { NoActiveTrip } from '../../components/trip/NoActiveTrip';
 import { MissionDashboard } from '../../components/map/MissionDashboard';
@@ -86,12 +87,22 @@ export default function ActiveTripMap() {
               longitude: location.coords.longitude,
             }}
             title="Your Location"
-            rotation={location.coords.heading || 0}
             onPress={() => {
               setIsFollowing(true);
               setIsNavMode(!isNavMode);
             }}
-          />
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <View
+              className="w-9 h-9 rounded-full border-[3px] border-white items-center justify-center shadow-lg shadow-black/30"
+              style={{
+                backgroundColor: activeTrip?.status === TripStatus.IN_PROGRESS ? '#6366f1' : '#10b981',
+                transform: [{ rotate: `${(location.coords.heading || 0) - 90}deg` }],
+              }}
+            >
+              <Truck size={16} color="#fff" strokeWidth={3} />
+            </View>
+          </MarkerComponent>
         )}
 
         {/* Order Markers */}
@@ -101,13 +112,29 @@ export default function ActiveTripMap() {
               <MarkerComponent
                 coordinate={order.pickupLocation}
                 title={`Pickup: ${order.id.substring(0, 8)}`}
-              />
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <View 
+                  className="w-8 h-8 rounded-full border-2 border-white items-center justify-center shadow shadow-black/25"
+                  style={{ backgroundColor: '#6366f1' }}
+                >
+                  <MapPin size={16} color="#fff" strokeWidth={3} />
+                </View>
+              </MarkerComponent>
             )}
             {order.deliveryLocation && (
               <MarkerComponent
                 coordinate={order.deliveryLocation}
                 title={`Delivery: ${order.id.substring(0, 8)}`}
-              />
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <View 
+                  className="w-8 h-8 rounded-full border-2 border-white items-center justify-center shadow shadow-black/25"
+                  style={{ backgroundColor: '#10b981' }}
+                >
+                  <MapPin size={16} color="#fff" strokeWidth={3} />
+                </View>
+              </MarkerComponent>
             )}
           </React.Fragment>
         ))}
@@ -139,3 +166,6 @@ export default function ActiveTripMap() {
     </View>
   );
 }
+
+
+

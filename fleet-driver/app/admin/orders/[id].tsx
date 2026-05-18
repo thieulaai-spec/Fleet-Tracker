@@ -418,7 +418,16 @@ export default function OrderDetailScreen() {
 
       {/* Floating Action Button */}
       {order.status === OrderStatus.PENDING && selectedVehicleId && (
-        <View className="absolute bottom-6 left-5 right-5 shadow-2xl shadow-indigo-500/10">
+        <View 
+          className="absolute bottom-6 left-5 right-5"
+          style={{
+            shadowColor: '#6366f1',
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.1,
+            shadowRadius: 24,
+            elevation: 8,
+          }}
+        >
           <TouchableOpacity 
             onPress={handleAssign}
             disabled={isSubmitting}

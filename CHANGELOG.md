@@ -1,3 +1,9 @@
+## [2026-05-18] - Order Detail Vehicle Selection Crash Fix
+### Fixed
+- **Couldn't find a navigation context crash when selecting a vehicle**:
+  - Resolved a critical crash that occurred when selecting a non-optimal vehicle on the order details screen inside the `fleet-driver` mobile app.
+  - Replaced dynamic Tailwind CSS shadow and opacity classes (e.g. `shadow-indigo-500/10`) in `OrderDetailScreen` (`[id].tsx`) and `VehicleDispatchItem` (`VehicleDispatchItem.tsx`) with robust native React Native inline shadow style properties to prevent layout tree CSS parsing race conditions under Expo Router.
+
 ## [2026-05-18] - Order Management Map Integration & Tailwind CSS Migration
 ### Added
 - **Interactive Map Search & Reverse Geocoding in MapPicker**:

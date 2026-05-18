@@ -23,17 +23,37 @@ export const VehicleDispatchItem: React.FC<VehicleDispatchItemProps> = ({
   const isOptimal = rank === 0;
 
   // Premium design systems styling tokens
-  const containerStyle = isSelected 
-    ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5' 
-    : isOptimal
-      ? 'bg-slate-800/80 border-amber-500/30 shadow-lg shadow-amber-500/5'
-      : 'bg-slate-800/50 border-white/5';
+  const containerStyle = {
+    backgroundColor: isSelected 
+      ? 'rgba(16, 185, 129, 0.1)' 
+      : isOptimal
+        ? 'rgba(30, 41, 59, 0.8)'
+        : 'rgba(30, 41, 59, 0.5)',
+    borderColor: isSelected 
+      ? 'rgba(16, 185, 129, 0.5)' 
+      : isOptimal
+        ? 'rgba(245, 158, 11, 0.3)'
+        : 'rgba(255, 255, 255, 0.05)',
+    shadowColor: isSelected 
+      ? '#10b981' 
+      : isOptimal
+        ? '#f59e0b'
+        : 'transparent',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isSelected || isOptimal ? 0.05 : 0,
+    shadowRadius: 12,
+    elevation: isSelected || isOptimal ? 2 : 0,
+  };
 
-  const iconBgStyle = isSelected 
-    ? 'bg-emerald-500' 
-    : isOptimal 
-      ? 'bg-amber-500/20 border border-amber-500/30' 
-      : 'bg-slate-700';
+  const iconBgStyle = {
+    backgroundColor: isSelected 
+      ? '#10b981' 
+      : isOptimal 
+        ? 'rgba(245, 158, 11, 0.2)' 
+        : '#334155', // slate-700
+    borderColor: isOptimal ? 'rgba(245, 158, 11, 0.3)' : 'transparent',
+    borderWidth: isOptimal ? 1 : 0,
+  };
 
   const iconColor = isSelected 
     ? '#fff' 
@@ -44,11 +64,15 @@ export const VehicleDispatchItem: React.FC<VehicleDispatchItemProps> = ({
   return (
     <TouchableOpacity 
       onPress={onPress}
-      className={`p-4 mb-3 rounded-2xl border ${containerStyle}`}
+      className="p-4 mb-3 rounded-2xl border"
+      style={containerStyle}
     >
       <View className="flex-row justify-between items-start mb-3">
         <View className="flex-row items-center flex-1 mr-2">
-          <View className={`w-10 h-10 rounded-xl justify-center items-center mr-3 ${iconBgStyle}`}>
+          <View 
+            className="w-10 h-10 rounded-xl justify-center items-center mr-3"
+            style={iconBgStyle}
+          >
             <Truck size={20} color={iconColor} />
           </View>
           <View className="flex-1">
@@ -58,17 +82,26 @@ export const VehicleDispatchItem: React.FC<VehicleDispatchItemProps> = ({
         </View>
         <View className="flex-row items-center gap-1.5 flex-wrap justify-end max-w-[50%]">
           {isOptimal && (
-            <View className="bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/30 flex-row items-center gap-1">
+            <View 
+              className="px-2 py-0.5 rounded-md border flex-row items-center gap-1"
+              style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.3)' }}
+            >
               <Sparkles size={10} color="#f59e0b" />
               <Text className="text-amber-500 text-[9px] font-bold uppercase tracking-wider">Optimal</Text>
             </View>
           )}
           {distanceKm !== undefined && (
-            <View className="bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">
+            <View 
+              className="px-2 py-0.5 rounded-md border"
+              style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(99, 102, 241, 0.2)' }}
+            >
               <Text className="text-indigo-400 text-[9px] font-bold uppercase">{distanceKm.toFixed(1)} km</Text>
             </View>
           )}
-          <View className="bg-emerald-500/10 px-2 py-0.5 rounded-md">
+          <View 
+            className="px-2 py-0.5 rounded-md"
+            style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}
+          >
             <Text className="text-emerald-500 text-[9px] font-bold uppercase">Available</Text>
           </View>
         </View>
@@ -98,7 +131,10 @@ export const VehicleDispatchItem: React.FC<VehicleDispatchItemProps> = ({
       </View>
 
       {isSelected && (
-        <View className="mt-3 pt-3 border-t border-emerald-500/20 flex-row justify-end items-center">
+        <View 
+          className="mt-3 pt-3 border-t flex-row justify-end items-center"
+          style={{ borderTopColor: 'rgba(16, 185, 129, 0.2)' }}
+        >
           <Text className="text-emerald-400 text-[11px] font-bold mr-1">Ready to Assign</Text>
           <ChevronRight size={14} color="#10b981" />
         </View>

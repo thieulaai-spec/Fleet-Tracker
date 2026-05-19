@@ -4,8 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Order, OrderStatus } from '../entities/order.entity';
+import { TripOrder } from '../entities/trip-order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -16,6 +17,7 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -83,13 +85,38 @@ export class OrdersService {
     };
   }
 
-  async findOne(id: string): Promise<Order> {
+  async findOne(id: string): Promise<any> {
     const order = await this.ordersRepository.findOne({
       where: { id },
     });
 
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} not found`);
+    }
+
+    // Find associated trip details for driver name/phone and vehicle license plate
+    const tripOrder = await this.dataSource.getRepository(TripOrder).findOne({
+      where: { orderId: id },
+      relations: ['trip', 'trip.driver', 'trip.driver.user', 'trip.vehicle'],
+    });
+
+    if (tripOrder && tripOrder.trip) {
+      return {
+        ...order,
+        assignedTrip: {
+          id: tripOrder.trip.id,
+          status: tripOrder.trip.status,
+          driver: tripOrder.trip.driver ? {
+            id: tripOrder.trip.driver.id,
+            fullName: tripOrder.trip.driver.user?.fullName || null,
+            phone: tripOrder.trip.driver.user?.phone || null,
+          } : null,
+          vehicle: tripOrder.trip.vehicle ? {
+            id: tripOrder.trip.vehicle.id,
+            plateNumber: tripOrder.trip.vehicle.plateNumber || null,
+          } : null,
+        },
+      };
     }
 
     return order;

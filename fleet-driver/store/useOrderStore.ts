@@ -29,6 +29,19 @@ export interface Order {
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;
+  assignedTrip?: {
+    id: string;
+    status: string;
+    driver?: {
+      id: string;
+      fullName: string | null;
+      phone: string | null;
+    } | null;
+    vehicle?: {
+      id: string;
+      plateNumber: string | null;
+    } | null;
+  } | null;
 }
 
 interface OrderState {
@@ -41,6 +54,7 @@ interface OrderState {
   deleteOrder: (id: string) => Promise<void>;
   assignOrder: (orderId: string, vehicleId: string, driverId: string) => Promise<void>;
   getOrderById: (id: string) => Order | undefined;
+  fetchOrderById: (id: string) => Promise<Order>;
 }
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -216,5 +230,33 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   getOrderById: (id) => {
     return get().orders.find(o => o.id === id);
+  },
+
+  fetchOrderById: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const { token } = useAuthStore.getState();
+      const response = await axios.get(`${API_URL}/orders/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const order = response.data;
+      
+      set(state => {
+        const index = state.orders.findIndex(o => o.id === id);
+        if (index > -1) {
+          const newOrders = [...state.orders];
+          newOrders[index] = order;
+          return { orders: newOrders, loading: false };
+        } else {
+          return { orders: [...state.orders, order], loading: false };
+        }
+      });
+      
+      return order;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to fetch order details';
+      set({ error: message, loading: false });
+      throw new Error(message);
+    }
   },
 }));

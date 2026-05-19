@@ -11,43 +11,24 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
-  ArrowLeft, 
-  Edit3, 
-  Trash2, 
-  Package, 
-  MapPin, 
-  Scale, 
-  Clock, 
-  Calendar,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  Clock3,
-  ChevronRight,
   Truck,
-  Send
+  Send,
+  AlertCircle,
+  ArrowLeft
 } from 'lucide-react-native';
-import { BlurView } from 'expo-blur';
 import { useOrderStore, OrderStatus, Order } from '../../../store/useOrderStore';
 import { useFleetStore } from '../../../store/useFleetStore';
 import { OrderForm } from '../../../components/admin/OrderForm';
 import { VehicleDispatchItem } from '../../../components/admin/VehicleDispatchItem';
-import { MapComponent, MarkerComponent, PolylineComponent, PROVIDER_GOOGLE } from '../../../components/map/MapComponents';
-
-const STATUS_CONFIG = {
-  [OrderStatus.PENDING]: { label: 'Pending', color: '#f59e0b', icon: Clock3 },
-  [OrderStatus.ASSIGNED]: { label: 'Assigned', color: '#6366f1', icon: Package },
-  [OrderStatus.PICKED_UP]: { label: 'Picked Up', color: '#8b5cf6', icon: MapPin },
-  [OrderStatus.DELIVERING]: { label: 'Delivering', color: '#0ea5e9', icon: MapPin },
-  [OrderStatus.DELIVERED]: { label: 'Delivered', color: '#10b981', icon: CheckCircle2 },
-  [OrderStatus.FAILED]: { label: 'Failed', color: '#ef4444', icon: AlertCircle },
-  [OrderStatus.CANCELLED]: { label: 'Cancelled', color: '#94a3b8', icon: XCircle },
-};
+import { OrderDetailHeader } from '../../../components/admin/OrderDetailHeader';
+import { OrderDetailMap } from '../../../components/admin/OrderDetailMap';
+import { AssignedTripCard } from '../../../components/admin/AssignedTripCard';
+import { OrderDetailInfo } from '../../../components/admin/OrderDetailInfo';
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { getOrderById, updateOrder, deleteOrder, assignOrder, loading } = useOrderStore();
+  const { getOrderById, fetchOrderById, updateOrder, deleteOrder, assignOrder, loading } = useOrderStore();
   const { suggestions, fetchSuggestions, loading: fleetLoading } = useFleetStore();
   const [order, setOrder] = useState<Order | undefined>(undefined);
   const [isEditing, setIsEditing] = useState(false);
@@ -61,8 +42,18 @@ export default function OrderDetailScreen() {
       if (data?.status === OrderStatus.PENDING) {
         fetchSuggestions(data.id).catch(console.error);
       }
+
+      // Fetch fresh order details from backend to ensure assignedTrip is fully populated
+      fetchOrderById(id as string)
+        .then((freshData) => {
+          setOrder(freshData);
+          if (freshData?.status === OrderStatus.PENDING) {
+            fetchSuggestions(freshData.id).catch(console.error);
+          }
+        })
+        .catch(console.error);
     }
-  }, [id, getOrderById, fetchSuggestions]);
+  }, [id, getOrderById, fetchOrderById, fetchSuggestions]);
 
   if (!order) {
     return (
@@ -167,8 +158,6 @@ export default function OrderDetailScreen() {
     );
   };
 
-  const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG[OrderStatus.PENDING];
-  const StatusIcon = statusConfig.icon;
   const canCancel = order.status === OrderStatus.PENDING || order.status === OrderStatus.ASSIGNED;
 
   if (isEditing) {
@@ -196,94 +185,17 @@ export default function OrderDetailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-slate-950" edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-row items-center px-4 py-3 gap-4 border-b border-white/5 bg-slate-950">
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
-        >
-          <ArrowLeft size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-xl font-extrabold text-white">Order Detail</Text>
-        <View className="flex-row gap-2">
-          {canCancel && (
-            <TouchableOpacity 
-              onPress={handleCancel} 
-              className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
-            >
-              <XCircle size={20} color="#94a3b8" />
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity 
-            onPress={() => setIsEditing(true)} 
-            className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
-          >
-            <Edit3 size={20} color="#6366f1" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            onPress={handleDelete} 
-            className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
-          >
-            <Trash2 size={20} color="#ef4444" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <OrderDetailHeader 
+        onBack={() => router.back()}
+        onEdit={() => setIsEditing(true)}
+        onDelete={handleDelete}
+        onCancel={handleCancel}
+        canCancel={canCancel}
+      />
 
       <ScrollView contentContainerStyle={{ paddingBottom: order.status === OrderStatus.PENDING && selectedVehicleId ? 120 : 40 }}>
         {/* Map Preview */}
-        <View className="h-56 w-full overflow-hidden relative">
-          <MapComponent
-            provider={PROVIDER_GOOGLE}
-            style={{ flex: 1 }}
-            initialRegion={{
-              latitude: (order.pickupLocation.coordinates[1] + order.deliveryLocation.coordinates[1]) / 2,
-              longitude: (order.pickupLocation.coordinates[0] + order.deliveryLocation.coordinates[0]) / 2,
-              latitudeDelta: Math.abs(order.pickupLocation.coordinates[1] - order.deliveryLocation.coordinates[1]) * 1.5 || 0.05,
-              longitudeDelta: Math.abs(order.pickupLocation.coordinates[0] - order.deliveryLocation.coordinates[0]) * 1.5 || 0.05,
-            }}
-            scrollEnabled={false}
-            zoomEnabled={false}
-          >
-            <MarkerComponent
-              coordinate={{
-                latitude: order.pickupLocation.coordinates[1],
-                longitude: order.pickupLocation.coordinates[0],
-              }}
-              title="Pickup"
-              pinColor="#f59e0b"
-            />
-            <MarkerComponent
-              coordinate={{
-                latitude: order.deliveryLocation.coordinates[1],
-                longitude: order.deliveryLocation.coordinates[0],
-              }}
-              title="Delivery"
-              pinColor="#10b981"
-            />
-            <PolylineComponent
-              coordinates={[
-                { latitude: order.pickupLocation.coordinates[1], longitude: order.pickupLocation.coordinates[0] },
-                { latitude: order.deliveryLocation.coordinates[1], longitude: order.deliveryLocation.coordinates[0] }
-              ]}
-              strokeColor="#6366f1"
-              strokeWidth={3}
-              lineDashPattern={[5, 5]}
-            />
-          </MapComponent>
-          <BlurView 
-            intensity={20} 
-            tint="dark" 
-            className="justify-end"
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: 0, padding: 16, backgroundColor: 'rgba(15, 23, 42, 0.3)' }}
-          >
-            <View 
-              className="flex-row items-center self-start px-3 py-1.5 rounded-xl gap-2 shadow-lg shadow-black/20"
-              style={{ backgroundColor: `${statusConfig.color}CC` }}
-            >
-              <StatusIcon size={16} color="#fff" />
-              <Text className="text-white font-extrabold text-xs uppercase tracking-wide">{statusConfig.label}</Text>
-            </View>
-          </BlurView>
-        </View>
+        <OrderDetailMap order={order} />
 
         {/* Info Sections */}
         <View className="p-5 gap-5">
@@ -296,6 +208,9 @@ export default function OrderDetailScreen() {
               {order.id.toUpperCase()}
             </Text>
           </View>
+
+          {/* Assigned Driver & Vehicle Details Card */}
+          <AssignedTripCard assignedTrip={order.assignedTrip} />
 
           {/* Dispatch Section */}
           {order.status === OrderStatus.PENDING && (
@@ -337,84 +252,8 @@ export default function OrderDetailScreen() {
             </View>
           )}
 
-          <View className="bg-slate-900 rounded-3xl p-5 border border-white/5">
-            <View className="flex-row items-center gap-2.5 mb-4">
-              <MapPin size={20} color="#6366f1" />
-              <Text className="text-lg font-bold text-slate-100">Route Details</Text>
-            </View>
-            
-            <View className="flex-row gap-4">
-              <View className="w-3 items-center">
-                <View className="w-3 h-3 rounded-full bg-amber-500 mt-1" />
-                <View className="w-0.5 flex-1 bg-white/10 my-1" />
-              </View>
-              <View className="flex-1 pb-4">
-                <Text className="text-xs text-slate-500 font-semibold mb-1">Pickup Address</Text>
-                <Text className="text-sm text-slate-300 leading-5">{order.pickupAddress}</Text>
-              </View>
-            </View>
-            
-            <View className="flex-row gap-4">
-              <View className="w-3 items-center">
-                <View className="w-3 h-3 rounded-full bg-emerald-500 mt-1" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-xs text-slate-500 font-semibold mb-1">Delivery Address</Text>
-                <Text className="text-sm text-slate-300 leading-5">{order.deliveryAddress}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View className="flex-row gap-4">
-            <View className="flex-1 bg-slate-900 rounded-3xl p-5 border border-white/5">
-              <View className="flex-row items-center gap-2 mb-3">
-                <Scale size={18} color="#6366f1" />
-                <Text className="text-sm font-bold text-slate-100">Weight</Text>
-              </View>
-              <Text className="text-xl font-extrabold text-white">{order.weightKg} kg</Text>
-            </View>
-
-            <View className="flex-1 bg-slate-900 rounded-3xl p-5 border border-white/5">
-              <View className="flex-row items-center gap-2 mb-3">
-                <Calendar size={18} color="#6366f1" />
-                <Text className="text-sm font-bold text-slate-100">Date</Text>
-              </View>
-              <Text className="text-xl font-extrabold text-white">
-                {new Date(order.createdAt).toLocaleDateString()}
-              </Text>
-            </View>
-          </View>
-
-          {order.description && (
-            <View className="bg-slate-900 rounded-3xl p-5 border border-white/5">
-              <View className="flex-row items-center gap-2.5 mb-4">
-                <Package size={20} color="#6366f1" />
-                <Text className="text-lg font-bold text-slate-100">Instructions</Text>
-              </View>
-              <Text className="text-slate-400 text-sm leading-6">{order.description}</Text>
-            </View>
-          )}
-
-          <View className="bg-slate-900 rounded-3xl p-5 border border-white/5">
-            <View className="flex-row items-center gap-2.5 mb-4">
-              <Clock size={20} color="#6366f1" />
-              <Text className="text-lg font-bold text-slate-100">Timeline</Text>
-            </View>
-            <View className="flex-row items-center gap-3 mb-3">
-              <View className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-              <Text className="text-slate-500 text-xs flex-1">
-                Order created on {new Date(order.createdAt).toLocaleString()}
-              </Text>
-            </View>
-            {order.updatedAt !== order.createdAt && (
-              <View className="flex-row items-center gap-3">
-                <View className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                <Text className="text-slate-500 text-xs flex-1">
-                  Last updated on {new Date(order.updatedAt).toLocaleString()}
-                </Text>
-              </View>
-            )}
-          </View>
+          {/* Route Details, Weight, Date, Instructions, Timeline */}
+          <OrderDetailInfo order={order} />
         </View>
       </ScrollView>
 
@@ -450,3 +289,4 @@ export default function OrderDetailScreen() {
     </SafeAreaView>
   );
 }
+

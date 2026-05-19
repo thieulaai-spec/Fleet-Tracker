@@ -1,47 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Platform
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  ArrowLeft, 
-  Edit3, 
-  Trash2, 
+} from "react-native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  ArrowLeft,
+  Edit3,
+  Trash2,
   User as UserIcon,
   Mail,
   Phone,
   ShieldCheck,
-  Activity,
-  Calendar
-} from 'lucide-react-native';
-import { useFleetStore, Driver, DriverStatus } from '../../../../store/useFleetStore';
-import { DriverForm } from '../../../../components/admin/DriverForm';
+  Calendar,
+} from "lucide-react-native";
+import {
+  useFleetStore,
+  Driver,
+  DriverStatus,
+} from "../../../../store/useFleetStore";
+import { DriverForm } from "../../../../components/admin/DriverForm";
 
 const STATUS_CONFIG = {
-  [DriverStatus.AVAILABLE]: { label: 'Available', color: '#10b981' },
-  [DriverStatus.ON_TRIP]: { label: 'On Trip', color: '#6366f1' },
-  [DriverStatus.OFF_DUTY]: { label: 'Off Duty', color: '#94a3b8' },
+  [DriverStatus.AVAILABLE]: { label: "Available", color: "#10b981" },
+  [DriverStatus.ON_TRIP]: { label: "On Trip", color: "#6366f1" },
+  [DriverStatus.OFF_DUTY]: { label: "Off Duty", color: "#94a3b8" },
 };
 
 export default function DriverDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { drivers, loading, updateDriver, deleteDriver, createDriver } = useFleetStore();
-  
+  const { drivers, loading, updateDriver, deleteDriver, createDriver } =
+    useFleetStore();
+
   const [driver, setDriver] = useState<Driver | undefined>(undefined);
-  const [isEditing, setIsEditing] = useState(id === 'create');
+  const [isEditing, setIsEditing] = useState(id === "create");
 
   useEffect(() => {
-    if (id && id !== 'create') {
-      const found = drivers.find(d => d.id === id);
+    if (id && id !== "create") {
+      const found = drivers.find((d) => d.id === id);
       setDriver(found);
     }
   }, [id, drivers]);
@@ -52,8 +54,8 @@ export default function DriverDetailScreen() {
       "Are you sure you want to remove this driver from the fleet?",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
+        {
+          text: "Delete",
           style: "destructive",
           onPress: async () => {
             try {
@@ -62,15 +64,15 @@ export default function DriverDetailScreen() {
             } catch (error: any) {
               Alert.alert("Error", error.message);
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
   const handleSubmit = async (data: any) => {
     try {
-      if (id === 'create') {
+      if (id === "create") {
         await createDriver(data);
         Alert.alert("Success", "Driver created successfully");
       } else {
@@ -84,45 +86,64 @@ export default function DriverDetailScreen() {
     }
   };
 
-  if (loading && !driver && id !== 'create') {
+  if (loading && !driver && id !== "create") {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
+      <SafeAreaView className="flex-1 bg-slate-950">
+        <Stack.Screen options={{ headerShown: false }} />
+        <View className="flex-1 justify-center items-center gap-4">
           <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={styles.loadingText}>Loading driver info...</Text>
+          <Text className="text-slate-400 text-base">Loading driver info...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  if (!driver && id !== 'create') {
+  if (!driver && id !== "create") {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Driver not found</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={{ color: '#6366f1' }}>Go Back</Text>
+      <SafeAreaView className="flex-1 bg-slate-950">
+        <Stack.Screen options={{ headerShown: false }} />
+        <View className="flex-1 justify-center items-center gap-4">
+          <Text className="text-red-500 text-lg font-bold">Driver not found</Text>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="px-4 py-2 rounded-xl bg-white/5 justify-center items-center"
+          >
+            <Text style={{ color: "#6366f1" }}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  const status = driver ? (STATUS_CONFIG[driver.status] || STATUS_CONFIG[DriverStatus.OFF_DUTY]) : null;
+  const status = driver
+    ? STATUS_CONFIG[driver.status] || STATUS_CONFIG[DriverStatus.OFF_DUTY]
+    : null;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+    <SafeAreaView className="flex-1 bg-slate-950" edges={["top"]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View className="flex-row items-center px-4 py-3 gap-4">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
+        >
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>{id === 'create' ? 'New Driver' : 'Driver Detail'}</Text>
-        {id !== 'create' && (
-          <View style={styles.headerActions}>
-            <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.actionIcon}>
-              <Edit3 size={20} color={isEditing ? '#10b981' : '#6366f1'} />
+        <Text className="flex-1 text-xl font-extrabold text-white">
+          {id === "create" ? "New Driver" : "Driver Detail"}
+        </Text>
+        {id !== "create" && (
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              onPress={() => setIsEditing(!isEditing)}
+              className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
+            >
+              <Edit3 size={20} color={isEditing ? "#10b981" : "#6366f1"} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleDelete} style={styles.actionIcon}>
+            <TouchableOpacity
+              onPress={handleDelete}
+              className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
+            >
               <Trash2 size={20} color="#ef4444" />
             </TouchableOpacity>
           </View>
@@ -130,81 +151,100 @@ export default function DriverDetailScreen() {
       </View>
 
       {isEditing ? (
-        <DriverForm 
+        <DriverForm
           initialData={driver}
           onSubmit={handleSubmit}
           loading={loading}
         />
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.profileSection}>
-            <View style={styles.avatarLarge}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+          <View className="items-center py-8 bg-slate-800 rounded-b-[32px] border-b border-x border-white/5">
+            <View className="w-24 h-24 rounded-[32px] bg-indigo-500/10 justify-center items-center mb-4">
               <UserIcon size={48} color="#6366f1" />
             </View>
-            <Text style={styles.nameTextLarge}>{driver?.user.fullName}</Text>
+            <Text className="text-2xl font-bold text-slate-50 mb-2">{driver?.user.fullName}</Text>
             {status && (
-              <View style={[styles.statusBadge, { backgroundColor: `${status.color}20` }]}>
-                <View style={[styles.statusDot, { backgroundColor: status.color }]} />
-                <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+              <View
+                className="flex-row items-center px-3 py-1.5 rounded-xl gap-2"
+                style={{ backgroundColor: `${status.color}20` }}
+              >
+                <View
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: status.color }}
+                />
+                <Text
+                  className="text-xs font-extrabold uppercase"
+                  style={{ color: status.color }}
+                >
+                  {status.label}
+                </Text>
               </View>
             )}
           </View>
 
-          <View style={styles.contentContainer}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Contact Details</Text>
-              
-              <View style={styles.infoRow}>
+          <View className="p-5 gap-5">
+            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
+              <Text className="text-sm font-extrabold text-slate-400 uppercase tracking-wider mb-5">Contact Details</Text>
+
+              <View className="flex-row items-center gap-4 mb-5">
                 <Mail size={20} color="#64748b" />
                 <View>
-                  <Text style={styles.infoLabel}>Email</Text>
-                  <Text style={styles.infoValue}>{driver?.user.email}</Text>
+                  <Text className="text-xs text-slate-500 font-semibold">Email</Text>
+                  <Text className="text-base text-slate-50 font-bold">{driver?.user.email}</Text>
                 </View>
               </View>
 
-              <View style={styles.infoRow}>
+              <View className="flex-row items-center gap-4">
                 <Phone size={20} color="#64748b" />
                 <View>
-                  <Text style={styles.infoLabel}>Phone</Text>
-                  <Text style={styles.infoValue}>{driver?.user.phone || 'Not provided'}</Text>
+                  <Text className="text-xs text-slate-500 font-semibold">Phone</Text>
+                  <Text className="text-base text-slate-50 font-bold">
+                    {driver?.user.phone || "Not provided"}
+                  </Text>
                 </View>
               </View>
             </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>License Information</Text>
-              
-              <View style={styles.infoRow}>
+            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
+              <Text className="text-sm font-extrabold text-slate-400 uppercase tracking-wider mb-5">License Information</Text>
+
+              <View className="flex-row items-center gap-4 mb-5">
                 <ShieldCheck size={20} color="#64748b" />
                 <View>
-                  <Text style={styles.infoLabel}>Class</Text>
-                  <Text style={styles.infoValue}>{driver?.licenseClass || 'N/A'}</Text>
+                  <Text className="text-xs text-slate-500 font-semibold">Class</Text>
+                  <Text className="text-base text-slate-50 font-bold">
+                    {driver?.licenseClass || "N/A"}
+                  </Text>
                 </View>
               </View>
 
-              <View style={styles.infoRow}>
+              <View className="flex-row items-center gap-4">
                 <Calendar size={20} color="#64748b" />
                 <View>
-                  <Text style={styles.infoLabel}>Expiry Date</Text>
-                  <Text style={styles.infoValue}>{driver?.licenseExpiry ? new Date(driver.licenseExpiry).toLocaleDateString() : 'N/A'}</Text>
+                  <Text className="text-xs text-slate-500 font-semibold">Expiry Date</Text>
+                  <Text className="text-base text-slate-50 font-bold">
+                    {driver?.licenseExpiry
+                      ? new Date(driver.licenseExpiry).toLocaleDateString()
+                      : "N/A"}
+                  </Text>
                 </View>
               </View>
             </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Activity</Text>
-              <View style={styles.statsGrid}>
-                <View style={styles.statBox}>
-                  <Text style={styles.statValue}>24</Text>
-                  <Text style={styles.statLabel}>Trips</Text>
+            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
+              <Text className="text-sm font-extrabold text-slate-400 uppercase tracking-wider mb-5">Activity</Text>
+              <View className="flex-row gap-3">
+                <View className="flex-1 bg-white/[0.03] p-4 rounded-2xl items-center">
+                  <Text className="text-xl font-extrabold text-indigo-500">24</Text>
+                  <Text className="text-[11px] text-slate-500 font-bold mt-1">Trips</Text>
                 </View>
-                <View style={styles.statBox}>
-                  <Text style={styles.statValue}>4.8</Text>
-                  <Text style={styles.statLabel}>Rating</Text>
+                <View className="flex-1 bg-white/[0.03] p-4 rounded-2xl items-center">
+                  <Text className="text-xl font-extrabold text-indigo-500">4.8</Text>
+                  <Text className="text-[11px] text-slate-500 font-bold mt-1">Rating</Text>
                 </View>
-                <View style={styles.statBox}>
-                  <Text style={styles.statValue}>120h</Text>
-                  <Text style={styles.statLabel}>On Duty</Text>
+                <View className="flex-1 bg-white/[0.03] p-4 rounded-2xl items-center">
+                  <Text className="text-xl font-extrabold text-indigo-500">120h</Text>
+                  <Text className="text-[11px] text-slate-500 font-bold mt-1">On Duty</Text>
                 </View>
               </View>
             </View>
@@ -214,166 +254,3 @@ export default function DriverDetailScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-  },
-  loadingText: {
-    color: '#94a3b8',
-    fontSize: 16,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#fff',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  profileSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    backgroundColor: '#1e293b',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  avatarLarge: {
-    width: 96,
-    height: 96,
-    borderRadius: 32,
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  nameTextLarge: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#f8fafc',
-    marginBottom: 8,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    gap: 8,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-  },
-  contentContainer: {
-    padding: 20,
-    gap: 20,
-  },
-  section: {
-    backgroundColor: '#1e293b',
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 20,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginBottom: 20,
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    fontWeight: '600',
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#f8fafc',
-    fontWeight: '700',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    padding: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#6366f1',
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#64748b',
-    fontWeight: 'bold',
-    marginTop: 4,
-  },
-});

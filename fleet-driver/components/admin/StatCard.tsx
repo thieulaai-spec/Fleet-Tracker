@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Dimensions } from 'react-native';
 import { LucideIcon } from 'lucide-react-native';
 
 interface StatCardProps {
@@ -23,53 +23,22 @@ export const StatCard: React.FC<StatCardProps> = ({
   trendColor = '#10b981'
 }) => {
   return (
-    <View style={styles.card}>
-      <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
+    <View 
+      className="bg-slate-800 rounded-2xl p-4 mb-4 border border-white/5" 
+      style={{ width: cardWidth }}
+    >
+      <View 
+        className="w-10 h-10 rounded-xl justify-center items-center mb-3" 
+        style={{ backgroundColor: `${color}15` }}
+      >
         <Icon size={20} color={color} />
       </View>
-      <Text style={styles.value}>{value}</Text>
-      <Text style={styles.title}>{title}</Text>
+      <Text className="text-xl font-bold text-slate-50 mb-1">{value}</Text>
+      <Text className="text-[12px] text-slate-400 uppercase tracking-wider font-semibold">{title}</Text>
       {trend && (
-        <Text style={[styles.trend, { color: trendColor }]}>{trend}</Text>
+        <Text className="text-[11px] mt-2 font-bold" style={{ color: trendColor }}>{trend}</Text>
       )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#1e293b',
-    borderRadius: 20,
-    padding: 16,
-    width: cardWidth,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  value: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#f8fafc',
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 12,
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    fontWeight: '600',
-  },
-  trend: {
-    fontSize: 11,
-    marginTop: 8,
-    fontWeight: '700',
-  },
-});

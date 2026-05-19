@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import SignatureScreen, { SignatureViewRef } from 'react-native-signature-canvas';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, Check, RotateCcw } from 'lucide-react-native';
@@ -123,20 +123,23 @@ export default function SignatureCapture() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+    <View className="flex-1 bg-slate-950">
+      <View className="flex-row justify-between items-center px-5 pt-[60px] pb-5">
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          className="w-10 h-10 rounded-full bg-slate-800 justify-center items-center"
+        >
           <X color="#94a3b8" size={24} />
         </TouchableOpacity>
-        <Text style={styles.title}>Customer Signature</Text>
-        <View style={{ width: 24 }} />
+        <Text className="text-slate-50 text-lg font-bold">Customer Signature</Text>
+        <View className="w-6" />
       </View>
 
-      <View style={styles.instructions}>
-        <Text style={styles.instructionText}>Please sign below to confirm delivery</Text>
+      <View className="p-5 items-center">
+        <Text className="text-slate-400 text-base">Please sign below to confirm delivery</Text>
       </View>
 
-      <View style={styles.signatureContainer}>
+      <View className="flex-1 m-5 bg-slate-50 rounded-xl overflow-hidden border border-slate-700">
         <SignatureScreen
           ref={signatureRef}
           onOK={handleSignature}
@@ -149,14 +152,17 @@ export default function SignatureCapture() {
         />
       </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.clearButton} onPress={handleClear}>
+      <View className="flex-row p-5 pb-10 gap-[15px]">
+        <TouchableOpacity 
+          className="flex-1 h-[56px] rounded-[14px] bg-slate-800 flex-row justify-center items-center gap-2 border border-slate-700" 
+          onPress={handleClear}
+        >
           <RotateCcw size={20} color="#64748b" />
-          <Text style={styles.clearButtonText}>Clear</Text>
+          <Text className="text-slate-400 font-semibold text-base">Clear</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.confirmButton} 
+          className="flex-[2] h-[56px] rounded-[14px] bg-emerald-500 flex-row justify-center items-center gap-2" 
           onPress={handleConfirm}
           disabled={isUploading}
         >
@@ -165,7 +171,7 @@ export default function SignatureCapture() {
           ) : (
             <>
               <Check size={20} color="#fff" />
-              <Text style={styles.confirmButtonText}>Confirm Delivery</Text>
+              <Text className="text-white font-bold text-base">Confirm Delivery</Text>
             </>
           )}
         </TouchableOpacity>
@@ -190,86 +196,3 @@ const signatureStyle = `
     background-color: #f8fafc;
   }
 `;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1e293b',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    color: '#f8fafc',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  instructions: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  instructionText: {
-    color: '#94a3b8',
-    fontSize: 16,
-  },
-  signatureContainer: {
-    flex: 1,
-    margin: 20,
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: 20,
-    paddingBottom: 40,
-    gap: 15,
-  },
-  clearButton: {
-    flex: 1,
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: '#1e293b',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  clearButtonText: {
-    color: '#94a3b8',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  confirmButton: {
-    flex: 2,
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: '#10b981',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  confirmButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-});

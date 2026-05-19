@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   ActivityIndicator,
 } from 'react-native';
 import { Search, MapPin, X } from 'lucide-react-native';
@@ -101,11 +100,11 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.inputWrapper, error && styles.inputError]}>
-        <Search size={18} color="#64748b" style={styles.searchIcon} />
+    <View className="z-10 w-full">
+      <View className={`flex-row items-center bg-slate-900 rounded-2xl h-[52px] px-3 border border-white/5 ${error ? 'border-red-500' : ''}`}>
+        <Search size={18} color="#64748b" style={{ marginRight: 10 }} />
         <TextInput
-          style={styles.input}
+          className="flex-1 color-slate-50 text-base h-full"
           value={input}
           placeholder={placeholder}
           placeholderTextColor="#64748b"
@@ -113,32 +112,41 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           onFocus={() => input.length >= 3 && setShowSuggestions(true)}
         />
         {loading ? (
-          <ActivityIndicator size="small" color="#6366f1" style={styles.rightIcon} />
+          <ActivityIndicator size="small" color="#6366f1" className="p-1" />
         ) : input.length > 0 ? (
-          <TouchableOpacity onPress={clearInput} style={styles.rightIcon}>
+          <TouchableOpacity onPress={clearInput} className="p-1">
             <X size={18} color="#64748b" />
           </TouchableOpacity>
         ) : null}
       </View>
 
       {showSuggestions && suggestions.length > 0 && (
-        <View style={styles.suggestionsContainer}>
+        <View 
+          className="absolute top-14 left-0 right-0 bg-slate-800 rounded-2xl border border-white/10 max-h-[250px] z-50"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.3,
+            shadowRadius: 20,
+            elevation: 10,
+          }}
+        >
           <ScrollView
-            style={styles.suggestionsList}
+            className="rounded-2xl"
             keyboardShouldPersistTaps="handled"
           >
             {suggestions.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.suggestionItem}
+                className="flex-row p-3.5 border-b border-white/5 items-center"
                 onPress={() => handleSelect(item)}
               >
-                <MapPin size={16} color="#6366f1" style={styles.suggestionIcon} />
-                <View style={styles.suggestionTextContainer}>
-                  <Text style={styles.suggestionTitle} numberOfLines={1}>
+                <MapPin size={16} color="#6366f1" style={{ marginRight: 12 }} />
+                <View className="flex-1">
+                  <Text className="color-slate-50 text-[15px] font-semibold" numberOfLines={1}>
                     {item.text}
                   </Text>
-                  <Text style={styles.suggestionSubtitle} numberOfLines={1}>
+                  <Text className="color-slate-500 text-xs mt-0.5" numberOfLines={1}>
                     {item.place_name.replace(`${item.text}, `, '')}
                   </Text>
                 </View>
@@ -147,89 +155,8 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           </ScrollView>
         </View>
       )}
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && <Text className="color-red-500 text-xs font-semibold mt-1 ml-1">{error}</Text>}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    zIndex: 10,
-    width: '100%',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    height: 52,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  inputError: {
-    borderColor: '#ef4444',
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    color: '#f8fafc',
-    fontSize: 16,
-    height: '100%',
-  },
-  rightIcon: {
-    padding: 4,
-  },
-  suggestionsContainer: {
-    position: 'absolute',
-    top: 56,
-    left: 0,
-    right: 0,
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    maxHeight: 250,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-    zIndex: 100,
-  },
-  suggestionsList: {
-    borderRadius: 16,
-  },
-  suggestionItem: {
-    flexDirection: 'row',
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-    alignItems: 'center',
-  },
-  suggestionIcon: {
-    marginRight: 12,
-  },
-  suggestionTextContainer: {
-    flex: 1,
-  },
-  suggestionTitle: {
-    color: '#f8fafc',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  suggestionSubtitle: {
-    color: '#64748b',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-    marginLeft: 4,
-  },
-});

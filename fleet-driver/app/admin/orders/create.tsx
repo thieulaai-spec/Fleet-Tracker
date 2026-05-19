@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -30,49 +30,19 @@ export default function CreateOrderScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-slate-950" edges={['top']}>
+      <View className="flex-row items-center justify-between px-4 h-[60px] border-b border-white/5">
         <TouchableOpacity 
-          style={styles.backButton} 
+          className="w-10 h-10 rounded-xl bg-slate-800 justify-center items-center"
           onPress={() => router.back()}
         >
           <ChevronLeft size={24} color="#f8fafc" />
         </TouchableOpacity>
-        <Text style={styles.title}>New Order</Text>
-        <View style={{ width: 40 }} />
+        <Text className="text-xl font-extrabold text-slate-50 tracking-[0.5px]">New Order</Text>
+        <View className="w-10" />
       </View>
 
       <OrderForm onSubmit={handleSubmit} loading={loading} />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    height: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#1e293b',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#f8fafc',
-    letterSpacing: 0.5,
-  },
-});

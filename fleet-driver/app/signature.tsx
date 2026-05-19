@@ -50,7 +50,11 @@ export default function SignatureCapture() {
       });
 
       if (!uploadRes.ok) throw new Error('Failed to upload signature');
-      const { url: signatureUrl } = await uploadRes.json();
+      const resJson = await uploadRes.json();
+      const signatureUrl = resJson.data?.url || resJson.url;
+      if (!signatureUrl) {
+        throw new Error('No URL returned from server');
+      }
 
       // 3. Get location for audit
       const coords = await getCurrentLocation();

@@ -78,7 +78,11 @@ export default function CameraScreen() {
         throw new Error(errorMsg);
       }
       
-      const { url } = await response.json();
+      const resData = await response.json();
+      const url = resData.data?.url || resData.url;
+      if (!url) {
+        throw new Error('No URL returned from server');
+      }
 
       Toast.show({
         type: 'success',

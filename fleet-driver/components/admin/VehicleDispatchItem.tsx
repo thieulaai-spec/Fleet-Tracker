@@ -38,15 +38,6 @@ export const VehicleDispatchItem: React.FC<VehicleDispatchItemProps> = ({
       : isOptimal
         ? 'rgba(245, 158, 11, 0.3)'
         : 'rgba(255, 255, 255, 0.05)',
-    shadowColor: isSelected 
-      ? '#10b981' 
-      : isOptimal
-        ? '#f59e0b'
-        : 'transparent',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: isSelected || isOptimal ? 0.05 : 0,
-    shadowRadius: 12,
-    elevation: isSelected || isOptimal ? 2 : 0,
   };
 
   const iconBgStyle = {

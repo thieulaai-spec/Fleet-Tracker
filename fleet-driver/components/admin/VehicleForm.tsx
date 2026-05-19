@@ -61,8 +61,9 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ initialData, onSubmit,
         },
       });
 
-      if (response.data && response.data.url) {
-        return response.data.url;
+      const resData = response.data.data || response.data;
+      if (resData && resData.url) {
+        return resData.url;
       }
       throw new Error('No URL returned from server');
     } catch (err: any) {

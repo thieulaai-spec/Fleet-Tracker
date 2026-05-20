@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-05-20] - Mission Action Buttons UI Layout Fix
+### Fixed
+- **Invisible Action Buttons**: Resolved a critical layout rendering bug in the `MissionPanel` where action buttons (such as the gradient active **"Pickup"** button under 200m geofencing, Deploy Trip, Delivering, Proof of Delivery, and Finalize) would visually disappear (height collapsed to 0) despite remaining clickable. Fixed by moving height (`64px`) and borderRadius (`12px`) properties directly to the style object of the `<LinearGradient>` component, removing the `overflow: 'hidden'` constraint from the wrapper `<TouchableOpacity>`, and matching the robust layout hierarchy pattern proven by the SOS Button. This ensures the native gradient view renders with precise absolute heights immediately on the first layout pass, bypassing Expo flex-wrap dynamic style-compilation bugs and preventing layout collapses.
+
 ## [2026-05-19] - Order Details Runtime Bug Fixes
 ### Fixed
 - **Order Detail Bug & FlatList Keys**: Unwrapped NestJS backend response in fetchOrderById using `response.data.data || response.data` to prevent replacing Order objects with response wrappers. This completely fixes the TypeError `.slice` of undefined and FlatList duplicate key warnings on the admin orders lists.

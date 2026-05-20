@@ -10,6 +10,10 @@
   - Implemented axios error boundary mapping in `useProfileFlow.ts` for safety profile queries, bypassing calculation crashes for completed transport profiles without distance fields.
 
 ### Fixed
+- **Mobile (Driver App)**:
+  - Fixed a critical visual bug in `MissionPanel.tsx` where active orange/colored action buttons (Deploy Trip, Pickup, Delivering, Proof of Delivery, Finalize) utilizing `LinearGradient` components became completely invisible on the screen while remaining pressable.
+  - Swapped dynamic Tailwind class properties on third-party `<LinearGradient>` elements with robust inline styles (`style={{ width: '100%', height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}`) to completely bypass NativeWind compilation and tree-shaking limits on custom external components.
+  - Refactored the dynamic button render flow to completely strip out dynamic IIFE `(() => { ... })()` statements within the main JSX template, promoting flat rendering speed and compilation safety.
 - **Backend (API)**:
   - Fixed a critical logical issue in `TripsService` (`trips.service.ts`) where all order statuses linked to a trip were automatically forced to `OrderStatus.PICKED_UP` upon transitioning the parent trip status to `TripStatus.IN_PROGRESS`.
   - Refactored `TripsService.updateStatus` to keep order statuses unchanged (`OrderStatus.ASSIGNED`/`PENDING`) at the beginning of the trip, requiring the driver to manually mark them as picked up upon physical geofence arrival.

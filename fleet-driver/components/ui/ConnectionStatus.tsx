@@ -11,7 +11,7 @@ export function ConnectionStatus() {
     <BlurView
       intensity={80}
       tint="dark"
-      className="flex-row items-center px-4 py-2 rounded-full border border-white/10"
+      className="flex-row items-center px-2 py-2 rounded-full border border-white/10"
     >
       <View className={`w-2 h-2 rounded-full mr-2 ${isOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
       {isOnline ? (

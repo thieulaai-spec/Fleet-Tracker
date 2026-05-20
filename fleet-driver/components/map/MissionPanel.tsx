@@ -18,9 +18,9 @@ interface MissionPanelProps {
   onProofOfDelivery?: () => void;
 }
 
-export const MissionPanel: React.FC<MissionPanelProps> = ({ 
-  activeTrip, 
-  currentOrder, 
+export const MissionPanel: React.FC<MissionPanelProps> = ({
+  activeTrip,
+  currentOrder,
   progressPercent = 0,
   location,
   onNavigate,
@@ -44,8 +44,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
   const renderActionButton = () => {
     if (activeTrip.status === TripStatus.ACCEPTED) {
       return (
-        <TouchableOpacity 
-          className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-indigo-500/30"
+        <TouchableOpacity
+          style={{ flex: 1, width: '100%' }}
+          className="shadow-2xl shadow-indigo-500/30"
           onPress={() => onUpdateTripStatus(TripStatus.IN_PROGRESS)}
           activeOpacity={0.8}
         >
@@ -53,7 +54,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
             colors={['#6366f1', '#4f46e5']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={{ width: '100%', height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+            style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
           >
             <Truck size={20} color="#fff" strokeWidth={2.5} />
             <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Deploy Trip</Text>
@@ -65,8 +66,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
     if (activeTrip.status === TripStatus.IN_PROGRESS) {
       if (!currentOrder) {
         return (
-          <TouchableOpacity 
-            className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-blue-500/30"
+          <TouchableOpacity
+            style={{ flex: 1, width: '100%' }}
+            className="shadow-2xl shadow-blue-500/30"
             onPress={() => onUpdateTripStatus(TripStatus.COMPLETED)}
             activeOpacity={0.8}
           >
@@ -74,7 +76,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               colors={['#3b82f6', '#2563eb']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ width: '100%', height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+              style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
             >
               <CheckCircle2 size={20} color="#fff" strokeWidth={2.5} />
               <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Finalize</Text>
@@ -86,8 +88,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
       if (currentOrder.status === OrderStatus.ASSIGNED || currentOrder.status === OrderStatus.PENDING) {
         if (isWithinPickupRange) {
           return (
-            <TouchableOpacity 
-              className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-amber-500/30"
+            <TouchableOpacity
+              style={{ flex: 1, width: '100%' }}
+              className="shadow-2xl shadow-amber-500/30"
               onPress={() => onUpdateOrderStatus(currentOrder.id, OrderStatus.PICKED_UP)}
               activeOpacity={0.8}
             >
@@ -95,7 +98,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
                 colors={['#f59e0b', '#d97706']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={{ width: '100%', height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+                style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
               >
                 <Truck size={20} color="#fff" strokeWidth={2.5} />
                 <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Pickup</Text>
@@ -105,8 +108,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
         } else {
           const distText = pickupDistance !== null ? `${Math.round(pickupDistance)}m` : 'Unknown distance';
           return (
-            <TouchableOpacity 
-              className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-800"
+            <TouchableOpacity
+              style={{ flex: 1, width: '100%' }}
+              className="shadow-2xl border border-slate-700 bg-slate-800"
               onPress={() => {
                 Alert.alert(
                   'Proximity Warning',
@@ -115,7 +119,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <View className="flex-1 flex-row justify-center items-center gap-2 bg-slate-800">
+              <View style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }} className="bg-slate-800">
                 <Truck size={20} color="#64748b" strokeWidth={2.5} />
                 <Text className="text-slate-400 font-bold text-[12px] uppercase tracking-wider" numberOfLines={1}>
                   Pickup ({distText})
@@ -128,8 +132,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
 
       if (currentOrder.status === OrderStatus.PICKED_UP) {
         return (
-          <TouchableOpacity 
-            className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-violet-500/30"
+          <TouchableOpacity
+            style={{ flex: 1, width: '100%' }}
+            className="shadow-2xl shadow-violet-500/30"
             onPress={() => onUpdateOrderStatus(currentOrder.id, OrderStatus.DELIVERING)}
             activeOpacity={0.8}
           >
@@ -137,7 +142,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               colors={['#8b5cf6', '#7c3aed']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ width: '100%', height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+              style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
             >
               <Navigation size={20} color="#fff" strokeWidth={2.5} />
               <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Delivering</Text>
@@ -147,8 +152,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
       }
 
       return (
-        <TouchableOpacity 
-          className="flex-1 h-16 rounded-xl overflow-hidden shadow-2xl shadow-emerald-500/30"
+        <TouchableOpacity
+          style={{ flex: 1, width: '100%' }}
+          className="shadow-2xl shadow-emerald-500/30"
           onPress={onProofOfDelivery}
           activeOpacity={0.8}
         >
@@ -156,7 +162,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
             colors={['#10b981', '#059669']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={{ width: '100%', height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+            style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
           >
             <CheckCircle2 size={20} color="#fff" strokeWidth={2.5} />
             <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Proof of Delivery</Text>
@@ -174,10 +180,10 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
         <View className="p-6 bg-slate-900/60">
           {/* Mission Progress Indicator */}
           <View className="absolute top-0 left-0 right-0 h-1.5 bg-white/5">
-             <View 
-              className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.9)]" 
+            <View
+              className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.9)]"
               style={{ width: `${progressPercent}%` }}
-             />
+            />
           </View>
 
           <View className="flex-row items-center mb-8 pt-3">
@@ -194,20 +200,20 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
                 {currentOrder?.status === OrderStatus.PICKED_UP || currentOrder?.status === OrderStatus.DELIVERING ? 'Delivery Point' : 'Pickup Point'}
               </Text>
               <Text className="text-white text-2xl font-black tracking-tight" numberOfLines={1}>
-                {currentOrder 
-                  ? (currentOrder.status === OrderStatus.PICKED_UP || currentOrder.status === OrderStatus.DELIVERING 
-                    ? currentOrder.address 
+                {currentOrder
+                  ? (currentOrder.status === OrderStatus.PICKED_UP || currentOrder.status === OrderStatus.DELIVERING
+                    ? currentOrder.address
                     : currentOrder.pickupAddress)
                   : 'Mission Accomplished'}
               </Text>
               {currentOrder && (
                 <View className="flex-row items-center gap-2 mt-2">
                   <View className="w-6 h-6 rounded-lg bg-white/5 items-center justify-center">
-                      <User size={12} color="#94a3b8" />
+                    <User size={12} color="#94a3b8" />
                   </View>
                   <Text className="text-slate-400 text-sm font-bold tracking-tight">
-                    {currentOrder.customerName && currentOrder.customerName !== 'Unknown Customer' 
-                      ? currentOrder.customerName 
+                    {currentOrder.customerName && currentOrder.customerName !== 'Unknown Customer'
+                      ? currentOrder.customerName
                       : 'Elite Fleet Client'}
                   </Text>
                   <View className="w-1.5 h-1.5 rounded-full bg-slate-700 mx-1" />
@@ -216,16 +222,16 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
                 </View>
               )}
             </View>
-            
+
             <View className="flex-row gap-3">
-               <TouchableOpacity 
+              <TouchableOpacity
                 className="bg-white/5 w-12 h-12 rounded-[18px] justify-center items-center border border-white/10 shadow-lg"
                 onPress={onNavigate}
                 activeOpacity={0.7}
               >
                 <Navigation size={22} color="#fff" strokeWidth={2} />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="bg-white/5 w-12 h-12 rounded-[18px] justify-center items-center border border-white/10 shadow-lg"
                 activeOpacity={0.7}
                 onPress={() => currentOrder?.customerPhone && Linking.openURL(`tel:${currentOrder.customerPhone}`)}

@@ -58,7 +58,7 @@ export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, 
                     </View>
                   </View>
                   <Text className="text-white font-black text-xl tracking-tighter uppercase">Mission Intel</Text>
-                  <Text className="text-slate-500 text-[9px] font-black uppercase tracking-[1.5px] mt-0.5">
+                  <Text className="text-[#c7c7c7] text-[9px] font-black uppercase tracking-[1.5px] mt-0.5">
                     ID #{activeTrip.id.substring(0, 8).toUpperCase()}
                   </Text>
                 </View>
@@ -72,7 +72,7 @@ export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, 
                   <Clock size={18} color="#818cf8" />
                 </View>
                 <View>
-                  <Text className="text-slate-500 text-[9px] font-black uppercase tracking-wider">ETA</Text>
+                  <Text className="text-[#c7c7c7] text-[9px] font-black uppercase tracking-wider">ETA</Text>
                   <Text className="text-slate-100 text-sm font-black tracking-tight">{formattedETA}</Text>
                 </View>
               </View>
@@ -81,7 +81,7 @@ export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, 
                   <Target size={18} color="#818cf8" />
                 </View>
                 <View>
-                  <Text className="text-slate-500 text-[9px] font-black uppercase tracking-wider">Est. Distance</Text>
+                  <Text className="text-[#c7c7c7] text-[9px] font-black uppercase tracking-wider">Distance</Text>
                   <Text className="text-slate-100 text-sm font-black tracking-tight">{formattedDistance}</Text>
                 </View>
               </View>

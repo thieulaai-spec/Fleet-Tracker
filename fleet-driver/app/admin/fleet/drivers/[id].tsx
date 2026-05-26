@@ -210,8 +210,15 @@ export default function DriverDetailScreen() {
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
           <View className="items-center py-8 bg-slate-800 rounded-b-[32px] border-b border-x border-white/5">
-            <View className="w-24 h-24 rounded-[32px] bg-indigo-500/10 justify-center items-center mb-4">
-              <UserIcon size={48} color="#6366f1" />
+            <View className="w-24 h-24 rounded-[32px] bg-indigo-500/10 justify-center items-center mb-4 overflow-hidden">
+              {driver?.avatarUrl || driver?.user?.avatarUrl ? (
+                <Image 
+                  source={{ uri: driver.avatarUrl || driver.user.avatarUrl }} 
+                  className="w-full h-full" 
+                />
+              ) : (
+                <UserIcon size={48} color="#6366f1" />
+              )}
             </View>
             <Text className="text-2xl font-bold text-slate-50 mb-2">{driver?.user.fullName}</Text>
             {status && (

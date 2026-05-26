@@ -17,7 +17,7 @@ import {
   AlertCircle,
   Map as MapIcon
 } from 'lucide-react-native';
-import { Order, OrderStatus } from '../../store/useOrderStore';
+import { Order, OrderStatus } from '../../../store/useOrderStore';
 import { MapPicker } from './MapPicker';
 
 interface OrderFormProps {

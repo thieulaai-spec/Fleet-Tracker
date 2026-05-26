@@ -21,7 +21,7 @@ import {
   Cpu
 } from 'lucide-react-native';
 import { useFleetStore, Vehicle, VehicleStatus, VehicleType } from '../../../../store/useFleetStore';
-import { VehicleForm } from '../../../../components/admin/VehicleForm';
+import { VehicleForm } from '../../../../components/admin/fleet/VehicleForm';
 
 const STATUS_CONFIG = {
   [VehicleStatus.AVAILABLE]: { label: 'Available', color: '#10b981' },

@@ -11,7 +11,7 @@ import {
   Truck,
   Activity
 } from 'lucide-react-native';
-import { ReportCard } from '../../../components/admin/ReportCard';
+import { ReportCard } from '../../../components/admin/dashboard/ReportCard';
 
 export default function ReportsOverviewScreen() {
   const router = useRouter();

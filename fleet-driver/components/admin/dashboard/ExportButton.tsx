@@ -3,7 +3,7 @@ import { TouchableOpacity, ActivityIndicator, Text, View } from 'react-native';
 import { FileText, Share2 } from 'lucide-react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useAuthStore } from '../../../store/useAuthStore';
 import Toast from 'react-native-toast-message';
 
 interface ExportButtonProps {

@@ -50,6 +50,7 @@ interface TripState {
   rejectTrip: (id: string) => Promise<void>;
   updateTripStatus: (id: string, status: TripStatus) => Promise<void>;
   updateOrderStatus: (id: string, status: OrderStatus, options?: { photoUrl?: string, signatureUrl?: string, actionLat?: number, actionLng?: number }) => Promise<void>;
+  submitOrderVerification: (orderId: string, data: { step: string; fingerprintStatus: boolean; facePhotoUrl?: string; cargoPhotoUrl?: string; latitude?: number; longitude?: number }) => Promise<void>;
 }
 
 export const useTripStore = create<TripState>()(
@@ -160,6 +161,30 @@ export const useTripStore = create<TripState>()(
           await get().fetchTrips();
         } catch (error: any) {
           const message = formatError(error, 'Failed to update order status');
+          set({ error: message, isLoading: false });
+          throw new Error(message);
+        }
+      },
+
+      submitOrderVerification: async (orderId: string, verificationData: any) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authFetch(`/orders/${orderId}/verifications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(verificationData),
+          });
+
+          if (!response.ok) {
+            const errorMsg = await getFetchErrorMessage(response, 'Failed to submit verification');
+            throw new Error(errorMsg);
+          }
+          
+          await get().fetchTrips();
+        } catch (error: any) {
+          const message = formatError(error, 'Failed to submit verification');
           set({ error: message, isLoading: false });
           throw new Error(message);
         }

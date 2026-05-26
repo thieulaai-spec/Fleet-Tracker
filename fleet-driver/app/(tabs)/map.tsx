@@ -12,6 +12,7 @@ import { NoActiveTrip } from '../../components/trip/NoActiveTrip';
 import { MissionDashboard } from '../../components/map/MissionDashboard';
 import { MapControls } from '../../components/map/MapControls';
 import { MissionPanel } from '../../components/map/MissionPanel';
+import { VerificationModal } from '../../components/trip/VerificationModal';
 import { useMapFlow } from '../../hooks/map/useMapFlow';
 
 export default function ActiveTripMap() {
@@ -25,6 +26,7 @@ export default function ActiveTripMap() {
     handleStatusUpdate,
     handleOrderStatusUpdate,
     handleProofOfDelivery,
+    handleCheckpoint,
     centerOnLocation,
     toggleMapType,
     openNavigation,
@@ -34,6 +36,10 @@ export default function ActiveTripMap() {
     setIsFollowing,
     isNavMode,
     setIsNavMode,
+    isVerificationVisible,
+    setIsVerificationVisible,
+    verificationStep,
+    handleVerificationSubmit,
   } = useMapFlow();
 
   if (!activeTrip) {
@@ -162,8 +168,19 @@ export default function ActiveTripMap() {
         onUpdateTripStatus={handleStatusUpdate}
         onUpdateOrderStatus={handleOrderStatusUpdate}
         onProofOfDelivery={handleProofOfDelivery}
+        onCheckpoint={handleCheckpoint}
         onNavigate={openNavigation}
       />
+
+      {currentOrder && (
+        <VerificationModal
+          visible={isVerificationVisible}
+          onClose={() => setIsVerificationVisible(false)}
+          orderId={currentOrder.id}
+          step={verificationStep}
+          onSubmit={handleVerificationSubmit}
+        />
+      )}
     </View>
   );
 }

@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Calendar, Download, TrendingUp, Navigation, Truck } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { useReportStore } from '../../../store/useReportStore';
-import { ExportButton } from '../../../components/admin/ExportButton';
+import { ExportButton } from '../../../components/admin/dashboard/ExportButton';
 
 const screenWidth = Dimensions.get('window').width;
 

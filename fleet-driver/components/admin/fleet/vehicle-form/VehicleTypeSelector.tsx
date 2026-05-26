@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Truck } from 'lucide-react-native';
-import { VehicleType } from '../../../store/useFleetStore';
+import { VehicleType } from '../../../../store/useFleetStore';
 
 interface Props {
   type: VehicleType;

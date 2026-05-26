@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Package, MapPin, Calendar, ChevronRight } from 'lucide-react-native';
-import { Order } from '../../store/useOrderStore';
+import { Order } from '../../../store/useOrderStore';
 
 interface OrderDispatchItemProps {
   order: Order;

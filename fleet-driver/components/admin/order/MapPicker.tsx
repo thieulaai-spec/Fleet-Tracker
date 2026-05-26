@@ -9,7 +9,7 @@ import {
   ScrollView, 
   Keyboard 
 } from 'react-native';
-import { MapComponent, MarkerComponent, PROVIDER_GOOGLE } from '../map/MapComponents';
+import { MapComponent, MarkerComponent, PROVIDER_GOOGLE } from '../../map/MapComponents';
 import { MapPin, Check, X, Target, Search } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { BlurView } from 'expo-blur';

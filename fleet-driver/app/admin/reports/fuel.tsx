@@ -6,7 +6,7 @@ import { ArrowLeft, Fuel, TrendingUp, DollarSign, RefreshCw, Activity } from 'lu
 import { useReportStore } from '../../../store/useReportStore';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
-import { ExportButton } from '../../../components/admin/ExportButton';
+import { ExportButton } from '../../../components/admin/dashboard/ExportButton';
 
 const screenWidth = Dimensions.get('window').width;
 

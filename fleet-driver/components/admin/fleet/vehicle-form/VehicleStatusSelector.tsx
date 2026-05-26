@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { VehicleStatus } from '../../../store/useFleetStore';
+import { VehicleStatus } from '../../../../store/useFleetStore';
 
 interface Props {
   status: VehicleStatus;

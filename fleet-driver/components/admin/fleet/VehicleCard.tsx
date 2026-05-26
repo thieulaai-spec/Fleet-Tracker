@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Truck, User as UserIcon, Settings2, ChevronRight } from 'lucide-react-native';
-import { Vehicle, VehicleStatus, VehicleType } from '../../store/useFleetStore';
+import { Vehicle, VehicleStatus, VehicleType } from '../../../store/useFleetStore';
 
 const VEHICLE_STATUS_CONFIG = {
   [VehicleStatus.AVAILABLE]: { label: 'Available', color: '#10b981' },

@@ -28,8 +28,8 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { useFleetStore, Driver, Vehicle, DriverStatus, VehicleStatus, VehicleType } from '../../store/useFleetStore';
 
-import { DriverCard } from '../../components/admin/DriverCard';
-import { VehicleCard } from '../../components/admin/VehicleCard';
+import { DriverCard } from '../../components/admin/fleet/DriverCard';
+import { VehicleCard } from '../../components/admin/fleet/VehicleCard';
 
 const DRIVER_STATUS_CONFIG = {
   [DriverStatus.AVAILABLE]: { label: 'Available', color: '#10b981' },

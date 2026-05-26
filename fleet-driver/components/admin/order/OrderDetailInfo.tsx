@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { MapPin, Scale, Calendar, Package, Clock } from 'lucide-react-native';
-import { Order } from '../../store/useOrderStore';
+import { Order } from '../../../store/useOrderStore';
 
 interface OrderDetailInfoProps {
   order: Order;

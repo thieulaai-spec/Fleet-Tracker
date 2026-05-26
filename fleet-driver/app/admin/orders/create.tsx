@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { Stack, useRouter } from 'expo-router';
-import { OrderForm } from '../../../components/admin/OrderForm';
+import { OrderForm } from '../../../components/admin/order/OrderForm';
 import { useOrderStore } from '../../../store/useOrderStore';
 import Toast from 'react-native-toast-message';
 

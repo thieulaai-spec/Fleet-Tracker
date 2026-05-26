@@ -1,16 +1,23 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, TextInput, FlatList, Keyboard } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Keyboard,
+} from 'react-native';
 import { MapComponent, PROVIDER_GOOGLE } from '../../components/map/MapComponents';
 import { FleetMarker } from '../../components/map/FleetMarker';
 import { useFleetTrackingStore } from '../../store/useFleetTrackingStore';
-import { Layers, Maximize, Search, Truck, User, Navigation } from 'lucide-react-native';
-import { BlurView } from 'expo-blur';
+import { Layers, Maximize } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
-
-const normalizePlate = (plate: string) => {
-  return plate.toLowerCase().replace(/[^a-z0-9]/g, '');
-};
+import { authFetch } from '../../lib/authFetch';
+import { normalizePlate } from '../../components/admin/tracking/trackingUtils';
+import { TrackingHeader } from '../../components/admin/tracking/TrackingHeader';
+import { SelectedVehicleCard } from '../../components/admin/tracking/SelectedVehicleCard';
+import { ProofDetailsModal } from '../../components/admin/tracking/ProofDetailsModal';
+import { LightboxModal } from '../../components/admin/tracking/LightboxModal';
 
 export default function AdminTrackingScreen() {
   const mapRef = useRef<any>(null);
@@ -19,6 +26,13 @@ export default function AdminTrackingScreen() {
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('standard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+
+  // Verification details states for mobile admin
+  const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [activeTrip, setActiveTrip] = useState<any | null>(null);
+  const [verifications, setVerifications] = useState<any[]>([]);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const vehicleList = useMemo(() => Object.values(vehicles), [vehicles]);
   const selectedVehicle = selectedVehicleId ? vehicles[selectedVehicleId] : null;
@@ -96,6 +110,28 @@ export default function AdminTrackingScreen() {
     setMapType(types[nextIndex]);
   }, [mapType]);
 
+  const fetchActiveTripDetails = async (tripId: string) => {
+    setIsFetchingDetails(true);
+    try {
+      const tripRes = await authFetch(`/trips/${tripId}`);
+      if (tripRes.ok) {
+        const tripData = await tripRes.json();
+        setActiveTrip(tripData?.data ?? tripData);
+      }
+      
+      const verifRes = await authFetch(`/trips/${tripId}/verifications`);
+      if (verifRes.ok) {
+        const verifData = await verifRes.json();
+        setVerifications(verifData?.data ?? verifData);
+      }
+      setIsDetailsVisible(true);
+    } catch (err) {
+      console.log('Error fetching live tracking detail:', err);
+    } finally {
+      setIsFetchingDetails(false);
+    }
+  };
+
   return (
     <View className="flex-1 bg-black">
       <StatusBar style="light" />
@@ -126,164 +162,57 @@ export default function AdminTrackingScreen() {
         ))}
       </MapComponent>
 
-      {/* Floating Header */}
-      <SafeAreaView className="absolute inset-0 p-4" pointerEvents="box-none">
-        <BlurView intensity={80} tint="dark" className="p-4 rounded-[20px] overflow-hidden border border-white/10">
-          <View className="flex-row justify-between items-center mb-3">
-            <View className="flex-row items-center gap-2">
-              <View className="w-2 h-2 rounded-full bg-red-500" />
-              <Text className="text-white text-lg font-extrabold tracking-wider">Fleet Live</Text>
-            </View>
-            <Text className="text-slate-400 text-xs mt-0.5">
-              {vehicleList.length} active vehicles
-            </Text>
-          </View>
+      {/* Floating Header & Search */}
+      <TrackingHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        isSearching={isSearching}
+        setIsSearching={setIsSearching}
+        vehicleList={vehicleList}
+        filteredVehicles={filteredVehicles}
+        onSelectVehicle={setSelectedVehicleId}
+      />
 
-          <View className="flex-row items-center bg-white/8 rounded-xl px-3 h-10 border border-white/5">
-            <Search size={18} color="#94a3b8" className="mr-2" />
-            <TextInput
-              className="flex-1 text-white text-sm py-0"
-              placeholder="Search plate or driver..."
-              placeholderTextColor="#64748b"
-              value={searchQuery}
-              onChangeText={(text) => {
-                setSearchQuery(text);
-                setIsSearching(true);
-              }}
-              onFocus={() => setIsSearching(true)}
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-            {isSearching && (
-              <TouchableOpacity onPress={() => {
-                setSearchQuery('');
-                setIsSearching(false);
-                Keyboard.dismiss();
-              }}>
-                <Text className="text-indigo-500 text-xs font-semibold ml-2">
-                  {searchQuery.length > 0 ? 'Clear' : 'Cancel'}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </BlurView>
+      {/* Map Controls */}
+      <View className="absolute right-4 top-[170px] gap-3">
+        <TouchableOpacity className="w-12 h-12 rounded-full bg-slate-900/80 items-center justify-center border border-white/10" onPress={toggleMapType}>
+          <Layers size={22} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity className="w-12 h-12 rounded-full bg-slate-900/80 items-center justify-center border border-white/10" onPress={fitFleet}>
+          <Maximize size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
-        {/* Search Results Dropdown */}
-        {isSearching && (
-          <BlurView intensity={95} tint="dark" className="mt-2 rounded-2xl overflow-hidden border border-white/10 shadow-lg shadow-black/30 z-[999]">
-            <FlatList
-              data={filteredVehicles}
-              keyExtractor={(item) => item.id}
-              keyboardShouldPersistTaps="handled"
-              className="max-h-[220px]"
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className="flex-row justify-between items-center py-3 px-4 border-b border-white/5"
-                  onPress={() => {
-                    setSelectedVehicleId(item.id);
-                    setSearchQuery('');
-                    setIsSearching(false);
-                    Keyboard.dismiss();
-                  }}
-                >
-                  <View className="flex-row items-center gap-3 flex-1">
-                    <Truck size={18} color={getStatusColor(item.status)} />
-                    <View className="flex-1">
-                      <Text className="text-white text-sm font-bold">{item.licensePlate}</Text>
-                      <Text className="text-slate-400 text-xs mt-0.5">{item.driverName}</Text>
-                    </View>
-                  </View>
-                  <View className="flex-row items-center gap-1.5">
-                    <View className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getStatusColor(item.status) }} />
-                    <Text className="text-[10px] font-bold" style={{ color: getStatusColor(item.status) }}>
-                      {item.status.replace('_', ' ').toUpperCase()}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <View className="p-5 items-center">
-                  <Text className="text-slate-500 text-sm">No vehicles match search</Text>
-                </View>
-              }
-            />
-          </BlurView>
-        )}
+      {/* Selected Vehicle Card */}
+      <SelectedVehicleCard
+        selectedVehicle={selectedVehicle}
+        onClose={() => setSelectedVehicleId(null)}
+        isFetchingDetails={isFetchingDetails}
+        onFetchDetails={fetchActiveTripDetails}
+      />
 
-        {/* Map Controls */}
-        <View className="absolute right-4 top-[170px] gap-3">
-          <TouchableOpacity className="w-12 h-12 rounded-full bg-slate-900/80 items-center justify-center border border-white/10" onPress={toggleMapType}>
-            <Layers size={22} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity className="w-12 h-12 rounded-full bg-slate-900/80 items-center justify-center border border-white/10" onPress={fitFleet}>
-            <Maximize size={22} color="#fff" />
-          </TouchableOpacity>
+      {isLoading && vehicleList.length === 0 && (
+        <View className="absolute inset-0 bg-slate-900/60 items-center justify-center gap-4">
+          <ActivityIndicator size="large" color="#6366f1" />
+          <Text className="text-slate-400 text-base">Connecting to fleet...</Text>
         </View>
+      )}
 
-        {/* Selected Vehicle Card */}
-        {selectedVehicle && (
-          <BlurView 
-            intensity={95} 
-            tint="dark" 
-            className="absolute left-4 right-4 rounded-3xl overflow-hidden p-5 border border-white/15 shadow-2xl shadow-black/30"
-            style={{ bottom: 112 }}
-          >
-            <View className="flex-row justify-between items-center mb-4">
-              <View className="flex-row items-center gap-2">
-                <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStatusColor(selectedVehicle.status) }} />
-                <Text className="text-white text-xl font-extrabold">{selectedVehicle.licensePlate}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setSelectedVehicleId(null)}>
-                <Text className="text-slate-400 text-sm">Close</Text>
-              </TouchableOpacity>
-            </View>
+      {/* MOBILE ADMIN PROOF DETAILS MODAL */}
+      <ProofDetailsModal
+        visible={isDetailsVisible}
+        onClose={() => setIsDetailsVisible(false)}
+        selectedVehicle={selectedVehicle}
+        activeTrip={activeTrip}
+        verifications={verifications}
+        onSelectImage={setLightboxImage}
+      />
 
-            <View className="gap-3 mb-5">
-              <View className="flex-row justify-between">
-                <View className="flex-row items-center gap-2 flex-1">
-                  <User size={16} color="#94a3b8" />
-                  <Text className="text-slate-100 text-sm font-medium">{selectedVehicle.driverName}</Text>
-                </View>
-                <View className="flex-row items-center gap-2 flex-1">
-                  <Navigation size={16} color="#94a3b8" />
-                  <Text className="text-slate-100 text-sm font-medium">{selectedVehicle.speed} km/h</Text>
-                </View>
-              </View>
-
-              <View className="flex-row justify-between">
-                <View className="flex-row items-center gap-2 flex-1">
-                  <Truck size={16} color="#94a3b8" />
-                  <Text className="text-slate-100 text-sm font-medium">{selectedVehicle.status.replace('_', ' ').toUpperCase()}</Text>
-                </View>
-                <View className="flex-row items-center gap-2 flex-1">
-                  <Text className="text-slate-500 text-xs">Last update: </Text>
-                  <Text className="text-slate-100 text-sm font-medium">Just now</Text>
-                </View>
-              </View>
-            </View>
-
-            <TouchableOpacity className="bg-indigo-500 py-3.5 rounded-2xl items-center">
-              <Text className="text-white font-bold text-base">View Details</Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
-
-        {isLoading && vehicleList.length === 0 && (
-          <View className="absolute inset-0 bg-slate-900/60 items-center justify-center gap-4">
-            <ActivityIndicator size="large" color="#6366f1" />
-            <Text className="text-slate-400 text-base">Connecting to fleet...</Text>
-          </View>
-        )}
-      </SafeAreaView>
+      {/* MOBILE LIGHTBOX */}
+      <LightboxModal
+        imageUrl={lightboxImage}
+        onClose={() => setLightboxImage(null)}
+      />
     </View>
   );
 }
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'available': return '#10b981';
-    case 'on_trip': return '#6366f1';
-    case 'maintenance': return '#f59e0b';
-    default: return '#64748b';
-  }
-};

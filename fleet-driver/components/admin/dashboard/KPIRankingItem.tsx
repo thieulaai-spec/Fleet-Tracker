@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Star, TrendingUp, Award } from 'lucide-react-native';
-import { DriverKPI } from '../../store/useReportStore';
+import { DriverKPI } from '../../../store/useReportStore';
 
 interface KPIRankingItemProps {
   kpi: DriverKPI;

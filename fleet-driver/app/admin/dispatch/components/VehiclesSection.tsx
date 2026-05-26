@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { AlertCircle, Sparkles } from 'lucide-react-native';
 import { Vehicle } from '../../../../store/useFleetStore';
-import { VehicleDispatchItem } from '../../../../components/admin/VehicleDispatchItem';
+import { VehicleDispatchItem } from '../../../../components/admin/dispatch/VehicleDispatchItem';
 
 interface SuggestedVehicle {
   vehicle: Vehicle;

@@ -18,12 +18,12 @@ import {
 } from 'lucide-react-native';
 import { useOrderStore, OrderStatus, Order } from '../../../store/useOrderStore';
 import { useFleetStore } from '../../../store/useFleetStore';
-import { OrderForm } from '../../../components/admin/OrderForm';
-import { VehicleDispatchItem } from '../../../components/admin/VehicleDispatchItem';
-import { OrderDetailHeader } from '../../../components/admin/OrderDetailHeader';
-import { OrderDetailMap } from '../../../components/admin/OrderDetailMap';
-import { AssignedTripCard } from '../../../components/admin/AssignedTripCard';
-import { OrderDetailInfo } from '../../../components/admin/OrderDetailInfo';
+import { OrderForm } from '../../../components/admin/order/OrderForm';
+import { VehicleDispatchItem } from '../../../components/admin/dispatch/VehicleDispatchItem';
+import { OrderDetailHeader } from '../../../components/admin/order/OrderDetailHeader';
+import { OrderDetailMap } from '../../../components/admin/order/OrderDetailMap';
+import { AssignedTripCard } from '../../../components/admin/dispatch/AssignedTripCard';
+import { OrderDetailInfo } from '../../../components/admin/order/OrderDetailInfo';
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams();

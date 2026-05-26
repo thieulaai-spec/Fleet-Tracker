@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Truck, User, Gauge, ChevronRight, Sparkles } from 'lucide-react-native';
-import { Vehicle } from '../../store/useFleetStore';
+import { Vehicle } from '../../../store/useFleetStore';
 
 interface VehicleDispatchItemProps {
   vehicle: Vehicle;

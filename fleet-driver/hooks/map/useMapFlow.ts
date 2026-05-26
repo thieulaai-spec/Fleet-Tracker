@@ -22,7 +22,11 @@ export const useMapFlow = () => {
   const activeTrip = useTripStore(state => state.activeTrip);
   const updateTripStatus = useTripStore(state => state.updateTripStatus);
   const updateOrderStatus = useTripStore(state => state.updateOrderStatus);
+  const submitOrderVerification = useTripStore(state => state.submitOrderVerification);
   const fetchTrips = useTripStore(state => state.fetchTrips);
+  
+  const [isVerificationVisible, setIsVerificationVisible] = useState(false);
+  const [verificationStep, setVerificationStep] = useState<'accept' | 'pickup' | 'checkpoint' | 'delivery'>('accept');
   
   const { location, errorMsg } = useLocationTracking(activeTrip);
   
@@ -127,23 +131,28 @@ export const useMapFlow = () => {
         { 
           text: 'Confirm', 
           onPress: async () => {
-            try {
-              await updateTripStatus(activeTrip.id, newStatus);
-              socketService.emit('trip:status_change', {
-                tripId: activeTrip.id,
-                status: newStatus
-              });
-              Toast.show({
-                type: 'success',
-                text1: 'Status Updated',
-                text2: `Trip is now ${newStatus}`
-              });
-            } catch (err: any) {
-              Toast.show({
-                type: 'error',
-                text1: 'Update Failed',
-                text2: err.message
-              });
+            if (newStatus === TripStatus.IN_PROGRESS) {
+              setVerificationStep('accept');
+              setIsVerificationVisible(true);
+            } else {
+              try {
+                await updateTripStatus(activeTrip.id, newStatus);
+                socketService.emit('trip:status_change', {
+                  tripId: activeTrip.id,
+                  status: newStatus
+                });
+                Toast.show({
+                  type: 'success',
+                  text1: 'Status Updated',
+                  text2: `Trip is now ${newStatus}`
+                });
+              } catch (err: any) {
+                Toast.show({
+                  type: 'error',
+                  text1: 'Update Failed',
+                  text2: err.message
+                });
+              }
             }
           }
         },
@@ -203,26 +212,31 @@ export const useMapFlow = () => {
         { 
           text: 'Confirm', 
           onPress: async () => {
-            try {
-              await updateOrderStatus(orderId, newStatus, {
-                actionLat: location?.coords.latitude,
-                actionLng: location?.coords.longitude,
-              });
-              socketService.emit('order:status_change', {
-                orderId,
-                status: newStatus
-              });
-              Toast.show({
-                type: 'success',
-                text1: 'Order Updated',
-                text2: `Status is now ${newStatus.replace('_', ' ')}`
-              });
-            } catch (err: any) {
-              Toast.show({
-                type: 'error',
-                text1: 'Update Failed',
-                text2: err.message
-              });
+            if (newStatus === OrderStatus.PICKED_UP) {
+              setVerificationStep('pickup');
+              setIsVerificationVisible(true);
+            } else {
+              try {
+                await updateOrderStatus(orderId, newStatus, {
+                  actionLat: location?.coords.latitude,
+                  actionLng: location?.coords.longitude,
+                });
+                socketService.emit('order:status_change', {
+                  orderId,
+                  status: newStatus
+                });
+                Toast.show({
+                  type: 'success',
+                  text1: 'Order Updated',
+                  text2: `Status is now ${newStatus.replace('_', ' ')}`
+                });
+              } catch (err: any) {
+                Toast.show({
+                  type: 'error',
+                  text1: 'Update Failed',
+                  text2: err.message
+                });
+              }
             }
           }
         },
@@ -322,9 +336,83 @@ export const useMapFlow = () => {
       return;
     }
 
-    // Skip camera step temporarily. Directly confirm delivery.
-    handleOrderStatusUpdate(currentOrder.id, OrderStatus.DELIVERED);
-  }, [currentOrder, location, handleOrderStatusUpdate]);
+    // Open Verification Modal for delivery
+    setVerificationStep('delivery');
+    setIsVerificationVisible(true);
+  }, [currentOrder, location]);
+
+  const handleCheckpoint = useCallback(() => {
+    if (!currentOrder) return;
+    setVerificationStep('checkpoint');
+    setIsVerificationVisible(true);
+  }, [currentOrder]);
+
+  const handleVerificationSubmit = useCallback(async (verificationData: {
+    step: string;
+    fingerprintStatus: boolean;
+    facePhotoUrl: string;
+    cargoPhotoUrl?: string;
+    latitude?: number;
+    longitude?: number;
+  }) => {
+    if (!activeTrip) return;
+    const orderId = currentOrder?.id || activeTrip.orders[0]?.id;
+    if (!orderId) return;
+
+    try {
+      await submitOrderVerification(orderId, verificationData);
+
+      if (verificationData.step === 'accept') {
+        await updateTripStatus(activeTrip.id, TripStatus.IN_PROGRESS);
+        socketService.emit('trip:status_change', {
+          tripId: activeTrip.id,
+          status: TripStatus.IN_PROGRESS,
+        });
+        Toast.show({
+          type: 'success',
+          text1: 'Hành trình bắt đầu',
+          text2: 'Chuyến đi đã chuyển sang trạng thái Đang thực hiện',
+        });
+      } else if (verificationData.step === 'pickup') {
+        socketService.emit('order:status_change', {
+          orderId,
+          status: OrderStatus.PICKED_UP,
+        });
+        Toast.show({
+          type: 'success',
+          text1: 'Đã lấy hàng',
+          text2: 'Lấy hàng và lưu minh chứng thành công',
+        });
+      } else if (verificationData.step === 'checkpoint') {
+        socketService.emit('order:status_change', {
+          orderId,
+          status: OrderStatus.DELIVERING,
+        });
+        Toast.show({
+          type: 'success',
+          text1: 'Ghi nhận chặng',
+          text2: 'Lưu minh chứng chặng thành công',
+        });
+      } else if (verificationData.step === 'delivery') {
+        socketService.emit('order:status_change', {
+          orderId,
+          status: OrderStatus.DELIVERED,
+        });
+        Toast.show({
+          type: 'success',
+          text1: 'Đã bàn giao hàng',
+          text2: 'Hoàn thành bàn giao và lưu minh chứng thành công',
+        });
+      }
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Xác thực thất bại',
+        text2: err.message || 'Vui lòng thử lại',
+      });
+      throw err;
+    }
+  }, [activeTrip, currentOrder, submitOrderVerification, updateTripStatus]);
 
   return {
     activeTrip,
@@ -337,6 +425,7 @@ export const useMapFlow = () => {
     handleStatusUpdate,
     handleOrderStatusUpdate,
     handleProofOfDelivery,
+    handleCheckpoint,
     centerOnLocation,
     toggleMapType,
     openNavigation,
@@ -346,5 +435,10 @@ export const useMapFlow = () => {
     setIsFollowing,
     isNavMode,
     setIsNavMode,
+    isVerificationVisible,
+    setIsVerificationVisible,
+    verificationStep,
+    setVerificationStep,
+    handleVerificationSubmit,
   };
 };

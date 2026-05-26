@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { User as UserIcon, ShieldCheck, Activity, ChevronRight } from 'lucide-react-native';
-import { Driver, DriverStatus } from '../../store/useFleetStore';
+import { Driver, DriverStatus } from '../../../store/useFleetStore';
 
 const DRIVER_STATUS_CONFIG = {
   [DriverStatus.AVAILABLE]: { label: 'Available', color: '#10b981' },

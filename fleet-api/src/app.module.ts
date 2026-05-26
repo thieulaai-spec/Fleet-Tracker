@@ -15,6 +15,7 @@ import { TripOrder } from './entities/trip-order.entity';
 import { GpsLocation } from './entities/gps-location.entity';
 import { Alert } from './entities/alert.entity';
 import { DriverKpi } from './entities/driver-kpi.entity';
+import { OrderVerification } from './entities/order-verification.entity';
 import { AuthModule } from './auth/auth.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { DriversModule } from './drivers/drivers.module';
@@ -28,6 +29,7 @@ import { ReportsModule } from './reports/reports.module';
 import { OptimizationModule } from './optimization/optimization.module';
 import { HealthModule } from './common/health/health.module';
 import { UsersModule } from './users/users.module';
+import { OrderVerificationsModule } from './order-verifications/order-verifications.module';
 
 @Module({
   imports: [
@@ -69,6 +71,7 @@ import { UsersModule } from './users/users.module';
           GpsLocation,
           Alert,
           DriverKpi,
+          OrderVerification,
         ],
         synchronize:
           configService.get<string>('NODE_ENV') === 'production'
@@ -107,6 +110,7 @@ import { UsersModule } from './users/users.module';
     OptimizationModule,
     HealthModule,
     UsersModule,
+    OrderVerificationsModule,
 
     // Modules to be added in future phases
     // TripsModule will be added in Phase 04

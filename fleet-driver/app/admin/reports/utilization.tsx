@@ -6,7 +6,7 @@ import { ArrowLeft, Truck, Clock, Zap, RefreshCw } from 'lucide-react-native';
 import { useReportStore } from '../../../store/useReportStore';
 import { BarChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
-import { ExportButton } from '../../../components/admin/ExportButton';
+import { ExportButton } from '../../../components/admin/dashboard/ExportButton';
 
 const screenWidth = Dimensions.get('window').width;
 

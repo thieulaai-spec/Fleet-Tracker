@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { User, Mail, Phone, ShieldCheck, Calendar, Lock } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Driver, DriverStatus } from '../../store/useFleetStore';
+import { Driver, DriverStatus } from '../../../store/useFleetStore';
 
 interface DriverFormProps {
   initialData?: Driver;

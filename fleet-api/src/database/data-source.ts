@@ -9,6 +9,7 @@ import { TripOrder } from '../entities/trip-order.entity';
 import { GpsLocation } from '../entities/gps-location.entity';
 import { Alert } from '../entities/alert.entity';
 import { DriverKpi } from '../entities/driver-kpi.entity';
+import { OrderVerification } from '../entities/order-verification.entity';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ export const AppDataSource = new DataSource({
     GpsLocation,
     Alert,
     DriverKpi,
+    OrderVerification,
   ],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   synchronize: false, // Always false for migrations

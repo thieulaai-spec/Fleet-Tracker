@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { AlertCircle } from 'lucide-react-native';
 import { Order } from '../../../../store/useOrderStore';
-import { OrderDispatchItem } from '../../../../components/admin/OrderDispatchItem';
+import { OrderDispatchItem } from '../../../../components/admin/order/OrderDispatchItem';
 
 interface OrdersSectionProps {
   pendingOrders: Order[];

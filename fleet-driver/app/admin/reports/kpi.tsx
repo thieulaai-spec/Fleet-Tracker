@@ -4,8 +4,8 @@ import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Filter, RefreshCw, Trophy } from 'lucide-react-native';
 import { useReportStore } from '../../../store/useReportStore';
-import { KPIRankingItem } from '../../../components/admin/KPIRankingItem';
-import { ExportButton } from '../../../components/admin/ExportButton';
+import { KPIRankingItem } from '../../../components/admin/dashboard/KPIRankingItem';
+import { ExportButton } from '../../../components/admin/dashboard/ExportButton';
 
 export default function KPIRankingScreen() {
   const router = useRouter();

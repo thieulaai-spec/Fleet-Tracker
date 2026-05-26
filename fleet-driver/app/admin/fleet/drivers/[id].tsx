@@ -33,7 +33,7 @@ import {
   Driver,
   DriverStatus,
 } from "../../../../store/useFleetStore";
-import { DriverForm } from "../../../../components/admin/DriverForm";
+import { DriverForm } from "../../../../components/admin/fleet/DriverForm";
 
 const screenWidth = Dimensions.get("window").width;
 

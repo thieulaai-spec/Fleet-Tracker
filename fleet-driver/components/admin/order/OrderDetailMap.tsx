@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { MapComponent, MarkerComponent, PolylineComponent, PROVIDER_GOOGLE } from '../map/MapComponents';
-import { Order, OrderStatus } from '../../store/useOrderStore';
+import { MapComponent, MarkerComponent, PolylineComponent, PROVIDER_GOOGLE } from '../../map/MapComponents';
+import { Order, OrderStatus } from '../../../store/useOrderStore';
 import { Clock3, Package, MapPin, CheckCircle2, AlertCircle, XCircle } from 'lucide-react-native';
 
 const STATUS_CONFIG = {

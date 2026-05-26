@@ -3,7 +3,7 @@ import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpa
 import { LayoutDashboard, Truck, Package, DollarSign, AlertTriangle, TrendingUp, ChevronRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { StatCard } from '../../components/admin/StatCard';
+import { StatCard } from '../../components/admin/dashboard/StatCard';
 import { useDashboardStore } from '../../store/useDashboardStore';
 
 export default function AdminDashboardScreen() {

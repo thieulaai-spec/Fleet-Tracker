@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
-import { MapPin, User, ShieldCheck, Navigation, Phone, Truck, CheckCircle2 } from 'lucide-react-native';
+import { MapPin, User, ShieldCheck, Navigation, Phone, Truck, CheckCircle2, Eye } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Trip, TripStatus, OrderStatus } from '@/types/trip';
@@ -16,6 +16,7 @@ interface MissionPanelProps {
   onUpdateTripStatus: (status: TripStatus) => void;
   onUpdateOrderStatus: (orderId: string, status: OrderStatus) => void;
   onProofOfDelivery?: () => void;
+  onCheckpoint?: () => void;
 }
 
 export const MissionPanel: React.FC<MissionPanelProps> = ({
@@ -26,7 +27,8 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
   onNavigate,
   onUpdateTripStatus,
   onUpdateOrderStatus,
-  onProofOfDelivery
+  onProofOfDelivery,
+  onCheckpoint
 }) => {
   const pickupDistance = React.useMemo(() => {
     if (!location || !currentOrder?.pickupLocation) return null;
@@ -152,22 +154,41 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
       }
 
       return (
-        <TouchableOpacity
-          style={{ flex: 1, width: '100%' }}
-          className="shadow-2xl shadow-emerald-500/30"
-          onPress={onProofOfDelivery}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#10b981', '#059669']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+        <View style={{ flexDirection: 'row', gap: 12, flex: 1, width: '100%' }}>
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            className="shadow-2xl shadow-amber-500/20"
+            onPress={onCheckpoint}
+            activeOpacity={0.8}
           >
-            <CheckCircle2 size={20} color="#fff" strokeWidth={2.5} />
-            <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Proof of Delivery</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={['#f59e0b', '#d97706']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}
+            >
+              <Eye size={16} color="#fff" strokeWidth={2.5} />
+              <Text className="text-white font-black text-[12px] uppercase tracking-wider" numberOfLines={1}>Checkpoint</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ flex: 1.5 }}
+            className="shadow-2xl shadow-emerald-500/30"
+            onPress={onProofOfDelivery}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#10b981', '#059669']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}
+            >
+              <CheckCircle2 size={16} color="#fff" strokeWidth={2.5} />
+              <Text className="text-white font-black text-[12px] uppercase tracking-wider" numberOfLines={1}>Proof of Delivery</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       );
     }
 

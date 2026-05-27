@@ -14,25 +14,20 @@ import {
   ArrowLeft, 
   Edit3, 
   Trash2, 
-  Truck,
-  Scale,
-  User as UserIcon,
-  Box,
-  Cpu
+  Truck
 } from 'lucide-react-native';
-import { useFleetStore, Vehicle, VehicleStatus, VehicleType } from '../../../../store/useFleetStore';
+import { useFleetStore, Vehicle, VehicleStatus } from '../../../../store/useFleetStore';
 import { VehicleForm } from '../../../../components/admin/fleet/VehicleForm';
+
+// Import our modular sub-components
+import { VehicleSpecs } from '../../../../components/admin/fleet/VehicleSpecs';
+import { VehicleDriver } from '../../../../components/admin/fleet/VehicleDriver';
+import { VehicleHealth } from '../../../../components/admin/fleet/VehicleHealth';
 
 const STATUS_CONFIG = {
   [VehicleStatus.AVAILABLE]: { label: 'Available', color: '#10b981' },
   [VehicleStatus.DELIVERING]: { label: 'Delivering', color: '#6366f1' },
   [VehicleStatus.MAINTENANCE]: { label: 'Maintenance', color: '#ef4444' },
-};
-
-const TYPE_LABELS = {
-  [VehicleType.SMALL]: 'Small Van',
-  [VehicleType.MEDIUM]: 'Box Truck',
-  [VehicleType.LARGE]: 'Semi Truck',
 };
 
 export default function VehicleDetailScreen() {
@@ -182,74 +177,13 @@ export default function VehicleDetailScreen() {
             </View>
           )}
 
-          <View className="p-5 gap-5">
-            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
-              <Text className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-5">Specifications</Text>
-              
-              <View className="flex-row items-center gap-4 mb-5">
-                <Box size={20} color="#64748b" />
-                <View>
-                  <Text className="text-xs text-slate-500 font-semibold">Type</Text>
-                  <Text className="text-base text-slate-50 font-bold">{vehicle ? TYPE_LABELS[vehicle.type] : 'N/A'}</Text>
-                </View>
-              </View>
-
-              <View className="flex-row items-center gap-4 mb-5">
-                <Scale size={20} color="#64748b" />
-                <View>
-                  <Text className="text-xs text-slate-500 font-semibold">Max Capacity</Text>
-                  <Text className="text-base text-slate-50 font-bold">{vehicle?.maxCapacityKg} kg</Text>
-                </View>
-              </View>
-
-              <View className="flex-row items-center gap-4">
-                <Cpu size={20} color="#64748b" />
-                <View>
-                  <Text className="text-xs text-slate-500 font-semibold">Hardware GPS Device ID</Text>
-                  <Text className="text-base text-slate-50 font-bold">{vehicle?.deviceId || 'No Device Linked'}</Text>
-                </View>
-              </View>
+          {vehicle && (
+            <View className="p-5 gap-5">
+              <VehicleSpecs vehicle={vehicle} />
+              <VehicleDriver vehicle={vehicle} onViewProfile={(driverId) => router.push(`/admin/fleet/drivers/${driverId}` as any)} />
+              <VehicleHealth />
             </View>
-
-            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
-              <Text className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-5">Assigned Driver</Text>
-              
-              <View className="flex-row items-center gap-4 mb-5">
-                <UserIcon size={20} color="#64748b" />
-                <View>
-                  <Text className="text-xs text-slate-500 font-semibold">Driver Name</Text>
-                  <Text className="text-base text-slate-50 font-bold">{vehicle?.driver?.user.fullName || 'Unassigned'}</Text>
-                </View>
-              </View>
-
-              {vehicle?.driver && (
-                <TouchableOpacity 
-                  className="bg-indigo-500/10 py-3 rounded-xl items-center mt-2"
-                  onPress={() => router.push(`/admin/fleet/drivers/${vehicle.driverId}` as any)}
-                >
-                  <Text className="text-indigo-500 font-bold text-sm">View Driver Profile</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
-              <Text className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-5">Vehicle Health</Text>
-              <View className="flex-row gap-3">
-                <View className="flex-1 bg-white/5 p-4 rounded-2xl items-center">
-                  <Text className="text-lg font-extrabold text-emerald-500">Good</Text>
-                  <Text className="text-[11px] text-slate-500 font-bold mt-1">Condition</Text>
-                </View>
-                <View className="flex-1 bg-white/5 p-4 rounded-2xl items-center">
-                  <Text className="text-lg font-extrabold text-emerald-500">85%</Text>
-                  <Text className="text-[11px] text-slate-500 font-bold mt-1">Fuel</Text>
-                </View>
-                <View className="flex-1 bg-white/5 p-4 rounded-2xl items-center">
-                  <Text className="text-lg font-extrabold text-emerald-500">1.2k</Text>
-                  <Text className="text-[11px] text-slate-500 font-bold mt-1">KM this month</Text>
-                </View>
-              </View>
-            </View>
-          </View>
+          )}
         </ScrollView>
       )}
     </SafeAreaView>

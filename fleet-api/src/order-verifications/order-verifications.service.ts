@@ -20,6 +20,10 @@ export class OrderVerificationsService {
   async create(orderId: string, dto: CreateVerificationDto): Promise<OrderVerification> {
     const { step, fingerprintStatus, facePhotoUrl, cargoPhotoUrl, latitude, longitude } = dto;
 
+    if (step !== VerificationStep.ACCEPT && !cargoPhotoUrl) {
+      throw new BadRequestException(`Cargo photo is required for step ${step}`);
+    }
+
     return this.dataSource.transaction(async (manager) => {
       const order = await manager.findOne(Order, { where: { id: orderId } });
       if (!order) {
@@ -108,9 +112,10 @@ export class OrderVerificationsService {
   }
 
   async findByTrip(tripId: string): Promise<OrderVerification[]> {
-    // Get all orders in this trip
+    // Get all orders in this trip with trip and vehicle info
     const tripOrders = await this.dataSource.getRepository(TripOrder).find({
       where: { tripId },
+      relations: ['trip', 'trip.vehicle'],
     });
 
     if (tripOrders.length === 0) {
@@ -120,17 +125,34 @@ export class OrderVerificationsService {
     const orderIds = tripOrders.map((to) => to.orderId);
 
     // Find all verifications
-    return this.verificationRepository.createQueryBuilder('v')
+    const verifications = await this.verificationRepository.createQueryBuilder('v')
       .where('v.order_id IN (:...orderIds)', { orderIds })
       .leftJoinAndSelect('v.order', 'order')
       .orderBy('v.created_at', 'ASC')
       .getMany();
+
+    // Attach plateNumber
+    const orderIdToPlateNumber: Record<string, string> = {};
+    for (const to of tripOrders) {
+      if (to.trip && to.trip.vehicle) {
+        orderIdToPlateNumber[to.orderId] = to.trip.vehicle.plateNumber;
+      }
+    }
+
+    for (const v of verifications) {
+      if (v.order) {
+        (v.order as any).plateNumber = orderIdToPlateNumber[v.orderId] || 'N/A';
+      }
+    }
+
+    return verifications;
   }
 
   async findByDriver(driverId: string): Promise<OrderVerification[]> {
-    // Get all trips for this driver
+    // Get all trips for this driver with vehicle loaded
     const trips = await this.dataSource.getRepository(Trip).find({
       where: { driverId },
+      relations: ['vehicle'],
     });
 
     if (trips.length === 0) {
@@ -151,10 +173,27 @@ export class OrderVerificationsService {
     const orderIds = tripOrders.map((to) => to.orderId);
 
     // Return verifications
-    return this.verificationRepository.createQueryBuilder('v')
+    const verifications = await this.verificationRepository.createQueryBuilder('v')
       .where('v.order_id IN (:...orderIds)', { orderIds })
       .leftJoinAndSelect('v.order', 'order')
       .orderBy('v.created_at', 'DESC')
       .getMany();
+
+    // Map plate number to each verification's order
+    const orderIdToPlateNumber: Record<string, string> = {};
+    for (const to of tripOrders) {
+      const trip = trips.find((t) => t.id === to.tripId);
+      if (trip && trip.vehicle) {
+        orderIdToPlateNumber[to.orderId] = trip.vehicle.plateNumber;
+      }
+    }
+
+    for (const v of verifications) {
+      if (v.order) {
+        (v.order as any).plateNumber = orderIdToPlateNumber[v.orderId] || 'N/A';
+      }
+    }
+
+    return verifications;
   }
 }

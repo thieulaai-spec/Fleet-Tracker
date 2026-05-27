@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Dimensions,
+  Image,
 } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,19 +15,9 @@ import {
   Edit3,
   Trash2,
   User as UserIcon,
-  Mail,
-  Phone,
-  ShieldCheck,
-  Calendar,
-  Navigation,
-  CheckCircle,
-  AlertTriangle,
-  TrendingUp,
 } from "lucide-react-native";
 import axios from "axios";
 import { useAuthStore } from "../../../../store/useAuthStore";
-import { StatCard } from "../../../../components/ui/StatCard";
-import { LineChart } from "react-native-chart-kit";
 import {
   useFleetStore,
   Driver,
@@ -35,7 +25,12 @@ import {
 } from "../../../../store/useFleetStore";
 import { DriverForm } from "../../../../components/admin/fleet/DriverForm";
 
-const screenWidth = Dimensions.get("window").width;
+// Import our modular sub-components
+import { DriverContact } from "../../../../components/admin/fleet/DriverContact";
+import { DriverLicense } from "../../../../components/admin/fleet/DriverLicense";
+import { DriverKpi } from "../../../../components/admin/fleet/DriverKpi";
+import { DriverKpiChart } from "../../../../components/admin/fleet/DriverKpiChart";
+import { DriverJourneyTimeline } from "../../../../components/admin/fleet/DriverJourneyTimeline";
 
 const STATUS_CONFIG = {
   [DriverStatus.AVAILABLE]: { label: "Available", color: "#10b981" },
@@ -53,6 +48,10 @@ export default function DriverDetailScreen() {
   const [isEditing, setIsEditing] = useState(id === "create");
   const [kpi, setKpi] = useState<any>(null);
   const [kpiLoading, setKpiLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'info' | 'journey'>('info');
+  const [verifications, setVerifications] = useState<any[]>([]);
+  const [verificationsLoading, setVerificationsLoading] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -80,7 +79,24 @@ export default function DriverDetailScreen() {
         }
       }
     };
+    const fetchVerifications = async () => {
+      if (id && id !== "create") {
+        setVerificationsLoading(true);
+        try {
+          const { token } = useAuthStore.getState();
+          const response = await axios.get(`${API_URL}/drivers/${id}/verifications`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setVerifications(response.data.data || response.data || []);
+        } catch (error) {
+          console.error("Failed to fetch driver verifications:", error);
+        } finally {
+          setVerificationsLoading(false);
+        }
+      }
+    };
     fetchKpi();
+    fetchVerifications();
   }, [id]);
 
   const handleDelete = () => {
@@ -217,146 +233,60 @@ export default function DriverDetailScreen() {
             )}
           </View>
 
-          <View className="p-5 gap-5">
-            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
-              <Text className="text-sm font-extrabold text-slate-400 uppercase tracking-wider mb-5">Contact Details</Text>
-
-              <View className="flex-row items-center gap-4 mb-5">
-                <Mail size={20} color="#64748b" />
-                <View>
-                  <Text className="text-xs text-slate-500 font-semibold">Email</Text>
-                  <Text className="text-base text-slate-50 font-bold">{driver?.user.email}</Text>
-                </View>
-              </View>
-
-              <View className="flex-row items-center gap-4">
-                <Phone size={20} color="#64748b" />
-                <View>
-                  <Text className="text-xs text-slate-500 font-semibold">Phone</Text>
-                  <Text className="text-base text-slate-50 font-bold">
-                    {driver?.user.phone || "Not provided"}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
-              <Text className="text-sm font-extrabold text-slate-400 uppercase tracking-wider mb-5">License Information</Text>
-
-              <View className="flex-row items-center gap-4 mb-5">
-                <ShieldCheck size={20} color="#64748b" />
-                <View>
-                  <Text className="text-xs text-slate-500 font-semibold">Class</Text>
-                  <Text className="text-base text-slate-50 font-bold">
-                    {driver?.licenseClass || "N/A"}
-                  </Text>
-                </View>
-              </View>
-
-              <View className="flex-row items-center gap-4">
-                <Calendar size={20} color="#64748b" />
-                <View>
-                  <Text className="text-xs text-slate-500 font-semibold">Expiry Date</Text>
-                  <Text className="text-base text-slate-50 font-bold">
-                    {driver?.licenseExpiry
-                      ? new Date(driver.licenseExpiry).toLocaleDateString()
-                      : "N/A"}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Driver KPI Metrics */}
-            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
-              <Text className="text-sm font-extrabold text-slate-400 uppercase tracking-wider mb-5">Driver KPI Metrics</Text>
-              {kpiLoading ? (
-                <ActivityIndicator size="small" color="#6366f1" className="py-4" />
-              ) : (
-                <View className="flex-row flex-wrap justify-between gap-y-3">
-                  <StatCard 
-                    label="Total Trips" 
-                    value={kpi?.totalTrips ?? 0} 
-                    icon={Navigation} 
-                    color="#6366f1" 
-                  />
-                  <StatCard 
-                    label="Completion" 
-                    value={`${kpi?.completionRate ?? 0}%`} 
-                    icon={CheckCircle} 
-                    color="#10b981" 
-                  />
-                  <StatCard 
-                    label="Violations" 
-                    value={kpi?.totalViolations ?? 0} 
-                    icon={AlertTriangle} 
-                    color="#ef4444" 
-                  />
-                  <StatCard 
-                    label="KPI Score" 
-                    value={kpi?.kpiScore != null ? Number(kpi.kpiScore).toFixed(1) : '0.0'} 
-                    icon={TrendingUp} 
-                    color="#fbbf24" 
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* Performance Trend Chart */}
-            <View className="bg-slate-800 rounded-[24px] p-5 border border-white/10">
-              <Text className="text-sm font-extrabold text-slate-400 uppercase tracking-wider mb-2">Performance Trend</Text>
-              <Text className="text-xs text-slate-500 mb-5">KPI score over the last 7 days</Text>
-              {kpiLoading ? (
-                <ActivityIndicator size="small" color="#fbbf24" className="py-8" />
-              ) : (
-                <View className="overflow-hidden rounded-2xl bg-slate-900/50 p-2 border border-white/5 items-center">
-                  <LineChart
-                    data={{
-                      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                      datasets: [
-                        {
-                          data: [
-                            kpi?.kpiScore != null ? Math.max(60, Number(kpi.kpiScore) - 6) : 88.0,
-                            kpi?.kpiScore != null ? Math.max(60, Number(kpi.kpiScore) - 4) : 90.0,
-                            kpi?.kpiScore != null ? Math.max(60, Number(kpi.kpiScore) - 2) : 92.5,
-                            kpi?.kpiScore != null ? Math.max(60, Number(kpi.kpiScore) - 5) : 89.0,
-                            kpi?.kpiScore != null ? Math.min(100, Number(kpi.kpiScore) + 1) : 94.0,
-                            kpi?.kpiScore != null ? Math.min(100, Number(kpi.kpiScore) + 2) : 96.0,
-                            kpi?.kpiScore != null ? Number(kpi.kpiScore) : 95.0,
-                          ],
-                          color: (opacity = 1) => `rgba(251, 191, 36, ${opacity})`,
-                          strokeWidth: 3
-                        }
-                      ],
-                      legend: ['KPI Score']
-                    }}
-                    width={screenWidth - 80}
-                    height={180}
-                    chartConfig={{
-                      backgroundGradientFrom: '#0f172a',
-                      backgroundGradientTo: '#0f172a',
-                      color: (opacity = 1) => `rgba(251, 191, 36, ${opacity})`,
-                      strokeWidth: 3,
-                      barPercentage: 0.5,
-                      useShadowColorFromDataset: false,
-                      decimalPlaces: 1,
-                      labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
-                      propsForDots: {
-                        r: '5',
-                        strokeWidth: '2',
-                        stroke: '#fbbf24'
-                      }
-                    }}
-                    bezier
-                    style={{
-                      marginVertical: 4,
-                      borderRadius: 16
-                    }}
-                  />
-                </View>
-              )}
-            </View>
+          {/* Segmented Tab Selector */}
+          <View className="flex-row border-b border-white/5 mx-5 mt-6 mb-2">
+            <TouchableOpacity
+              onPress={() => setActiveTab('info')}
+              className="flex-1 pb-3 items-center"
+              style={{ borderBottomWidth: activeTab === 'info' ? 2 : 0, borderBottomColor: '#6366f1' }}
+            >
+              <Text className={`text-sm font-extrabold uppercase tracking-wider ${activeTab === 'info' ? 'text-indigo-400' : 'text-slate-400'}`}>Thông tin</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setActiveTab('journey')}
+              className="flex-1 pb-3 items-center"
+              style={{ borderBottomWidth: activeTab === 'journey' ? 2 : 0, borderBottomColor: '#6366f1' }}
+            >
+              <Text className={`text-sm font-extrabold uppercase tracking-wider ${activeTab === 'journey' ? 'text-indigo-400' : 'text-slate-400'}`}>Hành trình minh chứng</Text>
+            </TouchableOpacity>
           </View>
+
+          {activeTab === 'info' && driver && (
+            <View className="p-5 gap-5">
+              <DriverContact driver={driver} />
+              <DriverLicense driver={driver} />
+              <DriverKpi kpi={kpi} kpiLoading={kpiLoading} />
+              <DriverKpiChart kpi={kpi} kpiLoading={kpiLoading} />
+            </View>
+          )}
+
+          {activeTab === 'journey' && (
+            <View className="p-5 gap-5">
+              <DriverJourneyTimeline
+                verifications={verifications}
+                verificationsLoading={verificationsLoading}
+                onImagePress={setLightboxImage}
+              />
+            </View>
+          )}
         </ScrollView>
+      )}
+
+      {/* Fullscreen Lightbox Modal */}
+      {lightboxImage && (
+        <View className="absolute inset-0 bg-black/95 z-50 justify-center items-center p-5">
+          <TouchableOpacity 
+            onPress={() => setLightboxImage(null)}
+            className="absolute top-12 right-6 w-10 h-10 rounded-full bg-white/10 justify-center items-center"
+          >
+            <Text className="text-white text-lg font-bold">✕</Text>
+          </TouchableOpacity>
+          <Image 
+            source={{ uri: lightboxImage }} 
+            className="w-full h-[70%]"
+            resizeMode="contain"
+          />
+        </View>
       )}
     </SafeAreaView>
   );

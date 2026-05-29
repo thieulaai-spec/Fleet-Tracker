@@ -28,7 +28,54 @@ export const useMapFlow = () => {
   const [isVerificationVisible, setIsVerificationVisible] = useState(false);
   const [verificationStep, setVerificationStep] = useState<'accept' | 'pickup' | 'checkpoint' | 'delivery'>('accept');
   
-  const { location, errorMsg } = useLocationTracking(activeTrip);
+  const { location: phoneLocation, errorMsg } = useLocationTracking(activeTrip);
+  const [hardwareLocation, setHardwareLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    heading: number;
+    speed: number;
+  } | null>(null);
+
+  const location = useMemo(() => {
+    if (hardwareLocation) {
+      return {
+        coords: {
+          latitude: hardwareLocation.latitude,
+          longitude: hardwareLocation.longitude,
+          heading: hardwareLocation.heading,
+          speed: hardwareLocation.speed,
+        },
+      } as any;
+    }
+    return phoneLocation;
+  }, [phoneLocation, hardwareLocation]);
+
+  useEffect(() => {
+    if (!activeTrip) {
+      setHardwareLocation(null);
+      return;
+    }
+
+    // Subscribe to trip room to receive backend prioritized GPS coordinates
+    socketService.emit('subscribe:trip', { tripId: activeTrip.id });
+
+    const onTripLocation = (data: any) => {
+      if (data && data.latitude !== undefined && data.longitude !== undefined) {
+        setHardwareLocation({
+          latitude: data.latitude,
+          longitude: data.longitude,
+          heading: data.heading || 0,
+          speed: data.speed || 0,
+        });
+      }
+    };
+
+    socketService.on('trip:location', onTripLocation);
+
+    return () => {
+      socketService.off('trip:location', onTripLocation);
+    };
+  }, [activeTrip?.id]);
   
   const mapRef = useRef<any>(null);
   const fitTimeoutRef = useRef<any>(null);

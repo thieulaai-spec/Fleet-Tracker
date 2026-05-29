@@ -69,13 +69,35 @@ export class TrackingService implements OnModuleDestroy {
       this.logger.debug(`Flushed ${batch.length} GPS points to DB`);
     } catch (error) {
       this.logger.error(`Failed to flush GPS buffer: ${error.message}`);
-      // Put back items if failed to save (at the beginning of the buffer)
-      this.gpsBuffer = [...batch, ...this.gpsBuffer];
+      
+      const isConstraintError = 
+        error.message.includes('constraint') || 
+        error.message.includes('violates') || 
+        error.message.includes('foreign key');
 
-      // Limit buffer size to prevent memory leaks if DB is down for long
-      if (this.gpsBuffer.length > 5000) {
-        this.logger.warn('GPS Buffer too large, dropping oldest points');
-        this.gpsBuffer = this.gpsBuffer.slice(-5000);
+      if (isConstraintError) {
+        // Attempt to save individually to isolate and discard invalid entries (e.g. FK violations)
+        this.logger.warn(`Attempting to save ${batch.length} GPS points individually to isolate errors`);
+        
+        for (const point of batch) {
+          try {
+            await this.gpsRepository.save(point);
+          } catch (saveError) {
+            this.logger.error(
+              `Discarding invalid GPS point for vehicle ${point.vehicleId} due to error: ${saveError.message}`,
+            );
+            // Discard permanently
+          }
+        }
+      } else {
+        // General database error (connection down, timeout) - put back to retry later
+        this.gpsBuffer = [...batch, ...this.gpsBuffer];
+
+        // Limit buffer size to prevent memory leaks if DB is down for long
+        if (this.gpsBuffer.length > 5000) {
+          this.logger.warn('GPS Buffer too large, dropping oldest points');
+          this.gpsBuffer = this.gpsBuffer.slice(-5000);
+        }
       }
     } finally {
       this.isFlushing = false;

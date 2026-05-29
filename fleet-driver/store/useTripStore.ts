@@ -51,6 +51,7 @@ interface TripState {
   updateTripStatus: (id: string, status: TripStatus) => Promise<void>;
   updateOrderStatus: (id: string, status: OrderStatus, options?: { photoUrl?: string, signatureUrl?: string, actionLat?: number, actionLng?: number }) => Promise<void>;
   submitOrderVerification: (orderId: string, data: { step: string; fingerprintStatus: boolean; facePhotoUrl?: string; cargoPhotoUrl?: string; latitude?: number; longitude?: number }) => Promise<void>;
+  updateCargoPhoto: (orderId: string, step: string, cargoPhotoUrl: string) => Promise<void>;
 }
 
 export const useTripStore = create<TripState>()(
@@ -185,6 +186,29 @@ export const useTripStore = create<TripState>()(
           await get().fetchTrips();
         } catch (error: any) {
           const message = formatError(error, 'Failed to submit verification');
+          set({ error: message, isLoading: false });
+          throw new Error(message);
+        }
+      },
+      updateCargoPhoto: async (orderId: string, step: string, cargoPhotoUrl: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authFetch(`/orders/${orderId}/verifications/${step}/cargo-photo`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cargoPhotoUrl }),
+          });
+
+          if (!response.ok) {
+            const errorMsg = await getFetchErrorMessage(response, 'Failed to update cargo photo');
+            throw new Error(errorMsg);
+          }
+          
+          await get().fetchTrips();
+        } catch (error: any) {
+          const message = formatError(error, 'Failed to update cargo photo');
           set({ error: message, isLoading: false });
           throw new Error(message);
         }

@@ -72,7 +72,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       setCargoPhoto('');
       progressAnim.setValue(0);
 
-      if (hasHardware && step === 'pickup') {
+      if (step === 'pickup' || step === 'delivery') {
         setIsWaitingHardware(true);
         setHasHardwareVerified(false);
       } else {
@@ -85,21 +85,31 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         clearInterval(scanIntervalRef.current);
       }
     };
-  }, [visible, hasHardware, step]);
+  }, [visible, step]);
 
   useEffect(() => {
     if (visible && isWaitingHardware && !hasHardwareVerified) {
       const handleOrderVerified = (data: any) => {
         console.log('[VerificationModal] Socket order:verified received:', data);
-        if (data.orderId === orderId && data.step === 'pickup') {
+        if (data.orderId === orderId && data.step === step) {
           setHasHardwareVerified(true);
+          if (data.verification && data.verification.facePhotoUrl) {
+            setFacePhoto(data.verification.facePhotoUrl);
+          }
           if (Platform.OS !== 'web') {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
           fetchTrips();
+          
+          // Wait 1.5 seconds, then transition to cargo photo step on the phone!
           setTimeout(() => {
-            onClose();
-          }, 2500);
+            setIsWaitingHardware(false);
+            if (step === 'pickup' || step === 'delivery') {
+              setCurrentStep(2); // Phone cargo camera capture
+            } else {
+              setCurrentStep(3); // Submit review screen
+            }
+          }, 1500);
         }
       };
 
@@ -108,7 +118,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         socketService.off('order:verified', handleOrderVerified);
       };
     }
-  }, [visible, isWaitingHardware, hasHardwareVerified, orderId, fetchTrips, onClose]);
+  }, [visible, isWaitingHardware, hasHardwareVerified, orderId, step, fetchTrips]);
 
   // Fingerprint & hardware pulse animation
   const loopAnimRef = useRef<any>(null);
@@ -225,13 +235,20 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         console.log('Location fetch failed:', e);
       }
 
-      await onSubmit({
-        step,
-        fingerprintStatus: true,
-        facePhotoUrl: facePhoto,
-        cargoPhotoUrl: cargoPhoto || undefined,
-        ...coords,
-      });
+      if (hasHardwareVerified) {
+        // If hardware biometrics were verified, update only the cargo photo URL via PATCH
+        const updateCargoPhoto = useTripStore.getState().updateCargoPhoto;
+        await updateCargoPhoto(orderId, step, cargoPhoto);
+      } else {
+        // Standard phone verification flow
+        await onSubmit({
+          step,
+          fingerprintStatus: true,
+          facePhotoUrl: facePhoto,
+          cargoPhotoUrl: cargoPhoto || undefined,
+          ...coords,
+        });
+      }
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -329,6 +346,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
                       <View className="w-full h-[1px] bg-white/5 my-4" />
 
+                      {/* Bypassed: Driver MUST use vehicle hardware biometrics */}
+                      {/*
                       <TouchableOpacity
                         onPress={() => setIsWaitingHardware(false)}
                         className="flex-row items-center justify-center bg-white/5 py-3.5 px-6 rounded-2xl border border-white/10 w-full"
@@ -338,6 +357,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                           Sử dụng camera & vân tay điện thoại
                         </Text>
                       </TouchableOpacity>
+                      */}
                     </View>
                   )}
                 </View>

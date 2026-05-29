@@ -104,6 +104,28 @@ export class OrderVerificationsService {
     });
   }
 
+  async updateCargoPhoto(orderId: string, step: VerificationStep, cargoPhotoUrl: string): Promise<OrderVerification> {
+    const verification = await this.verificationRepository.findOne({
+      where: { orderId, step },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!verification) {
+      throw new NotFoundException(`Verification for order ${orderId} at step ${step} not found`);
+    }
+
+    verification.cargoPhotoUrl = cargoPhotoUrl;
+    
+    // Also update order photoUrl
+    const order = await this.orderRepository.findOne({ where: { id: orderId } });
+    if (order) {
+      order.photoUrl = cargoPhotoUrl;
+      await this.orderRepository.save(order);
+    }
+
+    return this.verificationRepository.save(verification);
+  }
+
   async findByOrder(orderId: string): Promise<OrderVerification[]> {
     return this.verificationRepository.find({
       where: { orderId },

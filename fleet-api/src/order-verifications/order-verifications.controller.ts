@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   UseGuards,
@@ -13,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
+import { VerificationStep } from '../entities/order-verification.entity';
 
 @ApiTags('OrderVerifications')
 @ApiBearerAuth()
@@ -31,6 +33,17 @@ export class OrderVerificationsController {
     @Body() dto: CreateVerificationDto,
   ) {
     return this.verificationsService.create(orderId, dto);
+  }
+
+  @Patch('orders/:orderId/verifications/:step/cargo-photo')
+  @Roles(UserRole.DRIVER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Update cargo photo for an existing verification step' })
+  updateCargoPhoto(
+    @Param('orderId') orderId: string,
+    @Param('step') step: VerificationStep,
+    @Body('cargoPhotoUrl') cargoPhotoUrl: string,
+  ) {
+    return this.verificationsService.updateCargoPhoto(orderId, step, cargoPhotoUrl);
   }
 
   @Get('orders/:orderId/verifications')

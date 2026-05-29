@@ -44,6 +44,9 @@ export const useLocationTracking = (activeTrip: Trip | null) => {
           (newLocation) => {
             if (isMounted) {
               setLocation(newLocation);
+              // Bypassed: Telemetry is now 100% strictly driven by IoT hardware device.
+              // Do not upload phone GPS coordinates to server to save battery and cell data.
+              /*
               if (activeTrip && activeTrip.status === TripStatus.IN_PROGRESS) {
                 socketService.emit('gps:update', {
                   tripId: activeTrip.id,
@@ -55,6 +58,7 @@ export const useLocationTracking = (activeTrip: Trip | null) => {
                   timestamp: new Date(newLocation.timestamp).toISOString(),
                 });
               }
+              */
             }
           }
         );

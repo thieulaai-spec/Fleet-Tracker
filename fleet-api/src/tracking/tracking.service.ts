@@ -115,70 +115,12 @@ export class TrackingService implements OnModuleDestroy {
       timestamp,
     } = data;
 
-    // Check if hardware GPS is active for this vehicle (within last 30s)
-    const lastHardwareTime = this.lastHardwareGpsMap.get(vehicleId);
-    if (lastHardwareTime && Date.now() - lastHardwareTime < 30000) {
-      this.logger.debug(
-        `Skipping phone GPS update for vehicle ${vehicleId} due to active hardware GPS`,
-      );
-      
-      const vehicle = await this.vehicleRepository.findOne({
-        where: { id: vehicleId },
-        relations: ['driver', 'driver.user'],
-      });
+    // Completely bypass phone GPS database updates and historical buffer.
+    // Telemetry is now 100% strictly driven by vehicle IoT hardware.
+    this.logger.debug(
+      `[Phone GPS] Bypassed update for vehicle ${vehicleId}. Telemetry is strictly driven by IoT hardware.`,
+    );
 
-      return {
-        vehicleId,
-        tripId,
-        latitude,
-        longitude,
-        speed,
-        heading,
-        timestamp,
-        status: vehicle?.status || 'available',
-        licensePlate: vehicle?.plateNumber || `VH-${vehicleId.slice(0, 6)}`,
-        driverName: vehicle?.driver?.user?.fullName || 'Unknown Driver',
-      };
-    }
-
-    // 1. Create PostGIS Point
-    const point = {
-      type: 'Point',
-      coordinates: [longitude, latitude],
-    };
-
-    // 2. Add to buffer for batch insert
-    const gpsLocation = this.gpsRepository.create({
-      vehicleId,
-      tripId,
-      location: point,
-      speedKmh: speed,
-      heading,
-      recordedAt: new Date(timestamp),
-    });
-    this.gpsBuffer.push(gpsLocation);
-
-    // 3. Update Vehicle's last known location
-    await this.vehicleRepository
-      .createQueryBuilder()
-      .update(Vehicle)
-      .set({
-        lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
-      })
-      .where('id = :vehicleId', { vehicleId })
-      .setParameters({ lng: longitude, lat: latitude })
-      .execute();
-
-    // 4. Trigger Violation Detection (Async)
-    if (tripId) {
-      this.violationDetector
-        .checkViolations(data)
-        .catch((err) =>
-          this.logger.error(`Violation check failed: ${err.message}`),
-        );
-    }
-
-    // 5. Fetch vehicle details for broadcasting
     const vehicle = await this.vehicleRepository.findOne({
       where: { id: vehicleId },
       relations: ['driver', 'driver.user'],
@@ -201,70 +143,20 @@ export class TrackingService implements OnModuleDestroy {
   async processGpsBatch(data: GpsUpdateDto[]) {
     if (!data || data.length === 0) return [];
 
-    this.logger.log(`Processing batch of ${data.length} GPS points`);
+    this.logger.debug(
+      `[Phone GPS] Bypassed batch update of ${data.length} points. Telemetry is strictly driven by IoT hardware.`,
+    );
 
-    const results: any[] = [];
-
-    for (const pointData of data) {
-      const {
-        vehicleId,
-        tripId,
-        latitude,
-        longitude,
-        speed,
-        heading,
-        timestamp,
-      } = pointData;
-
-      // Check if hardware GPS is active for this vehicle (within last 30s)
-      const lastHardwareTime = this.lastHardwareGpsMap.get(vehicleId);
-      if (lastHardwareTime && Date.now() - lastHardwareTime < 30000) {
-        this.logger.debug(
-          `Skipping phone GPS batch point for vehicle ${vehicleId} due to active hardware GPS`,
-        );
-        continue;
-      }
-
-      // Add to buffer
-      const gpsLocation = this.gpsRepository.create({
-        vehicleId,
-        tripId,
-        location: {
-          type: 'Point',
-          coordinates: [longitude, latitude],
-        },
-        speedKmh: speed,
-        heading,
-        recordedAt: new Date(timestamp),
-      });
-      this.gpsBuffer.push(gpsLocation);
-
-      results.push({
-        vehicleId,
-        tripId,
-        latitude,
-        longitude,
-        speed,
-        heading,
-        timestamp,
-      });
-    }
-
-    // Update vehicle to the latest position only (if any points were not skipped)
-    if (results.length > 0) {
-      const latestPoint = results[results.length - 1];
-      await this.vehicleRepository
-        .createQueryBuilder()
-        .update(Vehicle)
-        .set({
-          lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
-        })
-        .where('id = :vehicleId', { vehicleId: latestPoint.vehicleId })
-        .setParameters({ lng: latestPoint.longitude, lat: latestPoint.latitude })
-        .execute();
-    }
-
-    return results;
+    // Bypassed completely. Just return input points to acknowledge client.
+    return data.map((pointData) => ({
+      vehicleId: pointData.vehicleId,
+      tripId: pointData.tripId,
+      latitude: pointData.latitude,
+      longitude: pointData.longitude,
+      speed: pointData.speed,
+      heading: pointData.heading,
+      timestamp: pointData.timestamp,
+    }));
   }
 
   async processDeviceGpsUpdate(data: DeviceGpsUpdateDto) {

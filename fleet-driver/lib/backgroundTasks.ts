@@ -51,6 +51,9 @@ if (Platform.OS !== 'web') {
             timestamp: new Date(location.timestamp).toISOString(),
           };
 
+          // Bypassed: Telemetry is strictly driven by vehicle IoT hardware.
+          // Do not send background GPS coordinates to server to conserve battery and cell data.
+          /*
           if (socketService.getSocket()?.connected) {
             socketService.emit('gps:update', payload);
             console.log(`[Background] GPS update sent for trip ${activeTrip.id}`);
@@ -58,6 +61,8 @@ if (Platform.OS !== 'web') {
             console.log('[Background] Socket disconnected, queueing GPS point');
             await offlineQueue.push(payload);
           }
+          */
+          console.log('[Background] Bypassed background location upload to server (IoT strict mode active)');
         } catch (emitError) {
           console.error('[Background] Failed to handle GPS update:', emitError);
         }

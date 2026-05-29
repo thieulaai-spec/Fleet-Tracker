@@ -34,7 +34,15 @@ describe('TrackingService', () => {
         execute: jest.fn().mockResolvedValue({}),
       }),
       find: jest.fn(),
-      findOne: jest.fn(),
+      findOne: jest.fn().mockResolvedValue({
+        id: 'v1',
+        plateNumber: '51A-999.99',
+        status: 'available',
+        driver: {
+          id: 'd1',
+          user: { fullName: 'Nguyen Van Hung' }
+        }
+      }),
     };
 
     driverRepo = {
@@ -111,24 +119,22 @@ describe('TrackingService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should add GPS update to buffer', async () => {
-    const data = {
-      vehicleId: 'v1',
-      tripId: 't1',
+  it('should add hardware GPS update to buffer', async () => {
+    const deviceData = {
+      deviceId: 'device_001',
       latitude: 10,
       longitude: 20,
       speed: 50,
       heading: 90,
-      timestamp: new Date().toISOString(),
     };
 
-    await service.processGpsUpdate(data);
+    await service.processDeviceGpsUpdate(deviceData);
 
     expect((service as any).gpsBuffer.length).toBe(1);
     expect(vehicleRepo.createQueryBuilder).toHaveBeenCalled();
   });
 
-  it('should skip phone GPS update if hardware GPS was recently active', async () => {
+  it('should bypass phone GPS update completely', async () => {
     const data = {
       vehicleId: 'v1',
       tripId: 't1',
@@ -139,27 +145,22 @@ describe('TrackingService', () => {
       timestamp: new Date().toISOString(),
     };
 
-    // Simulate active hardware GPS
-    (service as any).lastHardwareGpsMap.set('v1', Date.now());
-
     await service.processGpsUpdate(data);
 
-    // Should not add to buffer or update vehicle table
+    // Phone GPS updates must not add to buffer or query builder
     expect((service as any).gpsBuffer.length).toBe(0);
   });
 
   it('should flush buffer and clear it on success', async () => {
-    const data = {
-      vehicleId: 'v1',
-      tripId: 't1',
+    const deviceData = {
+      deviceId: 'device_001',
       latitude: 10,
       longitude: 20,
       speed: 50,
       heading: 90,
-      timestamp: new Date().toISOString(),
     };
 
-    await service.processGpsUpdate(data);
+    await service.processDeviceGpsUpdate(deviceData);
     expect((service as any).gpsBuffer.length).toBe(1);
 
     await (service as any).flushBuffer();
@@ -171,17 +172,15 @@ describe('TrackingService', () => {
   it('should not clear buffer on save failure', async () => {
     gpsRepo.save.mockRejectedValue(new Error('DB Error'));
 
-    const data = {
-      vehicleId: 'v1',
-      tripId: 't1',
+    const deviceData = {
+      deviceId: 'device_001',
       latitude: 10,
       longitude: 20,
       speed: 50,
       heading: 90,
-      timestamp: new Date().toISOString(),
     };
 
-    await service.processGpsUpdate(data);
+    await service.processDeviceGpsUpdate(deviceData);
     await (service as any).flushBuffer();
 
     expect((service as any).gpsBuffer.length).toBe(1);
@@ -253,23 +252,23 @@ describe('TrackingService', () => {
       expect(result).toEqual({ id: 't1' });
     });
 
-    it('processGpsUpdate should handle violation check errors gracefully', async () => {
+    it('processDeviceGpsUpdate should handle violation check errors gracefully', async () => {
       jest.useRealTimers();
       const detector = (service as any).violationDetector;
       detector.checkViolations.mockRejectedValue(new Error('Detector Error'));
       const loggerSpy = jest.spyOn((service as any).logger, 'error');
 
-      const data = {
-        vehicleId: 'v1',
-        tripId: 't1',
+      tripRepo.findOne.mockResolvedValue({ id: 't1' });
+
+      const deviceData = {
+        deviceId: 'device_001',
         latitude: 10,
         longitude: 20,
         speed: 50,
         heading: 90,
-        timestamp: new Date().toISOString(),
       };
 
-      await service.processGpsUpdate(data);
+      await service.processDeviceGpsUpdate(deviceData);
 
       // We need to wait for the async checkViolations to fail
       await new Promise((resolve) => setTimeout(resolve, 0));

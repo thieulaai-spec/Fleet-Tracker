@@ -14,6 +14,7 @@ interface User {
     status: string;
     licenseClass?: string;
     licenseExpiry?: string;
+    fingerprintId?: string | null;
   } | null;
 }
 

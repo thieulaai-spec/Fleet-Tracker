@@ -67,6 +67,15 @@ export class TrackingGateway
     this.server.to(`trip:${payload.id}`).emit('trip:status-changed', payload);
   }
 
+  @OnEvent('order.verified')
+  handleOrderVerified(payload: any) {
+    this.logger.log(
+      `Broadcasting order verification success to driver ${payload.driverId} for order ${payload.orderId}`,
+    );
+    this.server.to(`driver:${payload.driverId}`).emit('order:verified', payload);
+    this.server.to('admin').emit('order:verified', payload);
+  }
+
   @OnEvent('trip.assigned')
   handleTripAssigned(payload: any) {
     this.logger.log(
@@ -82,6 +91,13 @@ export class TrackingGateway
   handleAlertResolved(payload: any) {
     this.logger.log(`Broadcasting alert resolution: ${payload.id}`);
     this.server.to('admin').emit('alert:resolved', payload);
+  }
+
+  @OnEvent('enroll.required')
+  handleEnrollRequired(payload: any) {
+    this.logger.log(`Broadcasting remote enroll request for driver ${payload.driverId} on device ${payload.deviceId}`);
+    this.server.to(`driver:${payload.driverId}`).emit('enroll:required', payload);
+    this.server.to('admin').emit('enroll:required', payload);
   }
 
   afterInit(server: Server) {

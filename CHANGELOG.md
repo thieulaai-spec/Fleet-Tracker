@@ -1,3 +1,14 @@
+## [2026-05-28] - ESP32 Unified Hardware Migration & Cam Bugfixes
+### Added
+- **ESP32 Camera & Fingerprint (`esp_cam_main.cpp`)**:
+  - Migrated and unified the AS608 Fingerprint Sensor reading logic directly into the ESP32 Cam firmware. The single board now reads fingerprint matches from UART1 (GPIO 14 & 15) and immediately triggers the OV2640 camera to upload biometric proof to the backend.
+  - Eliminated the legacy secondary ESP32 board and raw UART inter-board communication.
+
+### Fixed
+- **ESP32 Camera & Fingerprint (`esp_cam_main.cpp`)**:
+  - Fixed a critical camera chunk image upload truncation bug where the final 1024-byte block of the JPEG image was skipped if the total file size was a multiple of 1024. Implemented a robust `while` loop to guarantee exact image size transmission.
+  - Enhanced API response logging: now reads and prints the full JSON error/success response body from the NestJS backend to the Serial Monitor.
+
 ## [2026-05-20] - Proximity Geofencing & Driver Trip Flow Skipping Fix
 ### Added
 - **Mobile (Driver App)**:

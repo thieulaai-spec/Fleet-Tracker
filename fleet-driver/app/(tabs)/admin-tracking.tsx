@@ -21,8 +21,10 @@ import { LightboxModal } from '../../components/admin/tracking/LightboxModal';
 
 export default function AdminTrackingScreen() {
   const mapRef = useRef<any>(null);
+  const justPressedMarkerRef = useRef<boolean>(false);
   const { vehicles, isLoading, fetchLiveLocations, startTracking, stopTracking } = useFleetTrackingStore();
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(true);
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('standard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -38,7 +40,9 @@ export default function AdminTrackingScreen() {
   const selectedVehicle = selectedVehicleId ? vehicles[selectedVehicleId] : null;
 
   const handleMarkerPress = useCallback((v: any) => {
+    justPressedMarkerRef.current = true;
     setSelectedVehicleId(v.id);
+    setIsFollowing(true);
     setIsSearching(false);
     Keyboard.dismiss();
   }, []);
@@ -74,9 +78,9 @@ export default function AdminTrackingScreen() {
 
   const lastAnimateTimeRef = useRef<number>(0);
 
-  // Center on selected vehicle whenever its coordinates update (throttled to 1.5s)
+  // Center on selected vehicle whenever its coordinates update (throttled to 1.5s, if following)
   useEffect(() => {
-    if (selectedVehicle && mapRef.current) {
+    if (selectedVehicle && isFollowing && mapRef.current) {
       const now = Date.now();
       if (now - lastAnimateTimeRef.current > 1500) {
         lastAnimateTimeRef.current = now;
@@ -88,7 +92,7 @@ export default function AdminTrackingScreen() {
         }, 500);
       }
     }
-  }, [selectedVehicle?.latitude, selectedVehicle?.longitude]);
+  }, [selectedVehicle?.latitude, selectedVehicle?.longitude, isFollowing]);
 
   const fitFleet = useCallback(() => {
     if (vehicleList.length === 0 || !mapRef.current) return;
@@ -147,7 +151,14 @@ export default function AdminTrackingScreen() {
           latitudeDelta: 0.1,
           longitudeDelta: 0.1,
         }}
+        onPanDrag={() => {
+          setIsFollowing(false);
+        }}
         onPress={() => {
+          if (justPressedMarkerRef.current) {
+            justPressedMarkerRef.current = false;
+            return;
+          }
           setSelectedVehicleId(null);
           setIsSearching(false);
           Keyboard.dismiss();
@@ -170,7 +181,10 @@ export default function AdminTrackingScreen() {
         setIsSearching={setIsSearching}
         vehicleList={vehicleList}
         filteredVehicles={filteredVehicles}
-        onSelectVehicle={setSelectedVehicleId}
+        onSelectVehicle={(id) => {
+          setSelectedVehicleId(id);
+          setIsFollowing(true);
+        }}
       />
 
       {/* Map Controls */}

@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 import { GpsLocation } from '../entities/gps-location.entity';
 import { Vehicle } from '../entities/vehicle.entity';
 import { Trip, TripStatus } from '../entities/trip.entity';
@@ -13,7 +14,7 @@ import { UploadService } from '../upload/upload.service';
 import { OrderVerificationsService } from '../order-verifications/order-verifications.service';
 import { TripOrder } from '../entities/trip-order.entity';
 import { OrderVerification, VerificationStep } from '../entities/order-verification.entity';
-import { Order } from '../entities/order.entity';
+import { Order, OrderStatus } from '../entities/order.entity';
 
 @Injectable()
 export class TrackingService implements OnModuleDestroy {
@@ -22,6 +23,7 @@ export class TrackingService implements OnModuleDestroy {
   private readonly BATCH_INTERVAL = 5000; // 5 seconds
   private flushInterval: NodeJS.Timeout;
   private isFlushing = false;
+  private pendingEnrollments = new Map<string, number>();
 
   constructor(
     @InjectRepository(GpsLocation)
@@ -36,6 +38,7 @@ export class TrackingService implements OnModuleDestroy {
     private readonly uploadService: UploadService,
     private readonly orderVerificationsService: OrderVerificationsService,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   onModuleInit() {
@@ -363,13 +366,16 @@ export class TrackingService implements OnModuleDestroy {
       throw new NotFoundException(`Vehicle with deviceId ${deviceId} not found`);
     }
 
-    // 2. Check for active trip
+    // 2. Check for active trip (can be accepted or in_progress)
     const activeTrip = await this.tripRepository.findOne({
-      where: { vehicleId: vehicle.id, status: TripStatus.IN_PROGRESS },
+      where: [
+        { vehicleId: vehicle.id, status: TripStatus.IN_PROGRESS },
+        { vehicleId: vehicle.id, status: TripStatus.ACCEPTED }
+      ],
     });
 
     if (!activeTrip) {
-      throw new BadRequestException(`No active trip in progress for vehicle ${vehicle.plateNumber}`);
+      throw new BadRequestException(`No active trip in progress or accepted for vehicle ${vehicle.plateNumber}`);
     }
 
     // 3. Verify Biometrics: Does fingerprintId match driver's registered fingerprintId?
@@ -458,6 +464,36 @@ export class TrackingService implements OnModuleDestroy {
       longitude,
     });
 
+    // 7. Auto-advance statuses if step is PICKUP
+    if (targetStep === VerificationStep.PICKUP) {
+      this.logger.log(`Auto-advancing order ${activeOrder.id} status to DELIVERING and trip ${activeTrip.id} status to IN_PROGRESS`);
+      
+      activeOrder.status = OrderStatus.DELIVERING;
+      await this.dataSource.getRepository(Order).save(activeOrder);
+
+      activeTrip.status = TripStatus.IN_PROGRESS;
+      activeTrip.startedAt = new Date();
+      await this.tripRepository.save(activeTrip);
+
+      // Emit trip status changed event so gateways/controllers/dashboard know
+      this.eventEmitter.emit('trip.status_changed', {
+        id: activeTrip.id,
+        status: TripStatus.IN_PROGRESS,
+        vehicleId: activeTrip.vehicleId,
+        driverId: activeTrip.driverId,
+      });
+    }
+
+    // 8. Emit order.verified event
+    this.eventEmitter.emit('order.verified', {
+      orderId: activeOrder.id,
+      tripId: activeTrip.id,
+      driverId: driver.id,
+      step: targetStep,
+      success: true,
+      verification,
+    });
+
     return {
       success: true,
       orderId: activeOrder.id,
@@ -468,5 +504,105 @@ export class TrackingService implements OnModuleDestroy {
       verificationId: verification.id,
       timestamp: new Date().toISOString(),
     };
+  }
+
+  requestEnrollment(deviceId: string, fingerprintId: number) {
+    this.pendingEnrollments.set(deviceId, fingerprintId);
+    this.logger.log(`Requested remote enrollment for device ${deviceId} at slot ${fingerprintId}`);
+  }
+
+  getPendingEnrollment(deviceId: string): number | null {
+    const enrollId = this.pendingEnrollments.get(deviceId) || null;
+    if (enrollId) {
+      this.pendingEnrollments.delete(deviceId); // Consume the request once
+    }
+    return enrollId;
+  }
+
+  async saveEnrollmentResult(deviceId: string, fingerprintId: number, success: boolean) {
+    this.logger.log(`Received enrollment result for device ${deviceId}, slot ${fingerprintId}: ${success ? 'SUCCESS' : 'FAILED'}`);
+    if (!success) {
+      return { success: false, message: 'Enrollment failed on device' };
+    }
+
+    // Find vehicle & driver associated with the device
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { deviceId },
+      relations: ['driver'],
+    });
+
+    if (!vehicle) {
+      throw new NotFoundException(`Vehicle with deviceId ${deviceId} not found`);
+    }
+
+    if (!vehicle.driver) {
+      throw new NotFoundException(`No driver assigned to vehicle ${vehicle.plateNumber}`);
+    }
+
+    // Save driver's fingerprintId in DB
+    vehicle.driver.fingerprintId = String(fingerprintId);
+    await this.driverRepository.save(vehicle.driver);
+    this.logger.log(`Successfully updated fingerprint ID to ${fingerprintId} for driver ${vehicle.driver.id}`);
+
+    return { success: true, driverId: vehicle.driver.id, fingerprintId };
+  }
+
+  @OnEvent('trip.status_changed')
+  async handleTripStatusChangedForEnroll(payload: { id: string; status: string; vehicleId: string; driverId: string }) {
+    if (payload.status !== TripStatus.ACCEPTED) return;
+
+    // Check if the driver already has a fingerprintId
+    const driver = await this.driverRepository.findOne({
+      where: { id: payload.driverId },
+    });
+
+    if (driver && !driver.fingerprintId) {
+      // Find vehicle & deviceId
+      const vehicle = await this.vehicleRepository.findOne({
+        where: { id: payload.vehicleId },
+      });
+
+      if (!vehicle || !vehicle.deviceId) {
+        this.logger.warn(`No vehicle/deviceId found for ID ${payload.vehicleId} to auto-enroll`);
+        return;
+      }
+
+      // Find all currently used fingerprint IDs
+      const allDrivers = await this.driverRepository.find({
+        select: ['fingerprintId'],
+      });
+
+      const usedIds = new Set(
+        allDrivers
+          .map((d) => d.fingerprintId ? Number(d.fingerprintId) : null)
+          .filter((id) => id !== null && !isNaN(id)),
+      );
+
+      // Allocate first available slot ID between 1 and 127
+      let autoId = 1;
+      for (let i = 1; i <= 127; i++) {
+        if (!usedIds.has(i)) {
+          autoId = i;
+          break;
+        }
+      }
+
+      this.logger.log(`Tài xế mới ${driver.id} chưa có vân tay. Tự động gán slot ${autoId} trên thiết bị ${vehicle.deviceId}`);
+
+      // Register remote enrollment in memory
+      this.requestEnrollment(vehicle.deviceId, autoId);
+
+      // Update driver fingerprintId immediately to reserve the slot
+      driver.fingerprintId = String(autoId);
+      await this.driverRepository.save(driver);
+
+      // Emit WS event to guide Driver via Mobile App & Alert Admin
+      this.eventEmitter.emit('enroll.required', {
+        driverId: driver.id,
+        deviceId: vehicle.deviceId,
+        fingerprintId: autoId,
+        message: 'Tài xế mới! Hãy đặt ngón tay lên cảm biến trên xe để đăng ký vân tay.',
+      });
+    }
   }
 }

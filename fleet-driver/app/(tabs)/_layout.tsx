@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { Truck, Map, User, LayoutDashboard, MapPin, Package, Users } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { Platform, StyleSheet } from 'react-native';
@@ -9,7 +9,7 @@ export default function TabLayout() {
   const { user, isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated || !user) {
-    return null;
+    return <Redirect href="/login" />;
   }
 
   const isAdmin = user.role?.toUpperCase() === 'ADMIN';

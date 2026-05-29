@@ -19,7 +19,11 @@ export const useLocationTracking = (activeTrip: Trip | null) => {
           return;
         }
 
-        await Location.requestBackgroundPermissionsAsync();
+        try {
+          await Location.requestBackgroundPermissionsAsync();
+        } catch (backgroundError) {
+          console.warn('Background location permissions failed/unsupported in this context:', backgroundError);
+        }
 
         const currentLocation = await Location.getCurrentPositionAsync({});
         if (isMounted) setLocation(currentLocation);

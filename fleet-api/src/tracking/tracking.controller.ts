@@ -69,7 +69,41 @@ export class TrackingController {
         .emit('trip:location', result);
     }
 
+    // Check if there is a pending remote enrollment request for this device
+    const pendingEnroll = this.trackingService.getPendingEnrollment(data.deviceId);
+    if (pendingEnroll) {
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        action: 'enroll',
+        enrollId: pendingEnroll,
+      };
+    }
+
     return { status: 'ok', timestamp: new Date().toISOString() };
+  }
+
+  @Post('device/:deviceId/enroll')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async triggerRemoteEnroll(
+    @Param('deviceId') deviceId: string,
+    @Body('fingerprintId') fingerprintId: number,
+  ) {
+    this.trackingService.requestEnrollment(deviceId, fingerprintId);
+    return { status: 'pending', deviceId, fingerprintId };
+  }
+
+  @Post('device/enroll-result')
+  async handleRemoteEnrollResult(
+    @Body() body: { deviceId: string; fingerprintId: number; success: boolean },
+    @Headers('x-device-api-key') headerApiKey?: string,
+  ) {
+    const configuredApiKey = this.configService.get<string>('DEVICE_API_KEY');
+    if (!configuredApiKey || headerApiKey !== configuredApiKey) {
+      throw new UnauthorizedException('Invalid or missing Device API Key');
+    }
+    return this.trackingService.saveEnrollmentResult(body.deviceId, body.fingerprintId, body.success);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

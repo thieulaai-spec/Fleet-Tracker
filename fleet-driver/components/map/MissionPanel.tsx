@@ -44,27 +44,55 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
 
   // Render Action Button based on Trip and Order status
   const renderActionButton = () => {
+    // 1. If trip is ACCEPTED (Going to pick up) -> directly offer Confirm Pickup!
     if (activeTrip.status === TripStatus.ACCEPTED) {
-      return (
-        <TouchableOpacity
-          style={{ flex: 1, width: '100%' }}
-          className="shadow-2xl shadow-indigo-500/30"
-          onPress={() => onUpdateTripStatus(TripStatus.IN_PROGRESS)}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#6366f1', '#4f46e5']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+      if (!currentOrder) return null;
+
+      if (isWithinPickupRange) {
+        return (
+          <TouchableOpacity
+            style={{ flex: 1, width: '100%' }}
+            className="shadow-2xl shadow-amber-500/30"
+            onPress={() => onUpdateOrderStatus(currentOrder.id, OrderStatus.PICKED_UP)}
+            activeOpacity={0.8}
           >
-            <Truck size={20} color="#fff" strokeWidth={2.5} />
-            <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Deploy Trip</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      );
+            <LinearGradient
+              colors={['#f59e0b', '#d97706']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+            >
+              <Truck size={20} color="#fff" strokeWidth={2.5} />
+              <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Xác nhận lấy hàng</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        );
+      } else {
+        const distText = pickupDistance !== null ? `${Math.round(pickupDistance)}m` : 'chưa xác định';
+        return (
+          <TouchableOpacity
+            style={{ flex: 1, width: '100%' }}
+            className="shadow-2xl border border-slate-700 bg-slate-800"
+            onPress={() => {
+              Alert.alert(
+                'Cảnh báo khoảng cách',
+                `Bạn còn cách điểm lấy hàng ${distText}. Vui lòng đến trong phạm vi 200m để xác nhận.`
+              );
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }} className="bg-slate-800">
+              <Truck size={20} color="#64748b" strokeWidth={2.5} />
+              <Text className="text-slate-400 font-bold text-[12px] uppercase tracking-wider" numberOfLines={1}>
+                Lấy hàng ({distText})
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      }
     }
 
+    // 2. If trip is IN_PROGRESS (Delivering)
     if (activeTrip.status === TripStatus.IN_PROGRESS) {
       if (!currentOrder) {
         return (
@@ -81,12 +109,13 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
             >
               <CheckCircle2 size={20} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Finalize</Text>
+              <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Hoàn thành chuyến</Text>
             </LinearGradient>
           </TouchableOpacity>
         );
       }
 
+      // If order is still assigned (should have auto-picked up, but as fallback)
       if (currentOrder.status === OrderStatus.ASSIGNED || currentOrder.status === OrderStatus.PENDING) {
         if (isWithinPickupRange) {
           return (
@@ -103,20 +132,20 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
                 style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
               >
                 <Truck size={20} color="#fff" strokeWidth={2.5} />
-                <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Pickup</Text>
+                <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Xác nhận lấy hàng</Text>
               </LinearGradient>
             </TouchableOpacity>
           );
         } else {
-          const distText = pickupDistance !== null ? `${Math.round(pickupDistance)}m` : 'Unknown distance';
+          const distText = pickupDistance !== null ? `${Math.round(pickupDistance)}m` : 'chưa xác định';
           return (
             <TouchableOpacity
               style={{ flex: 1, width: '100%' }}
               className="shadow-2xl border border-slate-700 bg-slate-800"
               onPress={() => {
                 Alert.alert(
-                  'Proximity Warning',
-                  `You are still ${distText} away from the pickup point. Please arrive within 200m to confirm pickup.`
+                  'Cảnh báo khoảng cách',
+                  `Bạn còn cách điểm lấy hàng ${distText}. Vui lòng đến trong phạm vi 200m để xác nhận.`
                 );
               }}
               activeOpacity={0.8}
@@ -124,7 +153,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               <View style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }} className="bg-slate-800">
                 <Truck size={20} color="#64748b" strokeWidth={2.5} />
                 <Text className="text-slate-400 font-bold text-[12px] uppercase tracking-wider" numberOfLines={1}>
-                  Pickup ({distText})
+                  Lấy hàng ({distText})
                 </Text>
               </View>
             </TouchableOpacity>
@@ -132,6 +161,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
         }
       }
 
+      // If order is picked up but not set to delivering (as fallback)
       if (currentOrder.status === OrderStatus.PICKED_UP) {
         return (
           <TouchableOpacity
@@ -147,12 +177,13 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
             >
               <Navigation size={20} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Delivering</Text>
+              <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Bắt đầu giao hàng</Text>
             </LinearGradient>
           </TouchableOpacity>
         );
       }
 
+      // Active delivering screen -> Show Checkpoint and Confirm Delivery!
       return (
         <View style={{ flexDirection: 'row', gap: 12, flex: 1, width: '100%' }}>
           <TouchableOpacity
@@ -168,7 +199,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}
             >
               <Eye size={16} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[12px] uppercase tracking-wider" numberOfLines={1}>Checkpoint</Text>
+              <Text className="text-white font-black text-[12px] uppercase tracking-wider" numberOfLines={1}>Báo chặng</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -185,7 +216,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}
             >
               <CheckCircle2 size={16} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[12px] uppercase tracking-wider" numberOfLines={1}>Proof of Delivery</Text>
+              <Text className="text-white font-black text-[12px] uppercase tracking-wider" numberOfLines={1}>Xác nhận giao hàng</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

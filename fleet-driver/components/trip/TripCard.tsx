@@ -40,9 +40,13 @@ export function TripCard({ item, section, onPress, onAccept, onReject, isLoading
                 Mission #{trip.id.slice(-6).toUpperCase()}
               </Text>
               <View className="flex-row items-center">
-                <View className={`w-2 h-2 rounded-full mr-2 ${isStarted ? 'bg-indigo-500' : 'bg-slate-500'}`} />
-                <Text className={`text-[10px] font-black uppercase tracking-widest ${isStarted ? 'text-indigo-400' : 'text-slate-500'}`}>
-                  {trip.status}
+                <View className={`w-2 h-2 rounded-full mr-2 ${trip.status === TripStatus.IN_PROGRESS ? 'bg-indigo-500' : trip.status === TripStatus.ACCEPTED ? 'bg-amber-500' : 'bg-slate-500'}`} />
+                <Text className={`text-[10px] font-black uppercase tracking-widest ${trip.status === TripStatus.IN_PROGRESS ? 'text-indigo-400' : trip.status === TripStatus.ACCEPTED ? 'text-amber-400' : 'text-slate-500'}`}>
+                  {trip.status === TripStatus.PENDING ? 'Chờ nhận chuyến' :
+                   trip.status === TripStatus.ACCEPTED ? 'Đang đi lấy hàng' :
+                   trip.status === TripStatus.IN_PROGRESS ? 'Đang giao hàng' :
+                   trip.status === TripStatus.COMPLETED ? 'Đã hoàn thành' :
+                   trip.status === TripStatus.CANCELLED ? 'Đã hủy' : trip.status}
                 </Text>
               </View>
             </View>

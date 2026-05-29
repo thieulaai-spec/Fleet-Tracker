@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "fleetdriver",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -19,7 +19,10 @@
         "UIBackgroundModes": [
           "location",
           "fetch"
-        ]
+        ],
+        "NSLocationWhenInUseUsageDescription": "Cho phép FleetTracker sử dụng vị trí của bạn để cập nhật lộ trình giao hàng.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Cho phép FleetTracker theo dõi vị trí liên tục ngay cả khi chạy nền để giám sát hành trình.",
+        "NSLocationAlwaysUsageDescription": "Cho phép FleetTracker truy cập vị trí của bạn liên tục để tối ưu hóa điều phối."
       }
     },
     "android": {
@@ -54,7 +57,8 @@
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

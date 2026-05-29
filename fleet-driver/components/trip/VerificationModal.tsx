@@ -7,7 +7,10 @@ import {
   Animated,
   Platform,
 } from 'react-native';
-import { X } from 'lucide-react-native';
+import { X, Cpu, Smartphone, CheckCircle2 } from 'lucide-react-native';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useTripStore } from '../../store/useTripStore';
+import { socketService } from '../../lib/socket';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -40,10 +43,15 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   step,
   onSubmit,
 }) => {
+  const { user } = useAuthStore();
+  const fetchTrips = useTripStore((state) => state.fetchTrips);
+
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fingerprintProgress, setFingerprintProgress] = useState(0);
   const [isScanning, setIsScanning] = useState(false);
+  const [isWaitingHardware, setIsWaitingHardware] = useState(false);
+  const [hasHardwareVerified, setHasHardwareVerified] = useState(false);
   
   // Mock proof data
   const [facePhoto, setFacePhoto] = useState<string>('');
@@ -53,6 +61,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const scanIntervalRef = useRef<any>(null);
 
+  const hasHardware = !!user?.driver?.fingerprintId;
+
   useEffect(() => {
     if (visible) {
       setCurrentStep(0);
@@ -61,19 +71,50 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       setFacePhoto('');
       setCargoPhoto('');
       progressAnim.setValue(0);
+
+      if (hasHardware && step === 'pickup') {
+        setIsWaitingHardware(true);
+        setHasHardwareVerified(false);
+      } else {
+        setIsWaitingHardware(false);
+        setHasHardwareVerified(false);
+      }
     }
     return () => {
       if (scanIntervalRef.current) {
         clearInterval(scanIntervalRef.current);
       }
     };
-  }, [visible]);
+  }, [visible, hasHardware, step]);
 
-  // Fingerprint pulse animation
+  useEffect(() => {
+    if (visible && isWaitingHardware && !hasHardwareVerified) {
+      const handleOrderVerified = (data: any) => {
+        console.log('[VerificationModal] Socket order:verified received:', data);
+        if (data.orderId === orderId && data.step === 'pickup') {
+          setHasHardwareVerified(true);
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+          fetchTrips();
+          setTimeout(() => {
+            onClose();
+          }, 2500);
+        }
+      };
+
+      socketService.on('order:verified', handleOrderVerified);
+      return () => {
+        socketService.off('order:verified', handleOrderVerified);
+      };
+    }
+  }, [visible, isWaitingHardware, hasHardwareVerified, orderId, fetchTrips, onClose]);
+
+  // Fingerprint & hardware pulse animation
   const loopAnimRef = useRef<any>(null);
 
   useEffect(() => {
-    if (isScanning) {
+    if (isScanning || (isWaitingHardware && !hasHardwareVerified)) {
       loopAnimRef.current = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -100,7 +141,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         loopAnimRef.current.stop();
       }
     };
-  }, [isScanning]);
+  }, [isScanning, isWaitingHardware, hasHardwareVerified]);
 
   const handleFingerprintPressIn = () => {
     setIsScanning(true);
@@ -243,48 +284,104 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             </View>
 
             {/* Stepper Progress */}
-            <StepperProgress currentStep={currentStep} step={step} />
+            {!isWaitingHardware && <StepperProgress currentStep={currentStep} step={step} />}
 
             {/* Step Content */}
-            <View className="flex-1 justify-center items-center py-6">
+            <View className="flex-1 justify-center items-center py-6 w-full">
               
-              {/* STEP 0: FINGERPRINT SCAN */}
-              {currentStep === 0 && (
-                <FingerprintStep
-                  isScanning={isScanning}
-                  fingerprintProgress={fingerprintProgress}
-                  pulseAnim={pulseAnim}
-                  onPressIn={handleFingerprintPressIn}
-                  onPressOut={handleFingerprintPressOut}
-                />
-              )}
+              {isWaitingHardware ? (
+                <View className="items-center justify-center py-8 px-4 w-full">
+                  {hasHardwareVerified ? (
+                    // Success View
+                    <View className="items-center w-full">
+                      <Animated.View className="bg-emerald-500/20 p-6 rounded-full border border-emerald-500/30 mb-6">
+                        <CheckCircle2 size={64} color="#10b981" />
+                      </Animated.View>
+                      <Text className="text-white text-xl font-bold text-center mb-2">
+                        Xác Thực Thành Công!
+                      </Text>
+                      <Text className="text-slate-400 text-sm text-center px-4">
+                        Thiết bị trên xe đã xác nhận vân tay & khuôn mặt. Chuyến đi của bạn đang được cập nhật...
+                      </Text>
+                    </View>
+                  ) : (
+                    // Waiting View
+                    <View className="items-center w-full">
+                      <View className="relative w-32 h-32 items-center justify-center mb-6">
+                        <Animated.View 
+                          className="absolute inset-0 bg-indigo-500/10 rounded-full border border-indigo-500/30"
+                          style={{
+                            transform: [{ scale: pulseAnim }],
+                          }}
+                        />
+                        <View className="bg-indigo-950/80 p-6 rounded-full border border-indigo-500/50">
+                          <Cpu size={48} color="#6366f1" />
+                        </View>
+                      </View>
+                      
+                      <Text className="text-white text-lg font-bold text-center mb-2">
+                        Đang đợi thiết bị trên xe xác thực...
+                      </Text>
+                      
+                      <Text className="text-slate-400 text-sm text-center mb-8 px-6 font-medium leading-relaxed">
+                        Vui lòng đặt vân tay lên đầu đọc AS608 và nhìn thẳng vào Camera trên xe để hoàn tất.
+                      </Text>
 
-              {/* STEP 1: ESP32-CAM PORTRAIT SUCCESS */}
-              {currentStep === 1 && (
-                <FaceCaptureStep
-                  facePhoto={facePhoto}
-                  onNext={() => step === 'accept' ? setCurrentStep(3) : setCurrentStep(2)}
-                />
-              )}
+                      <View className="w-full h-[1px] bg-white/5 my-4" />
 
-              {/* STEP 2: PHONE CARGO CAMERA */}
-              {currentStep === 2 && (
-                <CargoCaptureStep
-                  cargoPhoto={cargoPhoto}
-                  onCapture={captureCargoPhoto}
-                  onSkip={handleSkipCargoPhoto}
-                />
-              )}
+                      <TouchableOpacity
+                        onPress={() => setIsWaitingHardware(false)}
+                        className="flex-row items-center justify-center bg-white/5 py-3.5 px-6 rounded-2xl border border-white/10 w-full"
+                      >
+                        <Smartphone size={16} color="#94a3b8" />
+                        <Text className="text-slate-300 font-semibold text-sm ml-2">
+                          Sử dụng camera & vân tay điện thoại
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <>
+                  {/* STEP 0: FINGERPRINT SCAN */}
+                  {currentStep === 0 && (
+                    <FingerprintStep
+                      isScanning={isScanning}
+                      fingerprintProgress={fingerprintProgress}
+                      pulseAnim={pulseAnim}
+                      onPressIn={handleFingerprintPressIn}
+                      onPressOut={handleFingerprintPressOut}
+                    />
+                  )}
 
-              {/* STEP 3: SUBMIT REVIEW SCREEN */}
-              {currentStep === 3 && (
-                <SubmitProofStep
-                  step={step}
-                  facePhoto={facePhoto}
-                  cargoPhoto={cargoPhoto}
-                  isSubmitting={isSubmitting}
-                  onSubmit={handleSubmitProof}
-                />
+                  {/* STEP 1: ESP32-CAM PORTRAIT SUCCESS */}
+                  {currentStep === 1 && (
+                    <FaceCaptureStep
+                      facePhoto={facePhoto}
+                      onNext={() => step === 'accept' ? setCurrentStep(3) : setCurrentStep(2)}
+                    />
+                  )}
+
+                  {/* STEP 2: PHONE CARGO CAMERA */}
+                  {currentStep === 2 && (
+                    <CargoCaptureStep
+                      cargoPhoto={cargoPhoto}
+                      onCapture={captureCargoPhoto}
+                      onSkip={handleSkipCargoPhoto}
+                    />
+                  )}
+
+                  {/* STEP 3: SUBMIT REVIEW SCREEN */}
+                  {currentStep === 3 && (
+                    <SubmitProofStep
+                      step={step}
+                      facePhoto={facePhoto}
+                      cargoPhoto={cargoPhoto}
+                      isSubmitting={isSubmitting}
+                      onSubmit={handleSubmitProof}
+                    />
+                  )}
+                </>
               )}
 
             </View>

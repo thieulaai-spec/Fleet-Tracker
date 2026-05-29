@@ -374,14 +374,27 @@ export const useMapFlow = () => {
           text2: 'Chuyến đi đã chuyển sang trạng thái Đang thực hiện',
         });
       } else if (verificationData.step === 'pickup') {
+        // 1. Transition order from PICKED_UP to DELIVERING immediately
+        await updateOrderStatus(orderId, OrderStatus.DELIVERING, {
+          actionLat: verificationData.latitude,
+          actionLng: verificationData.longitude,
+        });
         socketService.emit('order:status_change', {
           orderId,
-          status: OrderStatus.PICKED_UP,
+          status: OrderStatus.DELIVERING,
         });
+
+        // 2. Transition trip from ACCEPTED to IN_PROGRESS immediately
+        await updateTripStatus(activeTrip.id, TripStatus.IN_PROGRESS);
+        socketService.emit('trip:status_change', {
+          tripId: activeTrip.id,
+          status: TripStatus.IN_PROGRESS,
+        });
+
         Toast.show({
           type: 'success',
-          text1: 'Đã lấy hàng',
-          text2: 'Lấy hàng và lưu minh chứng thành công',
+          text1: 'Đã lấy hàng & Bắt đầu giao',
+          text2: 'Chuyến đi hiện đã chuyển sang trạng thái Đang giao hàng',
         });
       } else if (verificationData.step === 'checkpoint') {
         socketService.emit('order:status_change', {
@@ -398,11 +411,31 @@ export const useMapFlow = () => {
           orderId,
           status: OrderStatus.DELIVERED,
         });
-        Toast.show({
-          type: 'success',
-          text1: 'Đã bàn giao hàng',
-          text2: 'Hoàn thành bàn giao và lưu minh chứng thành công',
-        });
+
+        // Auto finalize trip if all other orders are delivered
+        const otherUndelivered = activeTrip.orders.filter(
+          (o) => o.id !== orderId && o.status !== OrderStatus.DELIVERED
+        );
+
+        if (otherUndelivered.length === 0) {
+          // Auto finalize trip to completed
+          await updateTripStatus(activeTrip.id, TripStatus.COMPLETED);
+          socketService.emit('trip:status_change', {
+            tripId: activeTrip.id,
+            status: TripStatus.COMPLETED,
+          });
+          Toast.show({
+            type: 'success',
+            text1: 'Giao hàng thành công',
+            text2: 'Đã hoàn thành toàn bộ chuyến đi!',
+          });
+        } else {
+          Toast.show({
+            type: 'success',
+            text1: 'Đã bàn giao hàng',
+            text2: 'Tiếp tục hành trình giao các đơn tiếp theo',
+          });
+        }
       }
     } catch (err: any) {
       Toast.show({
@@ -412,7 +445,7 @@ export const useMapFlow = () => {
       });
       throw err;
     }
-  }, [activeTrip, currentOrder, submitOrderVerification, updateTripStatus]);
+  }, [activeTrip, currentOrder, submitOrderVerification, updateTripStatus, updateOrderStatus]);
 
   return {
     activeTrip,

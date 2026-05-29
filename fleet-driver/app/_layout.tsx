@@ -28,6 +28,8 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
+  console.log("[RootLayout] loaded:", loaded, "error:", error);
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -35,7 +37,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch((err) => {
+        console.warn("Failed to hide splash screen:", err);
+      });
     }
   }, [loaded]);
 
@@ -53,6 +57,7 @@ import { startBackgroundLocation, stopBackgroundLocation } from '../lib/backgrou
 import { NetworkBanner } from '../components/ui/NetworkBanner';
 import { socketService } from '../lib/socket';
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../components/ui/ExpandableToast';
 
@@ -65,6 +70,8 @@ function RootLayoutNav() {
   const activeTripRef = useRef(activeTrip);
   const segments = useSegments();
   const router = useRouter();
+
+  console.log("[RootLayoutNav] rendering! isAuthenticated:", isAuthenticated, "segments:", segments);
 
   // Keep ref in sync
   useEffect(() => {
@@ -133,14 +140,16 @@ function RootLayoutNav() {
   }, [activeTrip?.id, activeTrip?.status]);
 
   return (
-    <ThemeProvider value={DarkTheme}>
-      <NetworkBanner />
-      <Stack>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-      <Toast config={toastConfig} topOffset={56} />
-    </ThemeProvider>
+    <SafeAreaProvider style={{ flex: 1 }}>
+      <ThemeProvider value={DarkTheme}>
+        <NetworkBanner />
+        <Stack>
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+        <Toast config={toastConfig} topOffset={56} />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

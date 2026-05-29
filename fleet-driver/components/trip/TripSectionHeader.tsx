@@ -19,7 +19,11 @@ export const TripSectionHeader: React.FC<TripSectionHeaderProps> = ({ title }) =
             shadowRadius: 10
           }} 
         />
-        <Text className="text-[12px] font-black text-slate-400 uppercase tracking-[2px]">{title}</Text>
+        <Text className="text-[12px] font-black text-slate-400 uppercase tracking-[2px]">
+          {title === 'Active Trip' ? 'Hành trình đang chạy' :
+           title === 'Pending Trips' ? 'Chuyến đi đang chờ' :
+           title === 'Trip History' ? 'Lịch sử chuyến đi' : title}
+        </Text>
       </View>
       {title === 'Trip History' && (
         <TouchableOpacity activeOpacity={0.6}>

@@ -16,9 +16,9 @@ export const FleetMarker = memo(({ vehicle, onPress }: FleetMarkerProps) => {
     setTracksViewChanges(true);
     const timer = setTimeout(() => {
       setTracksViewChanges(false);
-    }, 1500);
+    }, 1000);
     return () => clearTimeout(timer);
-  }, [vehicle.latitude, vehicle.longitude, vehicle.status, vehicle.heading]);
+  }, [vehicle.status, vehicle.heading]); // Exclude lat/lng from tracksViewChanges trigger to boost movement performance
 
   const getStatusColors = () => {
     switch (vehicle.status) {
@@ -49,11 +49,13 @@ export const FleetMarker = memo(({ vehicle, onPress }: FleetMarkerProps) => {
         latitude: vehicle.latitude,
         longitude: vehicle.longitude,
       }}
+      tappable={true}
       onPress={() => onPress?.(vehicle)}
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={tracksViewChanges}
     >
       <View
+        pointerEvents="none"
         className="w-9 h-9 rounded-full border-[3px] border-white items-center justify-center shadow-lg shadow-black/30"
         style={[
           {

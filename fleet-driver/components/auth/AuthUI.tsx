@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { MotiView } from 'moti';
 
 // AuthBackground
 export const AuthBackground = () => (
-  <View className="absolute inset-0 bg-[#0f172a]">
+  <View className="absolute inset-0 bg-[#0f172a]" style={StyleSheet.absoluteFill}>
     <LinearGradient
       colors={['#1e293b', '#0f172a', '#020617']}
-      className="absolute inset-0"
+      style={StyleSheet.absoluteFill}
     />
     {/* Animated Shapes */}
     <MotiView
@@ -104,7 +104,7 @@ export const AuthButton = ({ title, onPress, isLoading, variant = 'primary', ico
         colors={bgColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="py-4 px-6 items-center justify-center flex-row"
+        style={{ paddingVertical: 16, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}
       >
         {isLoading ? (
           <ActivityIndicator color="#fff" size="small" />

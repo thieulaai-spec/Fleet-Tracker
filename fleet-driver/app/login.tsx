@@ -13,6 +13,7 @@ import { LoginForm } from "../components/auth/LoginForm";
 import { ForgotPassFlow } from "../components/auth/ForgotPassFlow";
 
 export default function LoginScreen() {
+  console.log("[LoginScreen] rendering!");
   const {
     email, setEmail,
     password, setPassword,
@@ -30,18 +31,18 @@ export default function LoginScreen() {
   } = useAuthFlow();
 
   return (
-    <View className="flex-1 bg-slate-950">
+    <View className="flex-1 bg-slate-950" style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       
       <LinearGradient
         colors={["#020617", "#0f172a", "#020617"]}
-        className="flex-1"
+        style={{ flex: 1 }}
       >
         <AuthBackground />
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1 px-8 justify-center"
+          style={{ flex: 1, paddingHorizontal: 32, justifyContent: "center" }}
         >
           <LoginHeader 
             onBack={isForgotMode ? () => toggleForgotMode(false) : undefined}

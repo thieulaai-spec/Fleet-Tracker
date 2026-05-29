@@ -71,11 +71,11 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     // 5 Drivers (Realistic Vietnamese Names & phones)
     const driversData: Driver[] = [];
     const driversInfo = [
-      { email: 'driver1@fleettracker.com', name: 'Nguyễn Văn Hùng', phone: '0901234567', license: 'C', fingerprintId: '1' },
-      { email: 'driver2@fleettracker.com', name: 'Trần Thanh Hải', phone: '0912345678', license: 'B2', fingerprintId: '2' },
-      { email: 'driver3@fleettracker.com', name: 'Lê Minh Quốc', phone: '0987654321', license: 'D', fingerprintId: '3' },
-      { email: 'driver4@fleettracker.com', name: 'Phạm Hoàng Nam', phone: '0934567890', license: 'FC', fingerprintId: '4' },
-      { email: 'driver5@fleettracker.com', name: 'Vũ Tiến Đạt', phone: '0977889900', license: 'C', fingerprintId: '5' },
+      { email: 'driver1@fleettracker.com', name: 'Nguyễn Văn Hùng', phone: '0901234567', license: 'C', fingerprintId: null as any },
+      { email: 'driver2@fleettracker.com', name: 'Trần Thanh Hải', phone: '0912345678', license: 'B2', fingerprintId: null as any },
+      { email: 'driver3@fleettracker.com', name: 'Lê Minh Quốc', phone: '0987654321', license: 'D', fingerprintId: null as any },
+      { email: 'driver4@fleettracker.com', name: 'Phạm Hoàng Nam', phone: '0934567890', license: 'FC', fingerprintId: null as any },
+      { email: 'driver5@fleettracker.com', name: 'Vũ Tiến Đạt', phone: '0977889900', license: 'C', fingerprintId: null as any },
     ];
 
     for (const info of driversInfo) {
@@ -187,13 +187,12 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     // Trips and verifications
     console.log('Seeding trips & journey verifications...');
     
-    // Trip 1 (Nguyễn Văn Hùng - Isuzu medium plate '51C-432.10') - status: IN_PROGRESS
+    // Trip 1 (Nguyễn Văn Hùng - Isuzu medium plate '51C-432.10') - status: PENDING
     const trip1 = await tripRepository.save(
       tripRepository.create({
         vehicle: vehiclesData[0],
         driver: driversData[0],
-        status: TripStatus.IN_PROGRESS,
-        startedAt: new Date(Date.now() - 3 * 3600000), // 3 hours ago
+        status: TripStatus.PENDING,
         totalDistanceKm: 18.5,
         estimatedFuelCost: 150000,
         plannedRoute: {
@@ -204,14 +203,6 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
             [106.7500, 10.8000],
             [106.8100, 10.8300],
           ]
-        },
-        actualRoute: {
-          type: 'LineString',
-          coordinates: [
-            [106.6600, 10.7570],
-            [106.6850, 10.7700],
-            [106.7020, 10.7820],
-          ]
         }
       })
     );
@@ -220,35 +211,12 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[6].id, sequence: 1 }));
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[7].id, sequence: 2 }));
 
-    // Ensure active driver Nguyễn Văn Hùng is ON_TRIP and vehicle is DELIVERING
-    driversData[0].status = DriverStatus.ON_TRIP;
+    // Nguyễn Văn Hùng AVAILABLE and vehicle AVAILABLE
+    driversData[0].status = DriverStatus.AVAILABLE;
     await driverRepository.save(driversData[0]);
 
-    vehiclesData[0].status = VehicleStatus.DELIVERING;
+    vehiclesData[0].status = VehicleStatus.AVAILABLE;
     await vehicleRepository.save(vehiclesData[0]);
-
-    // Seeding verifications for active Trip 1, Order 7 (delivering)
-    console.log('Seeding verifications for Order 7...');
-    await verificationRepository.save(
-      verificationRepository.create({
-        orderId: ordersData[6].id,
-        step: VerificationStep.ACCEPT,
-        fingerprintStatus: true,
-        facePhotoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&h=300&fit=crop',
-        cargoPhotoUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=400&fit=crop',
-        location: { type: 'Point', coordinates: [106.6600, 10.7570] },
-      })
-    );
-    await verificationRepository.save(
-      verificationRepository.create({
-        orderId: ordersData[6].id,
-        step: VerificationStep.PICKUP,
-        fingerprintStatus: true,
-        facePhotoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop',
-        cargoPhotoUrl: 'https://images.unsplash.com/photo-1549194388-f61be84a6e9e?w=400&h=400&fit=crop',
-        location: { type: 'Point', coordinates: [106.6620, 10.7580] },
-      })
-    );
 
     // Trip 2 (Trần Thanh Hải - status: DELIVERED/COMPLETED history)
     const trip2 = await tripRepository.save(
@@ -301,48 +269,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
       { lng: 106.7020, lat: 10.7820, speed: 30, heading: 45 },
     ];
 
-    for (let j = 0; j < gpsPoints.length; j++) {
-      const pt = gpsPoints[j];
-      await gpsRepository.save(
-        gpsRepository.create({
-          vehicleId: vehiclesData[0].id,
-          tripId: trip1.id,
-          location: { type: 'Point', coordinates: [pt.lng, pt.lat] },
-          speedKmh: pt.speed,
-          heading: pt.heading,
-          recordedAt: new Date(Date.now() - (gpsPoints.length - j) * 60000),
-        })
-      );
-    }
-    console.log('GPS locations seeded.');
-
-    // Seed alerts
-    console.log('Seeding alerts...');
-    await alertRepository.save(
-      alertRepository.create({
-        vehicle: vehiclesData[0],
-        driver: driversData[0],
-        trip: trip1,
-        type: AlertType.SPEED_VIOLATION,
-        severity: AlertSeverity.MEDIUM,
-        message: 'Tài xế Nguyễn Văn Hùng vượt quá tốc độ cho phép 85km/h tại Đại Lộ Đông Tây.',
-        location: { type: 'Point', coordinates: [106.6800, 10.7680] },
-        isResolved: false,
-      })
-    );
-    await alertRepository.save(
-      alertRepository.create({
-        vehicle: vehiclesData[0],
-        driver: driversData[0],
-        trip: trip1,
-        type: AlertType.ABNORMAL_STOP,
-        severity: AlertSeverity.HIGH,
-        message: 'Dừng bất thường quá 15 phút không rõ nguyên nhân tại giao lộ Nguyễn Văn Cừ.',
-        location: { type: 'Point', coordinates: [106.6900, 10.7750] },
-        isResolved: false,
-      })
-    );
-    console.log('Alerts seeded.');
+    console.log('Bypassed GPS locations & alerts seeding since Trip 1 is PENDING.');
 
     console.log('Seeding completed successfully! Database is populated with premium, realistic data.');
   } catch (err) {

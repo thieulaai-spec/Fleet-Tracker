@@ -24,6 +24,7 @@ export class TrackingService implements OnModuleDestroy {
   private flushInterval: NodeJS.Timeout;
   private isFlushing = false;
   private pendingEnrollments = new Map<string, number>();
+  private readonly lastHardwareGpsMap = new Map<string, number>();
 
   constructor(
     @InjectRepository(GpsLocation)
@@ -92,6 +93,32 @@ export class TrackingService implements OnModuleDestroy {
       timestamp,
     } = data;
 
+    // Check if hardware GPS is active for this vehicle (within last 30s)
+    const lastHardwareTime = this.lastHardwareGpsMap.get(vehicleId);
+    if (lastHardwareTime && Date.now() - lastHardwareTime < 30000) {
+      this.logger.debug(
+        `Skipping phone GPS update for vehicle ${vehicleId} due to active hardware GPS`,
+      );
+      
+      const vehicle = await this.vehicleRepository.findOne({
+        where: { id: vehicleId },
+        relations: ['driver', 'driver.user'],
+      });
+
+      return {
+        vehicleId,
+        tripId,
+        latitude,
+        longitude,
+        speed,
+        heading,
+        timestamp,
+        status: vehicle?.status || 'available',
+        licensePlate: vehicle?.plateNumber || `VH-${vehicleId.slice(0, 6)}`,
+        driverName: vehicle?.driver?.user?.fullName || 'Unknown Driver',
+      };
+    }
+
     // 1. Create PostGIS Point
     const point = {
       type: 'Point',
@@ -156,10 +183,6 @@ export class TrackingService implements OnModuleDestroy {
 
     const results: any[] = [];
 
-    // For batch updates, we process them but maybe skip some heavy logic
-    // or optimize the vehicle update to only the latest point.
-    const latestPoint = data[data.length - 1];
-
     for (const pointData of data) {
       const {
         vehicleId,
@@ -170,6 +193,15 @@ export class TrackingService implements OnModuleDestroy {
         heading,
         timestamp,
       } = pointData;
+
+      // Check if hardware GPS is active for this vehicle (within last 30s)
+      const lastHardwareTime = this.lastHardwareGpsMap.get(vehicleId);
+      if (lastHardwareTime && Date.now() - lastHardwareTime < 30000) {
+        this.logger.debug(
+          `Skipping phone GPS batch point for vehicle ${vehicleId} due to active hardware GPS`,
+        );
+        continue;
+      }
 
       // Add to buffer
       const gpsLocation = this.gpsRepository.create({
@@ -196,16 +228,19 @@ export class TrackingService implements OnModuleDestroy {
       });
     }
 
-    // Update vehicle to the latest position only
-    await this.vehicleRepository
-      .createQueryBuilder()
-      .update(Vehicle)
-      .set({
-        lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
-      })
-      .where('id = :vehicleId', { vehicleId: latestPoint.vehicleId })
-      .setParameters({ lng: latestPoint.longitude, lat: latestPoint.latitude })
-      .execute();
+    // Update vehicle to the latest position only (if any points were not skipped)
+    if (results.length > 0) {
+      const latestPoint = results[results.length - 1];
+      await this.vehicleRepository
+        .createQueryBuilder()
+        .update(Vehicle)
+        .set({
+          lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
+        })
+        .where('id = :vehicleId', { vehicleId: latestPoint.vehicleId })
+        .setParameters({ lng: latestPoint.longitude, lat: latestPoint.latitude })
+        .execute();
+    }
 
     return results;
   }
@@ -222,6 +257,9 @@ export class TrackingService implements OnModuleDestroy {
     if (!vehicle) {
       throw new Error(`Vehicle with deviceId ${deviceId} not found`);
     }
+
+    // Update last known hardware GPS timestamp
+    this.lastHardwareGpsMap.set(vehicle.id, Date.now());
 
     // 2. Check for active trip to link history
     const activeTrip = await this.tripRepository.findOne({

@@ -6,6 +6,10 @@ import { Vehicle } from '../entities/vehicle.entity';
 import { Trip } from '../entities/trip.entity';
 import { Driver } from '../entities/driver.entity';
 import { ViolationDetectorService } from '../alerts/violation-detector.service';
+import { UploadService } from '../upload/upload.service';
+import { OrderVerificationsService } from '../order-verifications/order-verifications.service';
+import { DataSource } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('TrackingService', () => {
   let service: TrackingService;
@@ -66,6 +70,30 @@ describe('TrackingService', () => {
             checkViolations: jest.fn().mockResolvedValue(undefined),
           },
         },
+        {
+          provide: UploadService,
+          useValue: {
+            uploadFile: jest.fn(),
+          },
+        },
+        {
+          provide: OrderVerificationsService,
+          useValue: {
+            verifyStep: jest.fn(),
+          },
+        },
+        {
+          provide: DataSource,
+          useValue: {
+            getRepository: jest.fn(),
+          },
+        },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -98,6 +126,26 @@ describe('TrackingService', () => {
 
     expect((service as any).gpsBuffer.length).toBe(1);
     expect(vehicleRepo.createQueryBuilder).toHaveBeenCalled();
+  });
+
+  it('should skip phone GPS update if hardware GPS was recently active', async () => {
+    const data = {
+      vehicleId: 'v1',
+      tripId: 't1',
+      latitude: 10,
+      longitude: 20,
+      speed: 50,
+      heading: 90,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Simulate active hardware GPS
+    (service as any).lastHardwareGpsMap.set('v1', Date.now());
+
+    await service.processGpsUpdate(data);
+
+    // Should not add to buffer or update vehicle table
+    expect((service as any).gpsBuffer.length).toBe(0);
   });
 
   it('should flush buffer and clear it on success', async () => {

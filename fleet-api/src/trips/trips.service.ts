@@ -192,9 +192,14 @@ export class TripsService {
       }
 
       if (status === TripStatus.CANCELLED) {
-        // Update orders back to PENDING
-        if (trip.tripOrders) {
-          for (const tripOrder of trip.tripOrders) {
+        // Query trip orders directly to be 100% robust and bypass any TypeORM relations lazy-loading issues
+        const tripOrders = await queryRunner.manager.find(TripOrder, {
+          where: { tripId: trip.id },
+          relations: ['order'],
+        });
+
+        if (tripOrders) {
+          for (const tripOrder of tripOrders) {
             if (tripOrder.order) {
               tripOrder.order.status = OrderStatus.PENDING;
               await queryRunner.manager.save(Order, tripOrder.order);

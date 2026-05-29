@@ -28,7 +28,7 @@ const getStatusColor = (status: string = '') => {
 export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, currentOrder, routeData }) => {
   const formattedDistance = routeData 
     ? (routeData.distance / 1000).toFixed(1) + ' KM'
-    : activeTrip.totalDistanceKm ? activeTrip.totalDistanceKm.toFixed(1) + ' KM' : '-- KM';
+    : activeTrip.totalDistanceKm ? Number(activeTrip.totalDistanceKm).toFixed(1) + ' KM' : '-- KM';
     
   const formattedETA = routeData
     ? Math.round(routeData.duration / 60) + ' MIN'

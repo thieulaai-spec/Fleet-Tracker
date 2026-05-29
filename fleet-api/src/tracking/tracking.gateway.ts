@@ -65,6 +65,14 @@ export class TrackingGateway
     });
 
     this.server.to(`trip:${payload.id}`).emit('trip:status-changed', payload);
+
+    if (payload.status === 'cancelled' && payload.driverId) {
+      this.logger.log(`Broadcasting trip:cancelled to driver:${payload.driverId} for trip ${payload.id}`);
+      this.server.to(`driver:${payload.driverId}`).emit('trip:cancelled', {
+        tripId: payload.id,
+        status: payload.status,
+      });
+    }
   }
 
   @OnEvent('order.verified')

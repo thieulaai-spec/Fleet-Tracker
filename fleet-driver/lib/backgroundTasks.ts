@@ -96,18 +96,22 @@ export const startBackgroundLocation = async () => {
 
   const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
   if (!isRegistered) {
-    await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: Location.Accuracy.Balanced,
-      timeInterval: 10000, // 10 seconds
-      distanceInterval: 20, // 20 meters
-      foregroundService: {
-        notificationTitle: 'FleetTracker Tracking',
-        notificationBody: 'FleetTracker is tracking your location for an active trip.',
-        notificationColor: '#3b82f6',
-      },
-      pausesUpdatesAutomatically: true, // Battery optimization
-    });
-    console.log('Background location tracking started');
+    try {
+      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 10000, // 10 seconds
+        distanceInterval: 20, // 20 meters
+        foregroundService: {
+          notificationTitle: 'FleetTracker Tracking',
+          notificationBody: 'FleetTracker is tracking your location for an active trip.',
+          notificationColor: '#3b82f6',
+        },
+        pausesUpdatesAutomatically: true, // Battery optimization
+      });
+      console.log('Background location tracking started');
+    } catch (err: any) {
+      console.warn('Background location tracking failed to start (expected on iOS Expo Go/Simulators):', err.message);
+    }
   }
 };
 

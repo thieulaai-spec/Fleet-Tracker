@@ -137,11 +137,21 @@ function RootLayoutNav() {
         });
       };
 
+      const handleFingerprintAllCleared = (data: any) => {
+        Toast.show({
+          type: data.success ? 'success' : 'error',
+          text1: data.success ? 'Xóa Sạch Vân Tay! 🧹' : 'Xóa Sạch Vân Tay Thất Bại ❌',
+          text2: data.message || (data.success ? `Đã xóa sạch bộ nhớ vân tay trên xe (Mã xe: ${data.deviceId}).` : 'Có lỗi xảy ra khi xóa sạch bộ nhớ vân tay.'),
+          visibilityTime: 10000,
+        });
+      };
+
       socketService.on('trip:assigned', handleTripAssigned);
       socketService.on('trip:cancelled', handleTripCancelled);
       socketService.on('enroll:required', handleEnrollRequired);
       socketService.on('enroll:result', handleEnrollResult);
       socketService.on('fingerprint:deleted', handleFingerprintDeleted);
+      socketService.on('fingerprint:all_cleared', handleFingerprintAllCleared);
 
       return () => {
         socketService.off('trip:assigned', handleTripAssigned);
@@ -149,6 +159,7 @@ function RootLayoutNav() {
         socketService.off('enroll:required', handleEnrollRequired);
         socketService.off('enroll:result', handleEnrollResult);
         socketService.off('fingerprint:deleted', handleFingerprintDeleted);
+        socketService.off('fingerprint:all_cleared', handleFingerprintAllCleared);
       };
     } else {
       // Disconnect socket when not authenticated

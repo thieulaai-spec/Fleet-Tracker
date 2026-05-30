@@ -81,7 +81,10 @@ export default function AdminFleetScreen() {
           onPress: async () => {
             try {
               await clearAllFingerprints();
-              Alert.alert("Thành công", "Đã xóa toàn bộ đăng ký vân tay thành công!");
+              Alert.alert(
+                "Đã yêu cầu xóa",
+                "Đã gửi lệnh xóa đến tất cả thiết bị phần cứng. Hệ thống sẽ hiển thị thông báo thời gian thực ngay khi từng xe hoàn tất việc xóa vân tay."
+              );
             } catch (error: any) {
               Alert.alert("Thất bại", error.message || "Không thể xóa vân tay.");
             }

@@ -392,73 +392,70 @@ export default function AdminDashboardScreen() {
       )}
     </ScrollView>
 
-    {/* Solutions 1 & 2: "View All" Modal with full interactive Filtering and Search on Mobile */}
-    <Modal
-      animationType="slide"
-      transparent={false}
-      visible={isModalOpen}
-      onRequestClose={() => setIsModalOpen(false)}
-    >
-      <SafeAreaView className="flex-1 bg-slate-950 p-5">
-        {/* Modal Header */}
-        <View className="flex-row justify-between items-center mb-6">
-          <Text className="text-2xl font-bold text-slate-50">Operational Logs</Text>
-          <TouchableOpacity 
-            onPress={() => setIsModalOpen(false)}
-            className="w-10 h-10 rounded-full bg-slate-800 justify-center items-center"
-          >
-            <X size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Filtering Tabs */}
-        <View className="flex-row justify-between mb-4 gap-1">
-          {(['all', 'order', 'trip', 'alert'] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              className={`flex-1 py-2 px-1 rounded-xl items-center border ${
-                activeTab === tab 
-                  ? 'bg-indigo-600 border-indigo-500 shadow-sm' 
-                  : 'bg-slate-800 border-slate-700'
-              }`}
+    {/* Solutions 1 & 2: "View All" Overlay with full interactive Filtering and Search on Mobile */}
+    {isModalOpen && (
+      <View className="absolute inset-0 bg-slate-950 z-50 p-5">
+        <SafeAreaView className="flex-1">
+          {/* Header */}
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-2xl font-bold text-slate-50">Operational Logs</Text>
+            <TouchableOpacity 
+              onPress={() => setIsModalOpen(false)}
+              className="w-10 h-10 rounded-full bg-slate-800 justify-center items-center"
             >
-              <Text className={`text-[10px] font-bold uppercase tracking-wider ${
-                activeTab === tab ? 'text-slate-50' : 'text-slate-400'
-              }`}>
-                {tab === 'all' ? 'All' : `${tab}s`}
-              </Text>
+              <X size={20} color="#fff" />
             </TouchableOpacity>
-          ))}
-        </View>
+          </View>
 
-        {/* Search Box */}
-        <View className="flex-row items-center bg-slate-800 px-4 py-3 rounded-2xl border border-slate-700 mb-6">
-          <Search size={16} color="#94a3b8" />
-          <TextInput
-            placeholder="Search history logs..."
-            placeholderTextColor="#64748b"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            className="flex-1 text-slate-200 text-sm ml-2 outline-none"
-          />
-        </View>
+          {/* Filtering Tabs */}
+          <View className="flex-row justify-between mb-4 gap-1">
+            {(['all', 'order', 'trip', 'alert'] as const).map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setActiveTab(tab)}
+                className={`flex-1 py-2 px-1 rounded-xl items-center border ${
+                  activeTab === tab 
+                    ? 'bg-indigo-600 border-indigo-500 shadow-sm' 
+                    : 'bg-slate-800 border-slate-700'
+                }`}
+              >
+                <Text className={`text-[10px] font-bold uppercase tracking-wider ${
+                  activeTab === tab ? 'text-slate-50' : 'text-slate-400'
+                }`}>
+                  {tab === 'all' ? 'All' : `${tab}s`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        {/* Scrollable Timeline */}
-        <ScrollView 
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: 40 }}
-        >
-          {filteredActivities.length === 0 ? (
-            <View className="bg-slate-900/40 py-12 rounded-3xl items-center border border-dashed border-slate-800">
-              <Text className="text-slate-400 text-sm font-medium">No matching logs found.</Text>
-            </View>
-          ) : (
-            filteredActivities.map((activity, idx, arr) => renderActivityItem(activity, idx, arr))
-          )}
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
+          {/* Search Box */}
+          <View className="flex-row items-center bg-slate-800 px-4 py-3 rounded-2xl border border-slate-700 mb-6">
+            <Search size={16} color="#94a3b8" />
+            <TextInput
+              placeholder="Search history logs..."
+              placeholderTextColor="#64748b"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              className="flex-1 text-slate-200 text-sm ml-2 outline-none"
+            />
+          </View>
+
+          {/* Scrollable Timeline */}
+          <ScrollView 
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 40 }}
+          >
+            {filteredActivities.length === 0 ? (
+              <View className="bg-slate-900/40 py-12 rounded-3xl items-center border border-dashed border-slate-800">
+                <Text className="text-slate-400 text-sm font-medium">No matching logs found.</Text>
+              </View>
+            ) : (
+              filteredActivities.map((activity, idx, arr) => renderActivityItem(activity, idx, arr))
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    )}
   </SafeAreaView>
   );
 }

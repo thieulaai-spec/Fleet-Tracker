@@ -117,137 +117,7 @@ export default function TripDetails() {
     return `${mins} phút`;
   };
 
-  const renderOrderVerifications = (orderId: string, order: any) => {
-    const orderVers = verifications.filter(v => v.orderId === orderId);
-    
-    if (orderVers.length === 0 && !order.signatureUrl) {
-      return null;
-    }
 
-    return (
-      <BlurView 
-        intensity={10} 
-        tint="dark"
-        className="rounded-[32px] p-5 mb-6 border border-white/5 overflow-hidden mt-[-16px] bg-slate-900/30"
-      >
-        <View className="flex-row items-center gap-2 mb-4">
-          <FileText size={14} color="#818cf8" />
-          <Text className="text-slate-400 text-[10px] font-black uppercase tracking-[2px]">Bằng chứng giao nhận</Text>
-        </View>
-
-        <View className="gap-5">
-          {orderVers.map((ver, idx) => {
-            const isPickup = ver.step === 'pickup';
-            const isDelivery = ver.step === 'delivery';
-            const isAccept = ver.step === 'accept';
-            const isCheckpoint = ver.step === 'checkpoint';
-            
-            let stepTitle = 'Xác thực';
-            if (isAccept) stepTitle = 'Chấp nhận đơn';
-            else if (isPickup) stepTitle = 'Lấy hàng thành công';
-            else if (isDelivery) stepTitle = 'Bàn giao hàng thành công';
-            else if (isCheckpoint) stepTitle = 'Mốc lộ trình (Checkpoint)';
-
-            return (
-              <View key={ver.id || idx} className="flex-row gap-3">
-                {/* Node Line */}
-                <View className="items-center">
-                  <View className="w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/30 items-center justify-center">
-                    <Check size={10} color="#818cf8" />
-                  </View>
-                  {idx !== orderVers.length - 1 && (
-                    <View className="w-px flex-1 bg-white/10 my-1" />
-                  )}
-                </View>
-
-                {/* Node Content */}
-                <View className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                  <View className="flex-row justify-between items-center mb-2.5">
-                    <Text className="text-white text-xs font-black tracking-wide">{stepTitle}</Text>
-                    <Text className="text-slate-500 text-[9px] font-black uppercase tracking-wider">
-                      {new Date(ver.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-
-                  {/* Fingerprint proof */}
-                  {ver.fingerprintStatus && (
-                    <View className="flex-row items-center gap-1.5 mb-3 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg self-start">
-                      <Fingerprint size={10} color="#10b981" />
-                      <Text className="text-emerald-400 text-[8px] font-black uppercase tracking-wider">Vân tay đã xác minh</Text>
-                    </View>
-                  )}
-
-                  {/* Photos Row */}
-                  {(ver.facePhotoUrl || ver.cargoPhotoUrl) && (
-                    <View className="flex-row gap-3 mt-1.5">
-                      {/* Face Photo */}
-                      {ver.facePhotoUrl && (
-                        <View className="flex-1">
-                          <Text className="text-slate-500 text-[8px] font-black uppercase tracking-wider mb-1">Xác thực gương mặt</Text>
-                          <View className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950">
-                            <Image 
-                              source={{ uri: ver.facePhotoUrl }} 
-                              className="w-full h-full"
-                              resizeMode="cover"
-                            />
-                          </View>
-                        </View>
-                      )}
-
-                      {/* Cargo Photo */}
-                      {ver.cargoPhotoUrl && (
-                        <View className="flex-1">
-                          <Text className="text-slate-500 text-[8px] font-black uppercase tracking-wider mb-1">Ảnh thực tế hàng hóa</Text>
-                          <View className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950">
-                            <Image 
-                              source={{ uri: ver.cargoPhotoUrl }} 
-                              className="w-full h-full"
-                              resizeMode="cover"
-                            />
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                  )}
-
-                  {/* GPS Location Details */}
-                  {ver.location && ver.location.coordinates && (
-                    <View className="flex-row items-center gap-1.5 mt-3 bg-white/[0.03] p-2 rounded-lg border border-white/5">
-                      <MapPin size={10} color="#a78bfa" />
-                      <Text className="text-slate-400 text-[9px] font-bold" numberOfLines={1}>
-                        Tọa độ GPS thực tế: {ver.location.coordinates[1].toFixed(5)}, {ver.location.coordinates[0].toFixed(5)}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            );
-          })}
-
-          {/* Customer Signature */}
-          {order.signatureUrl && (
-            <View className="flex-row gap-3">
-              <View className="items-center">
-                <View className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 items-center justify-center">
-                  <UserCheck size={10} color="#10b981" />
-                </View>
-              </View>
-              <View className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                <Text className="text-white text-xs font-black tracking-wide mb-2">Chữ ký xác nhận của người nhận</Text>
-                <View className="h-20 bg-slate-950/80 rounded-xl overflow-hidden items-center justify-center p-1 border border-white/10">
-                  <Image 
-                    source={{ uri: order.signatureUrl }} 
-                    className="w-full h-full"
-                    resizeMode="contain"
-                  />
-                </View>
-              </View>
-            </View>
-          )}
-        </View>
-      </BlurView>
-    );
-  };
 
   if (localLoading && !trip) {
     return (
@@ -432,19 +302,16 @@ export default function TripDetails() {
           </View>
 
           {trip.orders.map((order: any, index: number) => (
-            <View key={order.id}>
-              <OrderCard 
-                order={order}
-                index={index}
-                onNavigate={openNavigation}
-                onProof={(orderId) => router.push({ pathname: '/camera', params: { orderId } })}
-                onStatusUpdate={updateOrderStatus}
-                canSubmitProof={trip.status === TripStatus.IN_PROGRESS}
-              />
-              
-              {/* Verification proofs timeline for this order */}
-              {renderOrderVerifications(order.id, order)}
-            </View>
+            <OrderCard 
+              key={order.id}
+              order={order}
+              index={index}
+              onNavigate={openNavigation}
+              onProof={(orderId) => router.push({ pathname: '/camera', params: { orderId } })}
+              onStatusUpdate={updateOrderStatus}
+              canSubmitProof={trip.status === TripStatus.IN_PROGRESS}
+              verifications={verifications}
+            />
           ))}
 
           {/* Stats Summary */}

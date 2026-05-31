@@ -227,7 +227,13 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
             id: `live-trip-${payload.id}-${payload.status}-${Date.now()}`,
             type: 'trip',
             title: `Trip ${payload.status.charAt(0).toUpperCase() + payload.status.slice(1)}`,
-            description: `Trip is now ${statusText} for vehicle ${payload.vehicleId}.`,
+            description: payload.status === 'accepted'
+              ? `Driver ${payload.driverName || 'Driver'} accepted the assigned trip.`
+              : payload.status === 'in_progress'
+              ? `Driver ${payload.driverName || 'Driver'} started trip on vehicle ${payload.vehicleId || ''}.`
+              : payload.status === 'completed'
+              ? `Driver ${payload.driverName || 'Driver'} completed trip.`
+              : `Trip is now ${statusText} for vehicle ${payload.vehicleId || ''}.`,
             timestamp: new Date(),
             status: payload.status,
             meta: { tripId: payload.id }

@@ -233,12 +233,25 @@ export class TripsService {
       const savedTrip = await queryRunner.manager.save(Trip, trip);
       await queryRunner.commitTransaction();
 
+      // Retrieve driver's full name for operational logs
+      let driverName = 'Driver';
+      if (savedTrip.driverId) {
+        const driverWithUser = await this.tripRepository.manager.findOne(Driver, {
+          where: { id: savedTrip.driverId },
+          relations: ['user'],
+        });
+        if (driverWithUser && driverWithUser.user) {
+          driverName = driverWithUser.user.fullName;
+        }
+      }
+
       // Emit status change event
       this.eventEmitter.emit('trip.status_changed', {
         id: savedTrip.id,
         status: savedTrip.status,
         vehicleId: savedTrip.vehicleId,
         driverId: savedTrip.driverId,
+        driverName,
       });
 
       return savedTrip;

@@ -16,6 +16,7 @@ import { SearchInput } from '@/components/ui/SearchInput';
 import { Order, Alert, Trip } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { connectSocket } from '@/lib/socket';
 
 interface RecentActivityCardProps {
   orders: Order[];
@@ -44,6 +45,7 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'all' | 'order' | 'trip' | 'alert'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [localActivities, setLocalActivities] = React.useState<ActivityItem[]>([]);
 
   React.useEffect(() => {
     setMounted(true);
@@ -191,21 +193,93 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
     return items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }, [orders, alerts, trips]);
 
+  // Keep local activities in sync with fetched database updates
+  React.useEffect(() => {
+    setLocalActivities(allActivities);
+  }, [allActivities]);
+
+  // Solution 3: Bind global WebSockets to prepend new activities instantly in real-time
+  React.useEffect(() => {
+    let socket: any;
+
+    const setupSocket = async () => {
+      try {
+        socket = await connectSocket();
+
+        // 1. Listen for new operational alerts
+        socket.on('alert:new', (payload: any) => {
+          const newAlertItem: ActivityItem = {
+            id: `live-alert-${payload.id || Date.now()}`,
+            type: 'alert',
+            title: (payload.type || 'ALERT').replace('_', ' ').toUpperCase(),
+            description: `${payload.message || ''} (${payload.vehicle?.plateNumber || 'Unknown Vehicle'})`,
+            timestamp: new Date(),
+            severity: payload.severity,
+            meta: { vehicleId: payload.vehicleId, alertId: payload.id }
+          };
+          setLocalActivities(prev => [newAlertItem, ...prev]);
+        });
+
+        // 2. Listen for trip updates
+        socket.on('trip:status-changed', (payload: any) => {
+          const statusText = payload.status === 'in_progress' ? 'started' : payload.status;
+          const newTripItem: ActivityItem = {
+            id: `live-trip-${payload.id}-${payload.status}-${Date.now()}`,
+            type: 'trip',
+            title: `Trip ${payload.status.charAt(0).toUpperCase() + payload.status.slice(1)}`,
+            description: `Trip is now ${statusText} for vehicle ${payload.vehicleId}.`,
+            timestamp: new Date(),
+            status: payload.status,
+            meta: { tripId: payload.id }
+          };
+          setLocalActivities(prev => [newTripItem, ...prev]);
+        });
+
+        // 3. Listen for order milestone verifications
+        socket.on('order:verified', (payload: any) => {
+          const newOrderItem: ActivityItem = {
+            id: `live-order-${payload.orderId}-${Date.now()}`,
+            type: 'order',
+            title: 'Milestone Verified',
+            description: `ORD-${payload.orderId.substring(0, 4)} verification success!`,
+            timestamp: new Date(),
+            status: 'verified',
+            meta: { orderId: payload.orderId }
+          };
+          setLocalActivities(prev => [newOrderItem, ...prev]);
+        });
+
+      } catch (err) {
+        console.error('Failed to set up real-time websocket activities:', err);
+      }
+    };
+
+    setupSocket();
+
+    return () => {
+      if (socket) {
+        socket.off('alert:new');
+        socket.off('trip:status-changed');
+        socket.off('order:verified');
+      }
+    };
+  }, []);
+
   // Limit to Top 7 for the main dashboard display
   const dashboardActivities = React.useMemo(() => {
-    return allActivities.slice(0, 7);
-  }, [allActivities]);
+    return localActivities.slice(0, 7);
+  }, [localActivities]);
 
   // Filter activities dynamically for the Modal View
   const filteredActivities = React.useMemo(() => {
-    return allActivities.filter(activity => {
+    return localActivities.filter(activity => {
       const matchesTab = activeTab === 'all' || activity.type === activeTab;
       const matchesQuery = !searchQuery || 
         activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         activity.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesTab && matchesQuery;
     });
-  }, [allActivities, activeTab, searchQuery]);
+  }, [localActivities, activeTab, searchQuery]);
 
   const getActivityIcon = (type: 'order' | 'alert' | 'trip', status?: string) => {
     switch (type) {

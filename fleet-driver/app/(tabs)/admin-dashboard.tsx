@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { StatCard } from '../../components/admin/dashboard/StatCard';
 import { useDashboardStore } from '../../store/useDashboardStore';
+import { socketService } from '../../lib/socket';
 
 export default function AdminDashboardScreen() {
   const { stats, orders, alerts, trips, isLoading, fetchStats } = useDashboardStore();
@@ -13,6 +14,7 @@ export default function AdminDashboardScreen() {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'all' | 'order' | 'trip' | 'alert'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [localActivities, setLocalActivities] = React.useState<any[]>([]);
 
   useEffect(() => {
     fetchStats();
@@ -176,21 +178,81 @@ export default function AdminDashboardScreen() {
     return items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }, [orders, alerts, trips]);
 
+  // Keep local activities in sync with store updates
+  useEffect(() => {
+    setLocalActivities(allActivities);
+  }, [allActivities]);
+
+  // Solution 3: Bind live mobile socketService events to prepend new activities instantly in real-time
+  useEffect(() => {
+    socketService.connect();
+
+    // 1. Operational Alerts
+    const handleNewAlert = (payload: any) => {
+      const newAlertItem = {
+        id: `live-alert-${payload.id || Date.now()}`,
+        type: 'alert',
+        title: (payload.type || 'ALERT').replace('_', ' ').toUpperCase(),
+        description: `${payload.message || ''} (${payload.vehicle?.plateNumber || 'Unknown Vehicle'})`,
+        timestamp: new Date(),
+        severity: payload.severity,
+      };
+      setLocalActivities(prev => [newAlertItem, ...prev]);
+    };
+
+    // 2. Trip Updates
+    const handleTripStatusChanged = (payload: any) => {
+      const statusText = payload.status === 'in_progress' ? 'started' : payload.status;
+      const newTripItem = {
+        id: `live-trip-${payload.id}-${payload.status}-${Date.now()}`,
+        type: 'trip',
+        title: `Trip ${payload.status.charAt(0).toUpperCase() + payload.status.slice(1)}`,
+        description: `Trip is now ${statusText} for vehicle ${payload.vehicleId || ''}.`,
+        timestamp: new Date(),
+        status: payload.status,
+      };
+      setLocalActivities(prev => [newTripItem, ...prev]);
+    };
+
+    // 3. Order Milestone verification
+    const handleOrderVerified = (payload: any) => {
+      const newOrderItem = {
+        id: `live-order-${payload.orderId}-${Date.now()}`,
+        type: 'order',
+        title: 'Milestone Verified',
+        description: `ORD-${payload.orderId.substring(0, 4)} verification success!`,
+        timestamp: new Date(),
+        status: 'verified',
+      };
+      setLocalActivities(prev => [newOrderItem, ...prev]);
+    };
+
+    socketService.on('alert:new', handleNewAlert);
+    socketService.on('trip:status-changed', handleTripStatusChanged);
+    socketService.on('order:verified', handleOrderVerified);
+
+    return () => {
+      socketService.off('alert:new', handleNewAlert);
+      socketService.off('trip:status-changed', handleTripStatusChanged);
+      socketService.off('order:verified', handleOrderVerified);
+    };
+  }, []);
+
   // Dashboard top 6 view
   const dashboardActivities = React.useMemo(() => {
-    return allActivities.slice(0, 6);
-  }, [allActivities]);
+    return localActivities.slice(0, 6);
+  }, [localActivities]);
 
   // Filtered view for history modal
   const filteredActivities = React.useMemo(() => {
-    return allActivities.filter((activity: any) => {
+    return localActivities.filter((activity: any) => {
       const matchesTab = activeTab === 'all' || activity.type === activeTab;
       const matchesQuery = !searchQuery || 
         activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         activity.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesTab && matchesQuery;
     });
-  }, [allActivities, activeTab, searchQuery]);
+  }, [localActivities, activeTab, searchQuery]);
 
   const renderActivityItem = (activity: any, idx: number, array: any[]) => (
     <View key={activity.id} className="flex-row items-start mb-4">

@@ -10,6 +10,7 @@ interface User {
   fullName: string;
   role: string;
   avatarUrl?: string;
+  phone?: string;
   driver?: {
     id: string;
     status: string;

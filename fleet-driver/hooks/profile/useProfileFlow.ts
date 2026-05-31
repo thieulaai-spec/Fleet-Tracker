@@ -38,6 +38,7 @@ export const useProfileFlow = () => {
           updateUser({ 
             fullName: userData.fullName,
             email: userData.email,
+            phone: userData.phone,
             role: userData.role,
             avatarUrl: userData.avatarUrl,
             driver: userData.driver,

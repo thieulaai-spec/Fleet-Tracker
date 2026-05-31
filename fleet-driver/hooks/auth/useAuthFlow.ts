@@ -61,6 +61,8 @@ export function useAuthFlow() {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          phone: user.phone,
+          avatarUrl: user.avatarUrl,
           driver: user.driver,
         },
         accessToken,

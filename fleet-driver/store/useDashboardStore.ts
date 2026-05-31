@@ -10,6 +10,9 @@ interface DashboardStats {
 
 interface DashboardState {
   stats: DashboardStats;
+  orders: any[];
+  alerts: any[];
+  trips: any[];
   isLoading: boolean;
   error: string | null;
   fetchStats: () => Promise<void>;
@@ -24,6 +27,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     totalRevenue: 0,
     alertCount: 0,
   },
+  orders: [],
+  alerts: [],
+  trips: [],
   isLoading: false,
   error: null,
   fetchStats: async () => {
@@ -36,26 +42,27 @@ export const useDashboardStore = create<DashboardState>((set) => ({
         'Content-Type': 'application/json',
       };
 
-      const [vehiclesRes, ordersRes, alertsRes] = await Promise.all([
+      const [vehiclesRes, ordersRes, alertsRes, tripsRes] = await Promise.all([
         fetch(`${API_URL}/vehicles`, { headers }),
         fetch(`${API_URL}/orders`, { headers }),
         fetch(`${API_URL}/alerts`, { headers }),
+        fetch(`${API_URL}/trips`, { headers }).catch(() => null), // Fail-safe fallback if /trips fails
       ]);
 
       if (!vehiclesRes.ok || !ordersRes.ok || !alertsRes.ok) {
         throw new Error('Failed to fetch real-time dashboard data');
       }
 
-      const [vehicles, orders, alerts] = await Promise.all([
-        vehiclesRes.json(),
-        ordersRes.json(),
-        alertsRes.json(),
-      ]);
+      const vehicles = await vehiclesRes.json();
+      const orders = await ordersRes.json();
+      const alerts = await alertsRes.json();
+      const trips = tripsRes && tripsRes.ok ? await tripsRes.json() : [];
 
       // Unwrap NestJS ResponseInterceptor format if present
       const vehiclesData = Array.isArray(vehicles) ? vehicles : (vehicles.data || []);
       const ordersData = Array.isArray(orders) ? orders : (orders.data || []);
       const alertsData = Array.isArray(alerts) ? alerts : (alerts.data || []);
+      const tripsData = Array.isArray(trips) ? trips : (trips.data || []);
 
       // Calculate real active vehicles (not in maintenance)
       const activeVehicles = vehiclesData.filter((v: any) => v.status !== 'maintenance').length;
@@ -81,6 +88,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
           totalRevenue,
           alertCount,
         },
+        orders: ordersData,
+        alerts: alertsData,
+        trips: tripsData,
         isLoading: false,
       });
     } catch (err: any) {
@@ -94,6 +104,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
           totalRevenue: 0,
           alertCount: 0,
         },
+        orders: [],
+        alerts: [],
+        trips: [],
         isLoading: false,
       });
     }

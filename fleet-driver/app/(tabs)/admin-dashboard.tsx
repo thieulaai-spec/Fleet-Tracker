@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { LayoutDashboard, Truck, Package, DollarSign, AlertTriangle, TrendingUp, ChevronRight, Clock } from 'lucide-react-native';
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { LayoutDashboard, Truck, Package, DollarSign, AlertTriangle, TrendingUp, ChevronRight, Clock, X, Search } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { StatCard } from '../../components/admin/dashboard/StatCard';
@@ -9,6 +9,10 @@ import { useDashboardStore } from '../../store/useDashboardStore';
 export default function AdminDashboardScreen() {
   const { stats, orders, alerts, trips, isLoading, fetchStats } = useDashboardStore();
   const router = useRouter();
+  
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<'all' | 'order' | 'trip' | 'alert'>('all');
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   useEffect(() => {
     fetchStats();
@@ -35,15 +39,15 @@ export default function AdminDashboardScreen() {
     return `${diffDays}d ago`;
   };
 
-  const activities = React.useMemo(() => {
-    const items: any[] = [];
+  // Safe date parser
+  const safeDate = (dStr: any) => {
+    if (!dStr) return null;
+    const d = new Date(dStr);
+    return isNaN(d.getTime()) ? null : d;
+  };
 
-    // Safe date parser
-    const safeDate = (dStr: any) => {
-      if (!dStr) return null;
-      const d = new Date(dStr);
-      return isNaN(d.getTime()) ? null : d;
-    };
+  const allActivities = React.useMemo(() => {
+    const items: any[] = [];
 
     // 1. Orders
     if (Array.isArray(orders)) {
@@ -104,7 +108,6 @@ export default function AdminDashboardScreen() {
     // 3. Trips
     if (Array.isArray(trips)) {
       trips.forEach((trip: any) => {
-        // Dispatched / Pending state
         const createdDate = safeDate(trip.createdAt);
         if (createdDate && trip.status === 'pending') {
           items.push({
@@ -117,7 +120,6 @@ export default function AdminDashboardScreen() {
           });
         }
 
-        // Status transitions
         const updatedDate = safeDate(trip.updatedAt);
         if (updatedDate) {
           if (trip.status === 'accepted') {
@@ -170,11 +172,74 @@ export default function AdminDashboardScreen() {
       });
     }
 
-    // Sort and slice top 6
-    return items
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, 6);
+    // Sort all
+    return items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }, [orders, alerts, trips]);
+
+  // Dashboard top 6 view
+  const dashboardActivities = React.useMemo(() => {
+    return allActivities.slice(0, 6);
+  }, [allActivities]);
+
+  // Filtered view for history modal
+  const filteredActivities = React.useMemo(() => {
+    return allActivities.filter((activity: any) => {
+      const matchesTab = activeTab === 'all' || activity.type === activeTab;
+      const matchesQuery = !searchQuery || 
+        activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        activity.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesTab && matchesQuery;
+    });
+  }, [allActivities, activeTab, searchQuery]);
+
+  const renderActivityItem = (activity: any, idx: number, array: any[]) => (
+    <View key={activity.id} className="flex-row items-start mb-4">
+      {/* Timeline node */}
+      <View className="items-center mr-3 relative">
+        <View className={`w-8 h-8 rounded-full justify-center items-center ${
+          activity.type === 'alert' ? 'bg-red-500/10 border border-red-500/20' :
+          activity.type === 'trip' ? 'bg-emerald-500/10 border border-emerald-500/20' :
+          'bg-amber-500/10 border border-amber-500/20'
+        }`}>
+          {activity.type === 'alert' ? (
+            <AlertTriangle size={14} color="#f43f5e" />
+          ) : activity.type === 'trip' ? (
+            <Truck size={14} color="#10b981" />
+          ) : (
+            <Package size={14} color="#f59e0b" />
+          )}
+        </View>
+        {idx < array.length - 1 && (
+          <View className="w-[1px] h-12 bg-slate-800 absolute bottom-[-32px] left-[15px]" />
+        )}
+      </View>
+
+      {/* Content card */}
+      <View className="flex-1 bg-slate-800/80 p-4 rounded-2xl border border-white/5">
+        <View className="flex-row justify-between items-start mb-1 gap-2">
+          <Text className="text-slate-100 font-bold text-sm flex-1">{activity.title}</Text>
+          <View className="flex-row items-center gap-1">
+            <Clock size={10} color="#94a3b8" />
+            <Text className="text-[10px] text-slate-400 font-medium">{timeAgo(activity.timestamp.toISOString())}</Text>
+          </View>
+        </View>
+        <Text className="text-slate-400 text-xs leading-4">{activity.description}</Text>
+        
+        {activity.status && (
+          <View className="mt-2 self-start bg-slate-950/60 px-2 py-0.5 rounded-lg border border-white/5">
+            <Text className={`text-[9px] font-bold uppercase tracking-wider ${
+              activity.status === 'delivered' || activity.status === 'completed' ? 'text-emerald-400' :
+              activity.status === 'pending' ? 'text-amber-400' :
+              activity.status === 'failed' || activity.status === 'cancelled' ? 'text-red-400' :
+              'text-indigo-400'
+            }`}>
+              {activity.status.replace('_', ' ')}
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-slate-950">
@@ -242,72 +307,96 @@ export default function AdminDashboardScreen() {
           </View>
         </TouchableOpacity>
 
-        <View className="mb-4">
+        <View className="mb-4 flex-row justify-between items-center">
           <Text className="text-lg font-bold text-slate-50 tracking-wider">Recent Activity</Text>
+          <TouchableOpacity onPress={() => setIsModalOpen(true)}>
+            <Text className="text-indigo-400 font-bold text-xs">View All</Text>
+          </TouchableOpacity>
         </View>
 
-        {isLoading ? (
-          <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
-            <ActivityIndicator color="#6366f1" />
-          </View>
-        ) : activities.length === 0 ? (
-          <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
-            <Text className="text-slate-400 text-sm text-center mb-2 font-medium">No recent activities found.</Text>
-            <Text className="text-slate-500 text-xs text-center">Operational timelines will populate here once events trigger.</Text>
-          </View>
-        ) : (
-          <View className="bg-slate-900/60 rounded-[32px] p-5 border border-white/5 gap-y-4">
-            {activities.map((activity, idx) => (
-              <View key={activity.id} className="flex-row items-start">
-                {/* Timeline node */}
-                <View className="items-center mr-3 relative">
-                  <View className={`w-8 h-8 rounded-full justify-center items-center ${
-                    activity.type === 'alert' ? 'bg-red-500/10 border border-red-500/20' :
-                    activity.type === 'trip' ? 'bg-emerald-500/10 border border-emerald-500/20' :
-                    'bg-amber-500/10 border border-amber-500/20'
-                  }`}>
-                    {activity.type === 'alert' ? (
-                      <AlertTriangle size={14} color="#f43f5e" />
-                    ) : activity.type === 'trip' ? (
-                      <Truck size={14} color="#10b981" />
-                    ) : (
-                      <Package size={14} color="#f59e0b" />
-                    )}
-                  </View>
-                  {idx < activities.length - 1 && (
-                    <View className="w-[1px] h-12 bg-slate-800 absolute bottom-[-32px] left-[15px]" />
-                  )}
-                </View>
+      {isLoading ? (
+        <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
+          <ActivityIndicator color="#6366f1" />
+        </View>
+      ) : dashboardActivities.length === 0 ? (
+        <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
+          <Text className="text-slate-400 text-sm text-center mb-2 font-medium">No recent activities found.</Text>
+          <Text className="text-slate-500 text-xs text-center">Operational timelines will populate here once events trigger.</Text>
+        </View>
+      ) : (
+        <View className="bg-slate-900/60 rounded-[32px] p-5 border border-white/5 gap-y-4">
+          {dashboardActivities.map((activity, idx, arr) => renderActivityItem(activity, idx, arr))}
+        </View>
+      )}
+    </ScrollView>
 
-                {/* Content card */}
-                <View className="flex-1 bg-slate-800/80 p-4 rounded-2xl border border-white/5">
-                  <View className="flex-row justify-between items-start mb-1 gap-2">
-                    <Text className="text-slate-100 font-bold text-sm flex-1">{activity.title}</Text>
-                    <View className="flex-row items-center gap-1">
-                      <Clock size={10} color="#94a3b8" />
-                      <Text className="text-[10px] text-slate-400 font-medium">{timeAgo(activity.timestamp.toISOString())}</Text>
-                    </View>
-                  </View>
-                  <Text className="text-slate-400 text-xs leading-4">{activity.description}</Text>
-                  
-                  {activity.status && (
-                    <View className="mt-2 self-start bg-slate-950/60 px-2 py-0.5 rounded-lg border border-white/5">
-                      <Text className={`text-[9px] font-bold uppercase tracking-wider ${
-                        activity.status === 'delivered' || activity.status === 'completed' ? 'text-emerald-400' :
-                        activity.status === 'pending' ? 'text-amber-400' :
-                        activity.status === 'failed' || activity.status === 'cancelled' ? 'text-red-400' :
-                        'text-indigo-400'
-                      }`}>
-                        {activity.status.replace('_', ' ')}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+    {/* Solutions 1 & 2: "View All" Modal with full interactive Filtering and Search on Mobile */}
+    <Modal
+      animationType="slide"
+      transparent={false}
+      visible={isModalOpen}
+      onRequestClose={() => setIsModalOpen(false)}
+    >
+      <SafeAreaView className="flex-1 bg-slate-950 p-5">
+        {/* Modal Header */}
+        <View className="flex-row justify-between items-center mb-6">
+          <Text className="text-2xl font-bold text-slate-50">Operational Logs</Text>
+          <TouchableOpacity 
+            onPress={() => setIsModalOpen(false)}
+            className="w-10 h-10 rounded-full bg-slate-800 justify-center items-center"
+          >
+            <X size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Filtering Tabs */}
+        <View className="flex-row justify-between mb-4 gap-1">
+          {(['all', 'order', 'trip', 'alert'] as const).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              className={`flex-1 py-2 px-1 rounded-xl items-center border ${
+                activeTab === tab 
+                  ? 'bg-indigo-600 border-indigo-500 shadow-sm' 
+                  : 'bg-slate-800 border-slate-700'
+              }`}
+            >
+              <Text className={`text-[10px] font-bold uppercase tracking-wider ${
+                activeTab === tab ? 'text-slate-50' : 'text-slate-400'
+              }`}>
+                {tab === 'all' ? 'All' : `${tab}s`}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Search Box */}
+        <View className="flex-row items-center bg-slate-800 px-4 py-3 rounded-2xl border border-slate-700 mb-6">
+          <Search size={16} color="#94a3b8" />
+          <TextInput
+            placeholder="Search history logs..."
+            placeholderTextColor="#64748b"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            className="flex-1 text-slate-200 text-sm ml-2 outline-none"
+          />
+        </View>
+
+        {/* Scrollable Timeline */}
+        <ScrollView 
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 40 }}
+        >
+          {filteredActivities.length === 0 ? (
+            <View className="bg-slate-900/40 py-12 rounded-3xl items-center border border-dashed border-slate-800">
+              <Text className="text-slate-400 text-sm font-medium">No matching logs found.</Text>
+            </View>
+          ) : (
+            filteredActivities.map((activity, idx, arr) => renderActivityItem(activity, idx, arr))
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  </SafeAreaView>
   );
 }

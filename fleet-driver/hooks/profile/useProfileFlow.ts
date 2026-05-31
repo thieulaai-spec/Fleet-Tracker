@@ -10,7 +10,7 @@ import { formatError } from '../../utils/error';
 export const useProfileFlow = () => {
   const router = useRouter();
   const { user, logout, updateUser } = useAuthStore();
-  const { tripHistory, activeTrip } = useTripStore();
+  const { tripHistory, activeTrip, fetchTrips } = useTripStore();
   
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
@@ -45,6 +45,7 @@ export const useProfileFlow = () => {
       }
     };
     fetchStatus();
+    fetchTrips().catch((err) => console.error('Failed to fetch trips:', err));
   }, []);
 
   // Fetch KPI whenever user driver ID or online status changes

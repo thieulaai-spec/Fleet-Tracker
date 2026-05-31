@@ -85,6 +85,46 @@ export const MapPicker: React.FC<MapPickerProps> = ({
       setSuggestions([]);
       return;
     }
+
+    // Check if input is coordinate format (e.g. "10.7725, 106.6979" or "106.6979, 10.7725")
+    const coordRegex = /^\s*(-?\d+(?:\.\d+)?)\s*[\s,;]\s*(-?\d+(?:\.\d+)?)\s*$/;
+    const match = text.match(coordRegex);
+    
+    if (match) {
+      const num1 = parseFloat(match[1]);
+      const num2 = parseFloat(match[2]);
+      
+      let lat: number | null = null;
+      let lng: number | null = null;
+      
+      // Determine which is lat and which is lng
+      // In Vietnam: lat is ~8-24, lng is ~102-110
+      if (Math.abs(num1) <= 90 && Math.abs(num2) <= 180) {
+        if (num1 >= 8 && num1 <= 24 && num2 >= 102 && num2 <= 110) {
+          lat = num1;
+          lng = num2;
+        } else if (num2 >= 8 && num2 <= 24 && num1 >= 102 && num1 <= 110) {
+          lat = num2;
+          lng = num1;
+        } else {
+          // Guess first as lat, second as lng
+          lat = num1;
+          lng = num2;
+        }
+      }
+      
+      if (lat !== null && lng !== null) {
+        const customFeature = {
+          id: `coord-${lat}-${lng}`,
+          place_name: `Tọa độ GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+          text: `Đến vị trí GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+          center: [lng, lat], // Mapbox center [longitude, latitude]
+        };
+        setSuggestions([customFeature]);
+        return;
+      }
+    }
+
     setSearchLoading(true);
     try {
       const response = await axios.get(

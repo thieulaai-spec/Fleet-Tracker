@@ -69,7 +69,7 @@ export default function DriverDetailScreen() {
         setKpiLoading(true);
         try {
           const { token } = useAuthStore.getState();
-          const response = await axios.get(`${API_URL}/drivers/${id}/kpi`, {
+          const response = await axios.get(`${API_URL}/reports/driver-kpi/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setKpi(response.data.data || response.data);

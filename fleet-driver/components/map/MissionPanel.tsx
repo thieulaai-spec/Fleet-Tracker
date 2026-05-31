@@ -319,13 +319,11 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
                     <User size={12} color="#94a3b8" />
                   </View>
                   <Text className="text-slate-400 text-sm font-bold tracking-tight">
-                    {currentOrder.customerName && currentOrder.customerName !== 'Unknown Customer'
-                      ? currentOrder.customerName
-                      : 'Elite Fleet Client'}
+                    Đơn hàng #{currentOrder.id.slice(-6).toUpperCase()}
                   </Text>
                   <View className="w-1.5 h-1.5 rounded-full bg-slate-700 mx-1" />
                   <ShieldCheck size={14} color="#10b981" />
-                  <Text className="text-emerald-500 text-[10px] font-black uppercase">Verified</Text>
+                  <Text className="text-emerald-500 text-[10px] font-black uppercase">Xác thực</Text>
                 </View>
               )}
             </View>
@@ -337,13 +335,6 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
                 activeOpacity={0.7}
               >
                 <Navigation size={22} color="#fff" strokeWidth={2} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="bg-white/5 w-12 h-12 rounded-[18px] justify-center items-center border border-white/10 shadow-lg"
-                activeOpacity={0.7}
-                onPress={() => currentOrder?.customerPhone && Linking.openURL(`tel:${currentOrder.customerPhone}`)}
-              >
-                <Phone size={22} color="#fff" strokeWidth={2} />
               </TouchableOpacity>
             </View>
           </View>

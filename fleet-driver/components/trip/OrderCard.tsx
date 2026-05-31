@@ -109,7 +109,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             <Text className="text-indigo-400 font-black text-xs">{index + 1}</Text>
           </View>
           <Text className="text-white text-lg font-black flex-1" numberOfLines={1}>
-            {order.customerName}
+            Đơn hàng #{order.id.slice(-6).toUpperCase()}
           </Text>
         </View>
         <View className={`px-3 py-1 rounded-full ${isDelivered ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>

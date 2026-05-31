@@ -233,7 +233,7 @@ export default function TripDetails() {
                 </View>
               </View>
               <View className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                <Text className="text-white text-xs font-black tracking-wide mb-2">Chữ ký xác nhận của khách hàng</Text>
+                <Text className="text-white text-xs font-black tracking-wide mb-2">Chữ ký xác nhận của người nhận</Text>
                 <View className="h-20 bg-slate-950/80 rounded-xl overflow-hidden items-center justify-center p-1 border border-white/10">
                   <Image 
                     source={{ uri: order.signatureUrl }} 

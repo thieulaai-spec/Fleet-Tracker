@@ -217,9 +217,8 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
       })
     );
 
-    // Bind Order 7 & 8 to Trip 1
+    // Bind Order 7 to Trip 1 (Only 1 order per trip)
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[6].id, sequence: 1 }));
-    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[7].id, sequence: 2 }));
 
     // Nguyễn Văn Hùng AVAILABLE and vehicle AVAILABLE
     driversData[0].status = DriverStatus.AVAILABLE;
@@ -281,24 +280,10 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
           })
         );
         
-        const order2 = await orderRepository.save(
-          orderRepository.create({
-            weightKg: Math.round(300 + (dayOffset % 3) * 400 + Math.random() * 150),
-            description: `Vận chuyển linh kiện điện tử D-${dayOffset} T-${t}`,
-            pickupAddress: `Nhà máy công nghiệp phụ trợ`,
-            pickupLocation: { type: 'Point', coordinates: [106.7050 + (dayOffset % 4) * 0.01, 10.9300 - (t % 2) * 0.01] },
-            deliveryAddress: `Khu công nghiệp xuất khẩu`,
-            deliveryLocation: { type: 'Point', coordinates: [106.7950 - (dayOffset % 3) * 0.01, 10.7650 + (t % 3) * 0.01] },
-            status: OrderStatus.DELIVERED,
-            createdAt: startedAt,
-          })
-        );
-        
         await tripOrderRepository.save(tripOrderRepository.create({ tripId: historicalTrip.id, orderId: order1.id, sequence: 1 }));
-        await tripOrderRepository.save(tripOrderRepository.create({ tripId: historicalTrip.id, orderId: order2.id, sequence: 2 }));
         
         // Seed historical verifications for this trip's orders
-        for (const order of [order1, order2]) {
+        for (const order of [order1]) {
           await verificationRepository.save(
             verificationRepository.create({
               orderId: order.id,

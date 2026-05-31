@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DriverKpi } from '../entities/driver-kpi.entity';
 import { Trip, TripStatus } from '../entities/trip.entity';
+import { Alert } from '../entities/alert.entity';
 import { OnEvent } from '@nestjs/event-emitter';
 
 export const KPI_PENALTIES = {
@@ -19,6 +20,8 @@ export class KpiService {
     private kpiRepository: Repository<DriverKpi>,
     @InjectRepository(Trip)
     private tripRepository: Repository<Trip>,
+    @InjectRepository(Alert)
+    private alertRepository: Repository<Alert>,
   ) {}
 
   async getOrCreateKpi(driverId: string): Promise<DriverKpi> {
@@ -110,7 +113,45 @@ export class KpiService {
   }
 
   async getDriverKpiSummary(driverId: string) {
+    await this.syncTotalTrips(driverId);
+    await this.syncViolations(driverId);
     return this.getOrCreateKpi(driverId);
+  }
+
+  async syncViolations(driverId: string) {
+    const speedViolations = await this.alertRepository.count({
+      where: { driverId, type: 'speed_violation' as any },
+    });
+    const routeViolations = await this.alertRepository.count({
+      where: { driverId, type: 'route_deviation' as any },
+    });
+    const abnormalStops = await this.alertRepository.count({
+      where: { driverId, type: 'abnormal_stop' as any },
+    });
+    const incidents = await this.alertRepository.count({
+      where: { driverId, type: 'incident' as any },
+    });
+
+    const totalViolations = speedViolations + routeViolations + abnormalStops + incidents;
+
+    const penalty =
+      speedViolations * KPI_PENALTIES.speed_violation +
+      routeViolations * KPI_PENALTIES.route_deviation +
+      abnormalStops * KPI_PENALTIES.abnormal_stop +
+      incidents * KPI_PENALTIES.incident;
+
+    const kpiScore = Math.max(0, 100 - penalty);
+
+    await this.getOrCreateKpi(driverId);
+    await this.kpiRepository.update(
+      { driverId },
+      {
+        speedViolations,
+        routeViolations,
+        totalViolations,
+        kpiScore,
+      },
+    );
   }
 
   async getKpiLeaderboard() {

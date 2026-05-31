@@ -267,7 +267,7 @@ export const useProfileFlow = () => {
       }
 
       const uploadResult = await uploadResponse.json();
-      const uploadedUrl = uploadResult?.url;
+      const uploadedUrl = uploadResult?.data?.url ?? uploadResult?.url;
 
       if (!uploadedUrl) {
         throw new Error('Không nhận được URL ảnh đại diện từ máy chủ');

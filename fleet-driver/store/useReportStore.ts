@@ -118,10 +118,19 @@ export const useReportStore = create<ReportState>((set) => ({
     set({ loading: true, error: null });
     try {
       const { token } = useAuthStore.getState();
-      const response = await axios.get(`${API_URL}/reports/driver-kpis`, {
+      const response = await axios.get(`${API_URL}/reports/kpi-leaderboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      set({ driverKPIs: response.data.data || response.data, loading: false });
+      const data = response.data.data || response.data;
+      const mappedKPIs = (Array.isArray(data) ? data : []).map((item: any) => ({
+        driverId: item.driverId,
+        driverName: item.driver?.user?.fullName || 'Tài xế ẩn danh',
+        score: Math.round(Number(item.kpiScore || 100)),
+        totalTrips: Number(item.totalTrips || 0),
+        onTimeRate: Math.round(Number(item.completionRate || 100)),
+        rating: item.kpiScore >= 90 ? 5.0 : item.kpiScore >= 80 ? 4.5 : item.kpiScore >= 70 ? 4.0 : 3.5,
+      }));
+      set({ driverKPIs: mappedKPIs, loading: false });
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to fetch driver KPIs';
       set({ error: message, loading: false });

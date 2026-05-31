@@ -148,10 +148,38 @@ export class ReportsService {
       if (cost > 0) costByVehicleType.push({ type, cost });
     });
 
+    // Calculate dynamic cost trend group by day
+    const trendData = await this.tripRepository
+      .createQueryBuilder('trip')
+      .leftJoin('trip.vehicle', 'vehicle')
+      .select('DATE(trip.createdAt)', 'date')
+      .addSelect(
+        `
+        SUM(
+          (trip.totalDistanceKm / 100) * 
+          CASE 
+            WHEN vehicle.type = 'small' THEN ${FUEL_RATES.small}
+            WHEN vehicle.type = 'large' THEN ${FUEL_RATES.large}
+            ELSE ${FUEL_RATES.medium}
+          END * ${DEFAULT_FUEL_PRICE}
+        )
+      `,
+        'cost',
+      )
+      .where('trip.createdAt BETWEEN :from AND :to', { from, to })
+      .groupBy('DATE(trip.createdAt)')
+      .orderBy('DATE(trip.createdAt)', 'ASC')
+      .getRawMany();
+
+    const costTrend = trendData.map((t) => ({
+      date: t.date,
+      cost: parseFloat(t.cost || 0),
+    }));
+
     return {
       totalCost,
       costByVehicleType,
-      costTrend: [], // Placeholder
+      costTrend,
       averageCostPerTrip: totalCost / (totalTrips || 1),
       vehicleFuelStats,
     };

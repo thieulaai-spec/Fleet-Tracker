@@ -12,7 +12,8 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://fleet-tracker-nh01.onrender.com/api",
         "EXPO_PUBLIC_SOCKET_URL": "https://fleet-tracker-nh01.onrender.com",
-        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN": "pk.eyJ1IjoiZHVuZ2dhd3IiLCJhIjoiY21vdGtyZTFiMDVzbTJzbzhtZWFmczQzNiJ9.RFTBdWVQVEgcZZPkrL6UEQ"
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN": "pk.eyJ1IjoiZHVuZ2dhd3IiLCJhIjoiY21vdGtyZTFiMDVzbTJzbzhtZWFmczQzNiJ9.RFTBdWVQVEgcZZPkrL6UEQ",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
       }
     },
     "production": {}

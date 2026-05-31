@@ -31,25 +31,55 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     const { token } = useAuthStore.getState();
 
     try {
-      // For now, we mock some values as the specific aggregate endpoint might vary
-      // In a real scenario, we would call /reports/fleet-performance or a dedicated dashboard endpoint
-      const response = await fetch(`${API_URL}/reports/fleet-performance?from=${new Date().toISOString()}&to=${new Date().toISOString()}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
 
-      if (!response.ok) throw new Error('Failed to fetch dashboard stats');
-      
-      const data = await response.json();
-      
-      // Map API data to our stats structure
+      const [vehiclesRes, ordersRes, alertsRes] = await Promise.all([
+        fetch(`${API_URL}/vehicles`, { headers }),
+        fetch(`${API_URL}/orders`, { headers }),
+        fetch(`${API_URL}/alerts`, { headers }),
+      ]);
+
+      if (!vehiclesRes.ok || !ordersRes.ok || !alertsRes.ok) {
+        throw new Error('Failed to fetch real-time dashboard data');
+      }
+
+      const [vehicles, orders, alerts] = await Promise.all([
+        vehiclesRes.json(),
+        ordersRes.json(),
+        alertsRes.json(),
+      ]);
+
+      // Unwrap NestJS ResponseInterceptor format if present
+      const vehiclesData = Array.isArray(vehicles) ? vehicles : (vehicles.data || []);
+      const ordersData = Array.isArray(orders) ? orders : (orders.data || []);
+      const alertsData = Array.isArray(alerts) ? alerts : (alerts.data || []);
+
+      // Calculate real active vehicles (not in maintenance)
+      const activeVehicles = vehiclesData.filter((v: any) => v.status !== 'maintenance').length;
+
+      // Calculate real pending orders
+      const pendingOrders = ordersData.filter((o: any) => o.status === 'pending').length;
+
+      // Calculate real dynamic revenue (matching the web dashboard formula)
+      const totalRevenue = ordersData
+        .filter((o: any) => o.status === 'delivered')
+        .reduce((sum: number, o: any) => {
+          const orderRevenue = Math.round(Number(o.weightKg) * 850) + 200000;
+          return sum + orderRevenue;
+        }, 0);
+
+      // Count active (unresolved) alerts
+      const alertCount = alertsData.filter((a: any) => !a.isResolved).length;
+
       set({
         stats: {
-          activeVehicles: data.activeVehicles || 12, // Mock fallback
-          pendingOrders: data.pendingOrders || 45,
-          totalRevenue: data.totalRevenue || 12500000,
-          alertCount: data.alertCount || 3,
+          activeVehicles,
+          pendingOrders,
+          totalRevenue,
+          alertCount,
         },
         isLoading: false,
       });
@@ -59,10 +89,10 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       // Fallback for development if API fails
       set({
         stats: {
-          activeVehicles: 15,
-          pendingOrders: 28,
-          totalRevenue: 45800000,
-          alertCount: 5,
+          activeVehicles: 0,
+          pendingOrders: 0,
+          totalRevenue: 0,
+          alertCount: 0,
         },
         isLoading: false,
       });

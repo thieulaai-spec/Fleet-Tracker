@@ -1,0 +1,72 @@
+module.exports = {
+  expo: {
+    name: "fleet-driver",
+    slug: "fleet-driver",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "fleetdriver",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+    splash: {
+      image: "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    ios: {
+      supportsTablet: true,
+      infoPlist: {
+        UIBackgroundModes: [
+          "location",
+          "fetch"
+        ],
+        NSLocationWhenInUseUsageDescription: "Cho phép FleetTracker sử dụng vị trí của bạn để cập nhật lộ trình giao hàng.",
+        NSLocationAlwaysAndWhenInUseUsageDescription: "Cho phép FleetTracker theo dõi vị trí liên tục ngay cả khi chạy nền để giám sát hành trình.",
+        NSLocationAlwaysUsageDescription: "Cho phép FleetTracker truy cập vị trí của bạn liên tục để tối ưu hóa điều phối."
+      }
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: "./assets/images/adaptive-icon.png",
+        backgroundColor: "#ffffff"
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+      permissions: [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ],
+      config: {
+        googleMaps: {
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+        }
+      }
+    },
+    web: {
+      bundler: "metro",
+      output: "static",
+      favicon: "./assets/images/favicon.png"
+    },
+    plugins: [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Cho phép FleetTracker truy cập vị trí của bạn để theo dõi hành trình ngay cả khi ứng dụng đang chạy nền.",
+          "locationAlwaysPermission": "Cho phép FleetTracker truy cập vị trí của bạn để theo dõi hành trình ngay cả khi ứng dụng đang chạy nền.",
+          "locationWhenInUsePermission": "Cho phép FleetTracker truy cập vị trí của bạn để theo dõi hành trình.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-font"
+    ],
+    experiments: {
+      typedRoutes: true
+    }
+  }
+};

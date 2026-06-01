@@ -105,11 +105,25 @@ export default function TripsScreen() {
       return;
     }
     fetchTrips();
+  }, [user]);
 
-    if (activeTrip && !user?.driver?.fingerprintId && !fingerprintIntervalRef.current) {
-      startFingerprintCheck();
+  useEffect(() => {
+    if (user?.role?.toUpperCase() === 'ADMIN') return;
+
+    if (!isLoading) {
+      if (activeTrip && !user?.driver?.fingerprintId) {
+        if (!fingerprintIntervalRef.current) {
+          startFingerprintCheck();
+        }
+      } else {
+        if (fingerprintIntervalRef.current) {
+          clearInterval(fingerprintIntervalRef.current);
+          fingerprintIntervalRef.current = null;
+          Toast.hide();
+        }
+      }
     }
-  }, [user, activeTrip]);
+  }, [user, activeTrip, isLoading]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);

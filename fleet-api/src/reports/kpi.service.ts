@@ -156,7 +156,7 @@ export class KpiService {
 
   async getKpiLeaderboard() {
     return this.kpiRepository.find({
-      relations: ['driver'],
+      relations: ['driver', 'driver.user'],
       order: { kpiScore: 'DESC' },
       take: 10,
     });

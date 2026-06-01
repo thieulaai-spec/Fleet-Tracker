@@ -39,6 +39,7 @@ const STATUS_CONFIG = {
 
 const FILTER_STATUSES = [
   OrderStatus.PENDING,
+  OrderStatus.ASSIGNED,
   OrderStatus.DELIVERING,
   OrderStatus.DELIVERED,
   OrderStatus.FAILED,

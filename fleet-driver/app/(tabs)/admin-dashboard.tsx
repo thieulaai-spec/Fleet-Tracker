@@ -48,23 +48,23 @@ export default function AdminDashboardScreen() {
   const allActivities = React.useMemo(() => {
     const items: any[] = [];
 
-    // 1. Orders
+    // 1. Orders (collapse to single latest activity)
     if (Array.isArray(orders)) {
       orders.forEach((order: any) => {
-        const createdDate = safeDate(order.createdAt);
-        if (createdDate) {
-          items.push({
-            id: `order-created-${order.id}`,
-            type: 'order',
-            title: 'Order Created',
-            description: `ORD-${order.id.substring(0, 4)} created to ${order.deliveryAddress}`,
-            timestamp: createdDate,
-            status: 'pending',
-          });
-        }
-
-        if (order.status && order.status !== 'pending') {
-          const updatedDate = safeDate(order.updatedAt);
+        if (!order.status || order.status === 'pending') {
+          const createdDate = safeDate(order.createdAt);
+          if (createdDate) {
+            items.push({
+              id: `order-status-${order.id}-pending`,
+              type: 'order',
+              title: 'Order Created',
+              description: `ORD-${order.id.substring(0, 4)} created to ${order.deliveryAddress}`,
+              timestamp: createdDate,
+              status: 'pending',
+            });
+          }
+        } else {
+          const updatedDate = safeDate(order.updatedAt) || safeDate(order.createdAt);
           if (updatedDate) {
             let actionWord = 'updated';
             if (order.status === 'assigned') actionWord = 'assigned to driver';
@@ -107,69 +107,59 @@ export default function AdminDashboardScreen() {
       });
     }
 
-    // 3. Trips
+    // 3. Trips (collapse to single latest activity)
     if (Array.isArray(trips)) {
       trips.forEach((trip: any) => {
         const createdDate = safeDate(trip.createdAt);
-        if (createdDate && trip.status === 'pending') {
+        const updatedDate = safeDate(trip.updatedAt) || createdDate;
+        const startDate = safeDate(trip.startedAt);
+        const endDate = safeDate(trip.completedAt);
+
+        if (trip.status === 'pending' && createdDate) {
           items.push({
-            id: `trip-created-${trip.id}`,
+            id: `trip-status-${trip.id}-pending`,
             type: 'trip',
             title: 'Trip Dispatched',
             description: `New trip assigned to ${trip.driver?.fullName || 'Driver'} on vehicle ${trip.vehicle?.plateNumber || ''}`,
             timestamp: createdDate,
             status: 'pending',
           });
-        }
-
-        const updatedDate = safeDate(trip.updatedAt);
-        if (updatedDate) {
-          if (trip.status === 'accepted') {
-            items.push({
-              id: `trip-accepted-${trip.id}`,
-              type: 'trip',
-              title: 'Trip Accepted',
-              description: `Driver ${trip.driver?.fullName || 'Driver'} accepted the assigned trip.`,
-              timestamp: updatedDate,
-              status: 'accepted',
-            });
-          } else if (trip.status === 'cancelled') {
-            items.push({
-              id: `trip-cancelled-${trip.id}`,
-              type: 'trip',
-              title: 'Trip Cancelled',
-              description: `Trip for vehicle ${trip.vehicle?.plateNumber || ''} has been cancelled.`,
-              timestamp: updatedDate,
-              status: 'cancelled',
-            });
-          }
-        }
-
-        if (trip.startedAt) {
-          const startDate = safeDate(trip.startedAt);
-          if (startDate) {
-            items.push({
-              id: `trip-start-${trip.id}`,
-              type: 'trip',
-              title: 'Trip Started',
-              description: `Driver ${trip.driver?.fullName || 'Driver'} started trip on vehicle ${trip.vehicle?.plateNumber || ''}`,
-              timestamp: startDate,
-              status: 'in_progress',
-            });
-          }
-        }
-        if (trip.completedAt) {
-          const endDate = safeDate(trip.completedAt);
-          if (endDate) {
-            items.push({
-              id: `trip-complete-${trip.id}`,
-              type: 'trip',
-              title: 'Trip Completed',
-              description: `Driver ${trip.driver?.fullName || 'Driver'} completed trip. Distance: ${trip.totalDistanceKm || 0} km`,
-              timestamp: endDate,
-              status: 'completed',
-            });
-          }
+        } else if (trip.status === 'accepted' && updatedDate) {
+          items.push({
+            id: `trip-status-${trip.id}-accepted`,
+            type: 'trip',
+            title: 'Trip Accepted',
+            description: `Driver ${trip.driver?.fullName || 'Driver'} accepted the assigned trip.`,
+            timestamp: updatedDate,
+            status: 'accepted',
+          });
+        } else if (trip.status === 'cancelled' && updatedDate) {
+          items.push({
+            id: `trip-status-${trip.id}-cancelled`,
+            type: 'trip',
+            title: 'Trip Cancelled',
+            description: `Trip for vehicle ${trip.vehicle?.plateNumber || ''} has been cancelled.`,
+            timestamp: updatedDate,
+            status: 'cancelled',
+          });
+        } else if (trip.status === 'in_progress' && (startDate || updatedDate)) {
+          items.push({
+            id: `trip-status-${trip.id}-in_progress`,
+            type: 'trip',
+            title: 'Trip Started',
+            description: `Driver ${trip.driver?.fullName || 'Driver'} started trip on vehicle ${trip.vehicle?.plateNumber || ''}`,
+            timestamp: startDate || updatedDate!,
+            status: 'in_progress',
+          });
+        } else if (trip.status === 'completed' && (endDate || updatedDate)) {
+          items.push({
+            id: `trip-status-${trip.id}-completed`,
+            type: 'trip',
+            title: 'Trip Completed',
+            description: `Driver ${trip.driver?.fullName || 'Driver'} completed trip. Distance: ${trip.totalDistanceKm || 0} km`,
+            timestamp: endDate || updatedDate!,
+            status: 'completed',
+          });
         }
       });
     }
@@ -331,30 +321,24 @@ export default function AdminDashboardScreen() {
             value={stats.activeVehicles} 
             icon={Truck} 
             color="#6366f1" 
-            trend="+2 from yesterday"
           />
           <StatCard 
             title="Pending Orders" 
             value={stats.pendingOrders} 
             icon={Package} 
             color="#f59e0b" 
-            trend="-5 since morning"
-            trendColor="#f43f5e"
           />
           <StatCard 
             title="Total Trips" 
             value={stats.totalTrips} 
             icon={TrendingUp} 
             color="#10b981" 
-            trend="Trips dispatched"
           />
           <StatCard 
             title="Active Alerts" 
             value={stats.alertCount} 
             icon={AlertTriangle} 
             color="#ef4444" 
-            trend={stats.alertCount > 0 ? "Requires attention" : "System clear"}
-            trendColor={stats.alertCount > 0 ? "#ef4444" : "#10b981"}
           />
         </View>
 

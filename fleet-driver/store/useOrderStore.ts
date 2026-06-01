@@ -29,6 +29,8 @@ export interface Order {
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;
+  photoUrl?: string | null;
+  signatureUrl?: string | null;
   assignedTrip?: {
     id: string;
     status: string;

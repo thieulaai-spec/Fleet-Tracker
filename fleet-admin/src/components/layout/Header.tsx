@@ -11,11 +11,16 @@ import {
   Settings,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useAlerts } from '@/hooks/use-alerts';
 import { Dropdown } from '@/components/ui/Dropdown';
 import Link from 'next/link';
 
 export function Header() {
   const { user, logout } = useAuth();
+  const { alerts } = useAlerts({ isResolved: false });
+
+  // Filter to only count active abnormal_stop alerts
+  const activeAlertsCount = alerts.filter(a => a.type === 'abnormal_stop').length;
 
   return (
     <header className="h-header px-xl flex items-center justify-between sticky top-0 z-90 border-b border-border glass">
@@ -44,7 +49,11 @@ export function Header() {
         
         <button className="bg-transparent border-none text-text-muted flex items-center gap-xs cursor-pointer p-md rounded-sm transition-all hover:bg-surface-high hover:text-text relative" aria-label="Notifications" onClick={() => console.log('Open Notifications')}>
           <Bell size={20} />
-          <span className="absolute top-xs right-xs bg-danger text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-surface">3</span>
+          {activeAlertsCount > 0 && (
+            <span className="absolute top-xs right-xs bg-danger text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-surface">
+              {activeAlertsCount}
+            </span>
+          )}
         </button>
 
         <div className="flex items-center gap-sm bg-surface-low p-xs rounded-default border border-border">

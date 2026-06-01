@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Linking, Platform, RefreshControl, Image } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MapPin, Calendar, Clock, ChevronLeft, Package, Truck, CheckCircle2, AlertTriangle, Navigation, Camera, Fuel, Route, Fingerprint, FileText, UserCheck, Check } from 'lucide-react-native';
-import { useTripStore, TripStatus } from '../../store/useTripStore';
+import { useTripStore, TripStatus, OrderStatus } from '../../store/useTripStore';
 import Toast from 'react-native-toast-message';
 import { SosButton } from '../../components/ui/SosButton';
 import { BlurView } from 'expo-blur';
@@ -85,6 +85,15 @@ export default function TripDetails() {
         },
       ]
     );
+  };
+
+  const handleOrderStatusUpdate = async (orderId: string, status: OrderStatus, options?: any) => {
+    try {
+      await updateOrderStatus(orderId, status, options);
+      await loadData();
+    } catch (err) {
+      throw err;
+    }
   };
 
   const openNavigation = (latitude: number, longitude: number) => {
@@ -308,7 +317,7 @@ export default function TripDetails() {
               index={index}
               onNavigate={openNavigation}
               onProof={(orderId) => router.push({ pathname: '/camera', params: { orderId } })}
-              onStatusUpdate={updateOrderStatus}
+              onStatusUpdate={handleOrderStatusUpdate}
               canSubmitProof={trip.status === TripStatus.IN_PROGRESS}
               verifications={verifications}
             />

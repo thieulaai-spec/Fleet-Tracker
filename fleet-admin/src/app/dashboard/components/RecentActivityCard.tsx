@@ -62,23 +62,23 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   const allActivities: ActivityItem[] = React.useMemo(() => {
     const items: ActivityItem[] = [];
 
-    // 1. Map recent orders
+    // 1. Map recent orders (collapse to single latest activity)
     orders.forEach(order => {
-      const createdDate = safeNewDate(order.createdAt);
-      if (createdDate) {
-        items.push({
-          id: `order-created-${order.id}`,
-          type: 'order',
-          title: `Order Created`,
-          description: `New order ORD-${order.id.substring(0, 4)} to ${order.deliveryAddress}`,
-          timestamp: createdDate,
-          status: 'pending',
-          meta: { orderId: order.id }
-        });
-      }
-
-      if (order.status && order.status !== 'pending') {
-        const updatedDate = safeNewDate(order.updatedAt);
+      if (!order.status || order.status === 'pending') {
+        const createdDate = safeNewDate(order.createdAt);
+        if (createdDate) {
+          items.push({
+            id: `order-status-${order.id}-pending`,
+            type: 'order',
+            title: `Order Created`,
+            description: `New order ORD-${order.id.substring(0, 4)} to ${order.deliveryAddress}`,
+            timestamp: createdDate,
+            status: 'pending',
+            meta: { orderId: order.id }
+          });
+        }
+      } else {
+        const updatedDate = safeNewDate(order.updatedAt) || safeNewDate(order.createdAt);
         if (updatedDate) {
           let actionWord = 'updated';
           if (order.status === 'assigned') actionWord = 'assigned to driver';
@@ -120,13 +120,16 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
       }
     });
 
-    // 3. Map recent trips
+    // 3. Map recent trips (collapse to single latest activity)
     trips.forEach(trip => {
-      // Trip Dispatched (Pending)
       const createdDate = safeNewDate(trip.createdAt);
-      if (createdDate && trip.status === 'pending') {
+      const updatedDate = safeNewDate(trip.updatedAt) || createdDate;
+      const startDate = safeNewDate(trip.startedAt);
+      const endDate = safeNewDate(trip.completedAt);
+
+      if (trip.status === 'pending' && createdDate) {
         items.push({
-          id: `trip-created-${trip.id}`,
+          id: `trip-status-${trip.id}-pending`,
           type: 'trip',
           title: 'Trip Dispatched',
           description: `New trip assigned to ${trip.driver?.fullName || 'Driver'} on vehicle ${trip.vehicle?.plateNumber || ''}`,
@@ -134,61 +137,46 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
           status: 'pending',
           meta: { tripId: trip.id }
         });
-      }
-
-      // Status transitions
-      const updatedDate = safeNewDate(trip.updatedAt);
-      if (updatedDate) {
-        if (trip.status === 'accepted') {
-          items.push({
-            id: `trip-accepted-${trip.id}`,
-            type: 'trip',
-            title: 'Trip Accepted',
-            description: `Driver ${trip.driver?.fullName || 'Driver'} accepted the assigned trip.`,
-            timestamp: updatedDate,
-            status: 'accepted',
-            meta: { tripId: trip.id }
-          });
-        } else if (trip.status === 'cancelled') {
-          items.push({
-            id: `trip-cancelled-${trip.id}`,
-            type: 'trip',
-            title: 'Trip Cancelled',
-            description: `Trip for vehicle ${trip.vehicle?.plateNumber || ''} has been cancelled.`,
-            timestamp: updatedDate,
-            status: 'cancelled',
-            meta: { tripId: trip.id }
-          });
-        }
-      }
-
-      if (trip.startedAt) {
-        const startDate = safeNewDate(trip.startedAt);
-        if (startDate) {
-          items.push({
-            id: `trip-start-${trip.id}`,
-            type: 'trip',
-            title: 'Trip Started',
-            description: `Driver ${trip.driver?.fullName || 'Driver'} started trip on vehicle ${trip.vehicle?.plateNumber || ''}`,
-            timestamp: startDate,
-            status: 'in_progress',
-            meta: { tripId: trip.id }
-          });
-        }
-      }
-      if (trip.completedAt) {
-        const endDate = safeNewDate(trip.completedAt);
-        if (endDate) {
-          items.push({
-            id: `trip-complete-${trip.id}`,
-            type: 'trip',
-            title: 'Trip Completed',
-            description: `Driver ${trip.driver?.fullName || 'Driver'} finished trip. Distance: ${trip.totalDistanceKm || 0} km`,
-            timestamp: endDate,
-            status: 'completed',
-            meta: { tripId: trip.id }
-          });
-        }
+      } else if (trip.status === 'accepted' && updatedDate) {
+        items.push({
+          id: `trip-status-${trip.id}-accepted`,
+          type: 'trip',
+          title: 'Trip Accepted',
+          description: `Driver ${trip.driver?.fullName || 'Driver'} accepted the assigned trip.`,
+          timestamp: updatedDate,
+          status: 'accepted',
+          meta: { tripId: trip.id }
+        });
+      } else if (trip.status === 'cancelled' && updatedDate) {
+        items.push({
+          id: `trip-status-${trip.id}-cancelled`,
+          type: 'trip',
+          title: 'Trip Cancelled',
+          description: `Trip for vehicle ${trip.vehicle?.plateNumber || ''} has been cancelled.`,
+          timestamp: updatedDate,
+          status: 'cancelled',
+          meta: { tripId: trip.id }
+        });
+      } else if (trip.status === 'in_progress' && (startDate || updatedDate)) {
+        items.push({
+          id: `trip-status-${trip.id}-in_progress`,
+          type: 'trip',
+          title: 'Trip Started',
+          description: `Driver ${trip.driver?.fullName || 'Driver'} started trip on vehicle ${trip.vehicle?.plateNumber || ''}`,
+          timestamp: startDate || updatedDate!,
+          status: 'in_progress',
+          meta: { tripId: trip.id }
+        });
+      } else if (trip.status === 'completed' && (endDate || updatedDate)) {
+        items.push({
+          id: `trip-status-${trip.id}-completed`,
+          type: 'trip',
+          title: 'Trip Completed',
+          description: `Driver ${trip.driver?.fullName || 'Driver'} finished trip. Distance: ${trip.totalDistanceKm || 0} km`,
+          timestamp: endDate || updatedDate!,
+          status: 'completed',
+          meta: { tripId: trip.id }
+        });
       }
     });
 

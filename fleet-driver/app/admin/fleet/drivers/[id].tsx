@@ -30,7 +30,6 @@ import { DriverForm } from "../../../../components/admin/fleet/DriverForm";
 import { DriverContact } from "../../../../components/admin/fleet/DriverContact";
 import { DriverLicense } from "../../../../components/admin/fleet/DriverLicense";
 import { DriverKpi } from "../../../../components/admin/fleet/DriverKpi";
-import { DriverKpiChart } from "../../../../components/admin/fleet/DriverKpiChart";
 import { DriverJourneyTimeline } from "../../../../components/admin/fleet/DriverJourneyTimeline";
 
 const STATUS_CONFIG = {
@@ -315,7 +314,6 @@ export default function DriverDetailScreen() {
               <DriverContact driver={driver} />
               <DriverLicense driver={driver} />
               <DriverKpi kpi={kpi} kpiLoading={kpiLoading} />
-              <DriverKpiChart kpi={kpi} kpiLoading={kpiLoading} />
             </View>
           )}
 

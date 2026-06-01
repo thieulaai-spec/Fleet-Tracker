@@ -11,19 +11,53 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { ReportChartWrapper } from '@/app/reports/components/ReportChartWrapper';
+import { format, subDays, startOfDay, isAfter } from 'date-fns';
 
-// Mock performance trend data
-const performanceData = [
-  { day: 'Mon', score: 85 },
-  { day: 'Tue', score: 88 },
-  { day: 'Wed', score: 92 },
-  { day: 'Thu', score: 90 },
-  { day: 'Fri', score: 94 },
-  { day: 'Sat', score: 95 },
-  { day: 'Sun', score: 96 },
-];
+const KPI_PENALTIES: Record<string, number> = {
+  speed_violation: 5,
+  route_deviation: 8,
+  abnormal_stop: 3,
+  incident: 10,
+};
 
-export function DriverPerformanceChart() {
+interface DriverPerformanceChartProps {
+  kpiScore?: number;
+  alerts?: any[];
+}
+
+export function DriverPerformanceChart({ kpiScore = 100, alerts = [] }: DriverPerformanceChartProps) {
+  const performanceData = React.useMemo(() => {
+    const data = [];
+    const currentScore = Number(kpiScore);
+
+    // Generate last 7 days (from 6 days ago to today)
+    for (let i = 6; i >= 0; i--) {
+      const date = subDays(new Date(), i);
+      const dayName = format(date, 'EEE');
+      const dayStart = startOfDay(date);
+
+      // Find alerts that happened AFTER this day to add back their penalty points
+      const futureAlerts = alerts.filter(alert => {
+        const alertDate = new Date(alert.createdAt);
+        return isAfter(alertDate, dayStart);
+      });
+
+      const totalPenalty = futureAlerts.reduce((sum, alert) => {
+        const penalty = KPI_PENALTIES[alert.type] || 0;
+        return sum + penalty;
+      }, 0);
+
+      const estimatedScore = Math.min(100, currentScore + totalPenalty);
+
+      data.push({
+        day: dayName,
+        score: Math.max(0, estimatedScore),
+      });
+    }
+
+    return data;
+  }, [kpiScore, alerts]);
+
   return (
     <ReportChartWrapper 
       title="Performance Trend" 

@@ -29,8 +29,8 @@ export class ViolationDetectorService implements OnModuleInit {
   async checkViolations(gpsData: GpsUpdateDto) {
     const { speed, tripId, vehicleId, latitude, longitude } = gpsData;
 
-    // 1. Abnormal Stop Check
-    if (speed === 0) {
+    // 1. Abnormal Stop Check (speed < 1.0 km/h to tolerate GPS drift/jitter)
+    if (speed < 1.0) {
       if (!this.stopStartTimeMap.has(vehicleId)) {
         this.stopStartTimeMap.set(vehicleId, Date.now());
       } else {

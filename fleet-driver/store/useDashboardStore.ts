@@ -73,8 +73,8 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       // Count total trips
       const totalTrips = tripsData.length;
 
-      // Count active (unresolved) alerts
-      const alertCount = alertsData.filter((a: any) => !a.isResolved).length;
+      // Count active (unresolved) alerts (only abnormal_stop)
+      const alertCount = alertsData.filter((a: any) => !a.isResolved && a.type === 'abnormal_stop').length;
 
       set({
         stats: {

@@ -12,7 +12,6 @@ import { Trip } from '@/types';
 // Extracted Components
 import { DriverHeader } from './components/DriverHeader';
 import { DriverKpiStats } from './components/DriverKpiStats';
-import { DriverPerformanceChart } from './components/DriverPerformanceChart';
 import { DriverViolationsList } from './components/DriverViolationsList';
 import { TripHistorySection } from './components/TripHistorySection';
 import { TripDetailModal } from './components/TripDetailModal';
@@ -56,13 +55,8 @@ export default function DriverKpiDetailPage() {
 
       <DriverKpiStats kpi={kpi} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2xl">
-        <div className="lg:col-span-2">
-          <DriverPerformanceChart />
-        </div>
-        <div className="lg:col-span-1">
-          <DriverViolationsList alerts={(alerts || []).filter(a => a.type !== 'speed_violation')} />
-        </div>
+      <div>
+        <DriverViolationsList alerts={(alerts || []).filter(a => a.type !== 'speed_violation')} />
       </div>
 
       <TripHistorySection 

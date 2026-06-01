@@ -24,6 +24,7 @@ import { OrderDetailHeader } from '../../../components/admin/order/OrderDetailHe
 import { OrderDetailMap } from '../../../components/admin/order/OrderDetailMap';
 import { AssignedTripCard } from '../../../components/admin/dispatch/AssignedTripCard';
 import { OrderDetailInfo } from '../../../components/admin/order/OrderDetailInfo';
+import { authFetch } from '../../../lib/authFetch';
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -31,6 +32,7 @@ export default function OrderDetailScreen() {
   const { getOrderById, fetchOrderById, updateOrder, deleteOrder, assignOrder, loading } = useOrderStore();
   const { suggestions, fetchSuggestions, loading: fleetLoading } = useFleetStore();
   const [order, setOrder] = useState<Order | undefined>(undefined);
+  const [verifications, setVerifications] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,6 +54,17 @@ export default function OrderDetailScreen() {
           }
         })
         .catch(console.error);
+
+      // Fetch verifications from backend
+      authFetch(`/orders/${id}/verifications`)
+        .then(async (res) => {
+          if (res.ok) {
+            const result = await res.json();
+            const verData = result.data || result;
+            setVerifications(Array.isArray(verData) ? verData : []);
+          }
+        })
+        .catch((err) => console.error('Failed to fetch order verifications:', err));
     }
   }, [id, getOrderById, fetchOrderById, fetchSuggestions]);
 
@@ -253,7 +266,7 @@ export default function OrderDetailScreen() {
           )}
 
           {/* Route Details, Weight, Date, Instructions, Timeline */}
-          <OrderDetailInfo order={order} />
+          <OrderDetailInfo order={order} verifications={verifications} />
         </View>
       </ScrollView>
 

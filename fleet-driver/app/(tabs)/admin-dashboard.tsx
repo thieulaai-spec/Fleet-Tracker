@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput } from 'react-native';
-import { LayoutDashboard, Truck, Package, DollarSign, AlertTriangle, TrendingUp, ChevronRight, Clock, X, Search } from 'lucide-react-native';
+import { LayoutDashboard, Truck, Package, AlertTriangle, TrendingUp, ChevronRight, Clock, X, Search } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { StatCard } from '../../components/admin/dashboard/StatCard';
@@ -20,9 +20,6 @@ export default function AdminDashboardScreen() {
     fetchStats();
   }, []);
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
-  };
 
   const timeAgo = (dateStr: string) => {
     if (!dateStr) return '';
@@ -345,11 +342,11 @@ export default function AdminDashboardScreen() {
             trendColor="#f43f5e"
           />
           <StatCard 
-            title="Revenue (Day)" 
-            value={formatCurrency(stats.totalRevenue).split(',00')[0]} 
-            icon={DollarSign} 
+            title="Total Trips" 
+            value={stats.totalTrips} 
+            icon={TrendingUp} 
             color="#10b981" 
-            trend="+12% vs last week"
+            trend="Trips dispatched"
           />
           <StatCard 
             title="Active Alerts" 
@@ -360,26 +357,6 @@ export default function AdminDashboardScreen() {
             trendColor={stats.alertCount > 0 ? "#ef4444" : "#10b981"}
           />
         </View>
-        
-        <View className="mb-4">
-          <Text className="text-lg font-bold text-slate-50 tracking-wider">Reports & Analytics</Text>
-        </View>
-
-        <TouchableOpacity 
-          className="bg-slate-800 rounded-3xl p-5 flex-row items-center mb-6 border border-white/10"
-          onPress={() => router.push('/admin/reports' as any)}
-        >
-          <View className="w-12 h-12 rounded-2xl bg-indigo-500/15 justify-center items-center mr-4">
-            <TrendingUp size={24} color="#6366f1" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-slate-50 font-bold text-base mb-1">Fleet Insights & KPIs</Text>
-            <Text className="text-slate-400 text-xs">View fuel, trips, and utilization</Text>
-          </View>
-          <View className="w-8 h-8 rounded-full bg-slate-950 justify-center items-center">
-            <ChevronRight size={18} color="#94a3b8" />
-          </View>
-        </TouchableOpacity>
 
         <View className="mb-4 flex-row justify-between items-center">
           <Text className="text-lg font-bold text-slate-50 tracking-wider">Recent Activity</Text>

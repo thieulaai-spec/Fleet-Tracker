@@ -4,7 +4,7 @@ import { useAuthStore } from './useAuthStore';
 interface DashboardStats {
   activeVehicles: number;
   pendingOrders: number;
-  totalRevenue: number;
+  totalTrips: number;
   alertCount: number;
 }
 
@@ -24,7 +24,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   stats: {
     activeVehicles: 0,
     pendingOrders: 0,
-    totalRevenue: 0,
+    totalTrips: 0,
     alertCount: 0,
   },
   orders: [],
@@ -70,13 +70,8 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       // Calculate real pending orders
       const pendingOrders = ordersData.filter((o: any) => o.status === 'pending').length;
 
-      // Calculate real dynamic revenue (matching the web dashboard formula)
-      const totalRevenue = ordersData
-        .filter((o: any) => o.status === 'delivered')
-        .reduce((sum: number, o: any) => {
-          const orderRevenue = Math.round(Number(o.weightKg) * 850) + 200000;
-          return sum + orderRevenue;
-        }, 0);
+      // Count total trips
+      const totalTrips = tripsData.length;
 
       // Count active (unresolved) alerts
       const alertCount = alertsData.filter((a: any) => !a.isResolved).length;
@@ -85,7 +80,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
         stats: {
           activeVehicles,
           pendingOrders,
-          totalRevenue,
+          totalTrips,
           alertCount,
         },
         orders: ordersData,
@@ -101,7 +96,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
         stats: {
           activeVehicles: 0,
           pendingOrders: 0,
-          totalRevenue: 0,
+          totalTrips: 0,
           alertCount: 0,
         },
         orders: [],

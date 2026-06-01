@@ -72,10 +72,10 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               colors={['#f59e0b', '#d97706']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+              style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}
             >
-              <Truck size={20} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Xác nhận lấy hàng</Text>
+              <Truck size={18} color="#fff" strokeWidth={2.5} />
+              <Text className="text-white font-black text-[11px] uppercase tracking-wide" numberOfLines={1}>Xác nhận lấy hàng</Text>
             </LinearGradient>
           </TouchableOpacity>
         );
@@ -93,9 +93,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
             }}
             activeOpacity={0.8}
           >
-            <View style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }} className="bg-slate-800">
-              <Truck size={20} color="#64748b" strokeWidth={2.5} />
-              <Text className="text-slate-400 font-bold text-[12px] uppercase tracking-wider" numberOfLines={1}>
+            <View style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }} className="bg-slate-800">
+              <Truck size={18} color="#64748b" strokeWidth={2.5} />
+              <Text className="text-slate-400 font-bold text-[11px] uppercase tracking-wide" numberOfLines={1}>
                 Lấy hàng ({distText})
               </Text>
             </View>

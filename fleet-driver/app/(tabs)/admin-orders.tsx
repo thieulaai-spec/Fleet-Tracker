@@ -37,6 +37,13 @@ const STATUS_CONFIG = {
   [OrderStatus.CANCELLED]: { label: 'Cancelled', color: '#94a3b8', icon: XCircle },
 };
 
+const FILTER_STATUSES = [
+  OrderStatus.PENDING,
+  OrderStatus.DELIVERING,
+  OrderStatus.DELIVERED,
+  OrderStatus.FAILED,
+];
+
 export default function AdminOrdersScreen() {
   const router = useRouter();
   const { orders, loading, fetchOrders } = useOrderStore();
@@ -155,21 +162,24 @@ export default function AdminOrdersScreen() {
               selectedStatus === 'all' ? 'text-white' : 'text-slate-400'
             }`}>All</Text>
           </TouchableOpacity>
-          {Object.entries(STATUS_CONFIG).map(([status, config]) => (
-            <TouchableOpacity 
-              key={status}
-              className={`px-4 py-2 rounded-full bg-slate-800 border border-white/5 ${
-                selectedStatus === status ? 'bg-indigo-500 border-indigo-500' : ''
-              }`}
-              onPress={() => setSelectedStatus(status as OrderStatus)}
-            >
-              <Text className={`font-semibold text-sm ${
-                selectedStatus === status ? 'text-white' : 'text-slate-400'
-              }`}>
-                {config.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {FILTER_STATUSES.map((status) => {
+            const config = STATUS_CONFIG[status];
+            return (
+              <TouchableOpacity 
+                key={status}
+                className={`px-4 py-2 rounded-full bg-slate-800 border border-white/5 ${
+                  selectedStatus === status ? 'bg-indigo-500 border-indigo-500' : ''
+                }`}
+                onPress={() => setSelectedStatus(status)}
+              >
+                <Text className={`font-semibold text-sm ${
+                  selectedStatus === status ? 'text-white' : 'text-slate-400'
+                }`}>
+                  {config?.label || status}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 

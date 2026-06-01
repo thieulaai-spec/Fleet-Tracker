@@ -91,7 +91,7 @@ export const SosButton: React.FC<SosButtonProps> = ({ tripId }) => {
           <View className="bg-white/20 p-1.5 rounded-full">
             <AlertTriangle size={18} color="#fff" strokeWidth={2.5} />
           </View>
-          <Text className="text-white font-black text-[13px] uppercase tracking-wider" numberOfLines={1}>Emergency SOS</Text>
+          <Text className="text-white font-black text-[11px] uppercase tracking-wide" numberOfLines={1}>Emergency SOS</Text>
         </LinearGradient>
       </TouchableOpacity>
 

@@ -1,3 +1,24 @@
+## [2026-06-02] - Vietnam Hybrid Map Search, Hanoi Seed Centering & Mobile KPI Alignment
+### Added
+- **Vietnam-Optimized Hybrid Map Search**:
+  - Implemented a robust parallel hybrid geocoding search in both React Native mobile MapPicker (`MapPicker.tsx`) and Next.js Web Admin map (`MapBox.tsx`). It queries the standard Mapbox Geocoding API and the OpenStreetMap Nominatim API concurrently, merges the results, and prioritizes Nominatim results for specific local POIs. This allows highly accurate local address suggestions in Vietnam (e.g. searching "Học viện Công nghệ Bưu chính Viễn thông").
+- **Hanoi-Centric Seed Relocation**:
+  - Relocated all seed vehicle coordinates, device trajectories, and active orders to the geographic center of Hanoi (`[105.834159, 21.027764]`) in `seed.ts`, `seed-vehicles-locations.ts`, and `comprehensive-seed.ts` to facilitate realistic local transport and routing simulations.
+- **Dynamic Profile KPI Sync & Driver Card Score**:
+  - Allowed `UserRole.DRIVER` role to query the secure KPI reports endpoint `/reports/driver-kpi/:driverId` in backend NestJS (`reports.controller.ts`).
+  - Integrated dynamic, real-time KPI metrics (`Completion Rate`, `Safety Violations`, `Performance Score`) directly into the mobile driver `ProfileStats.tsx` component, syncing its labels and layout with the Web Admin Dashboard.
+  - Linked driver KPI score dynamically to the driver listings inside the `DriverCard` and `useFleetStore.ts` store via TypeORM relations.
+
+### Fixed
+- **Mobile (MapPicker Touch & Scroll Dropdown)**:
+  - Resolved a critical UI blocking bug in React Native where address suggestions in the MapPicker modal could not be clicked or scrolled. Relocated the absolute suggestions `View` container outside of the `BlurView` to allow it to receive standard touch and scroll events on top of the parent screen container.
+- **Graceful GPS Location Unavailability Handling**:
+  - Wrapped dynamic device location queries (`Location.getCurrentPositionAsync`) in try/catch blocks in the mobile `MapPicker.tsx` component. If location services/GPS are disabled or fail on the device, the app now falls back gracefully to Hanoi coordinates `[21.027764, 105.834159]` and alerts the user instead of triggering uncaught promise crashes.
+- **Initial Map Viewports Alignment**:
+  - Fixed default map focus views inside `admin-tracking.tsx` and `map.tsx` to center on Hanoi instead of global boundaries, matching the new mock data footprint.
+- **Timeline Alignment (Mobile Admin Dashboard)**:
+  - Perfectly aligned the vertical timeline line with the circular status icons inside the mobile `admin-dashboard.tsx` screen.
+
 ## [2026-06-01] - Dynamic Verification Timeline, Alert Sync & KPI Cleanup
 ### Added
 - **Mobile & Web Admin (Verification Timeline)**:

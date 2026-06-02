@@ -12,6 +12,8 @@ export default function AdminDashboardScreen() {
   const { stats, orders, alerts, trips, isLoading, fetchStats } = useDashboardStore();
   const router = useRouter();
   
+  const dashboardStartTime = React.useMemo(() => new Date(), []);
+  
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'all' | 'order' | 'trip' | 'alert'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -39,13 +41,12 @@ export default function AdminDashboardScreen() {
     return `${diffDays}d ago`;
   };
 
-  // Safe date parser (caps future timestamps to avoid clock drift issues)
+  // Safe date parser (caps future timestamps to stable start time to avoid clock drift issues)
   const safeDate = (dStr: any) => {
     if (!dStr) return null;
     const d = new Date(dStr);
     if (isNaN(d.getTime())) return null;
-    const now = new Date();
-    return d > now ? now : d;
+    return d > dashboardStartTime ? dashboardStartTime : d;
   };
 
   const allActivities = React.useMemo(() => {

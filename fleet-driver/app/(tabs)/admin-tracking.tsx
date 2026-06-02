@@ -146,8 +146,8 @@ export default function AdminTrackingScreen() {
         style={StyleSheet.absoluteFillObject}
         mapType={mapType}
         initialRegion={{
-          latitude: 10.762622,
-          longitude: 106.660172,
+          latitude: 21.027764,
+          longitude: 105.834159,
           latitudeDelta: 0.1,
           longitudeDelta: 0.1,
         }}

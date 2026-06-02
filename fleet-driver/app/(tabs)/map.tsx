@@ -60,8 +60,8 @@ export default function ActiveTripMap() {
           setIsNavMode(false);
         }}
         initialRegion={{
-          latitude: location?.coords.latitude || 10.762622,
-          longitude: location?.coords.longitude || 106.660172,
+          latitude: location?.coords.latitude || 21.027764,
+          longitude: location?.coords.longitude || 105.834159,
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         }}

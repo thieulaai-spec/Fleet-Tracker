@@ -21,19 +21,19 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ kpi }) => {
       color: '#6366f1' // indigo 
     },
     { 
-      label: 'Completion', 
-      value: `${kpi?.completionRate ?? 0}%`, 
+      label: 'Completion Rate', 
+      value: kpi?.completionRate != null ? `${Number(kpi.completionRate).toFixed(0)}%` : '0%', 
       icon: CheckCircle, 
       color: '#10b981' // emerald 
     },
     { 
-      label: 'Violations', 
+      label: 'Safety Violations', 
       value: kpi?.totalViolations ?? 0, 
       icon: AlertTriangle, 
       color: '#ef4444' // red
     },
     { 
-      label: 'KPI Score', 
+      label: 'Performance Score', 
       value: kpi?.kpiScore != null ? Number(kpi.kpiScore).toFixed(1) : '0.0', 
       icon: TrendingUp, 
       color: '#fbbf24' // amber

@@ -76,7 +76,7 @@ async function seedComprehensive() {
         driverId: drivers[0].id,
         status: TripStatus.IN_PROGRESS,
         startedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        actualRoute: { type: 'LineString', coordinates: [[106.660172, 10.762622], [106.670172, 10.772622]] },
+        actualRoute: { type: 'LineString', coordinates: [[105.834159, 21.027764], [105.844159, 21.037764]] },
       });
       await tripRepository.save(trip1);
       console.log('Created Trip 1 (IN_PROGRESS)');
@@ -96,7 +96,7 @@ async function seedComprehensive() {
         await gpsLocationRepository.save({
           vehicleId: vehicles[0].id,
           tripId: trip1.id,
-          location: { type: 'Point', coordinates: [106.660172 + (i * 0.002), 10.762622 + (i * 0.002)] },
+          location: { type: 'Point', coordinates: [105.834159 + (i * 0.002), 21.027764 + (i * 0.002)] },
           speedKmh: 40 + Math.random() * 20,
           heading: 45,
         });
@@ -110,7 +110,7 @@ async function seedComprehensive() {
         type: AlertType.SPEED_VIOLATION,
         severity: AlertSeverity.MEDIUM,
         message: 'Vehicle exceeded speed limit (75 km/h in 60 km/h zone)',
-        location: { type: 'Point', coordinates: [106.665172, 10.767622] },
+        location: { type: 'Point', coordinates: [105.839159, 21.032764] },
         isResolved: false,
       });
 
@@ -124,7 +124,7 @@ async function seedComprehensive() {
         completedAt: new Date(Date.now() - 1000 * 60 * 60 * 20), // completed 20 hours ago
         totalDistanceKm: 45.5,
         estimatedFuelCost: 150000,
-        plannedRoute: { type: 'LineString', coordinates: [[106.680172, 10.782622], [106.700172, 10.802622]] },
+        plannedRoute: { type: 'LineString', coordinates: [[105.8525, 21.0285], [105.8625, 21.0385]] },
       });
       await tripRepository.save(trip2);
       console.log('Created Trip 2 (COMPLETED)');
@@ -147,7 +147,7 @@ async function seedComprehensive() {
         type: AlertType.ROUTE_DEVIATION,
         severity: AlertSeverity.LOW,
         message: 'Vehicle deviated from planned route by 2km',
-        location: { type: 'Point', coordinates: [106.690172, 10.792622] },
+        location: { type: 'Point', coordinates: [105.8575, 21.0335] },
         isResolved: true,
         resolvedAt: new Date(),
       });

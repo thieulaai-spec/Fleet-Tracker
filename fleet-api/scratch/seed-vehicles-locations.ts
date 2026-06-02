@@ -22,18 +22,18 @@ const dataSource = new DataSource({
   },
 });
 
-// Sample locations around Ho Chi Minh City with coordinates [longitude, latitude]
+// Sample locations around Hanoi with coordinates [longitude, latitude]
 const locations = [
-  { name: 'Tân Bình (District 11)', lat: 10.8141, lng: 106.6841 },
-  { name: 'Bình Tân (District 12)', lat: 10.7838, lng: 106.6353 },
-  { name: 'Quận 1 (Downtown)', lat: 10.7769, lng: 106.7009 },
-  { name: 'Quận 3 (Ben Thanh Market)', lat: 10.7694, lng: 106.6978 },
-  { name: 'Quận 7 (Saigon South)', lat: 10.7529, lng: 106.7255 },
-  { name: 'Bình Chánh (Outer District)', lat: 10.6816, lng: 106.4752 },
-  { name: 'Thủ Đức (Eastern Area)', lat: 10.8015, lng: 106.7637 },
-  { name: 'Gò Vấp (Northern Area)', lat: 10.8514, lng: 106.6735 },
-  { name: 'Tân Phú (Western Area)', lat: 10.8094, lng: 106.6156 },
-  { name: 'Phú Nhuận (Mid District)', lat: 10.7916, lng: 106.7442 },
+  { name: 'Hoàn Kiếm (Downtown)', lat: 21.0285, lng: 105.8525 },
+  { name: 'Ba Đình (Square)', lat: 21.0368, lng: 105.8347 },
+  { name: 'Tây Hồ (West Lake)', lat: 21.0584, lng: 105.8242 },
+  { name: 'Cầu Giấy (District)', lat: 21.0306, lng: 105.7963 },
+  { name: 'Đống Đa (District)', lat: 21.0181, lng: 105.8252 },
+  { name: 'Hai Bà Trưng (District)', lat: 21.0125, lng: 105.8504 },
+  { name: 'Thanh Xuân (District)', lat: 20.9938, lng: 105.8122 },
+  { name: 'Hà Đông (District)', lat: 20.9723, lng: 105.7739 },
+  { name: 'Long Biên (Bridge Area)', lat: 21.0428, lng: 105.8600 },
+  { name: 'Nội Bài (Airport)', lat: 21.2187, lng: 105.8056 },
 ];
 
 async function seedVehicles() {
@@ -51,7 +51,7 @@ async function seedVehicles() {
 
     for (let i = 0; i < locations.length; i++) {
       const location = locations[i];
-      const plateNumber = `HCM-${String(1000 + i).slice(-4)}`;
+      const plateNumber = `HN-${String(1000 + i).slice(-4)}`;
 
       // Check if vehicle already exists
       const exists = await vehicleRepository.findOne({

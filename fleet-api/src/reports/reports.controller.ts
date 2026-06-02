@@ -5,7 +5,9 @@ import {
   Param,
   UseGuards,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
+import { GetUser } from '../auth/decorators/current-user.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -50,9 +52,12 @@ export class ReportsController {
   }
 
   @Get('driver-kpi/:driverId')
-  @Roles(UserRole.ADMIN, UserRole.DISPATCHER)
+  @Roles(UserRole.ADMIN, UserRole.DISPATCHER, UserRole.DRIVER)
   @ApiOperation({ summary: 'Get KPI details for a specific driver' })
-  async getDriverKpi(@Param('driverId') driverId: string) {
+  async getDriverKpi(@Param('driverId') driverId: string, @GetUser() user: any) {
+    if (user.role === UserRole.DRIVER && user.driver?.id !== driverId) {
+      throw new ForbiddenException('You can only view your own KPI');
+    }
     return this.kpiService.getDriverKpiSummary(driverId);
   }
 

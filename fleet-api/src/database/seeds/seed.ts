@@ -128,11 +128,11 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     console.log('Seeding vehicles...');
     const vehiclesData: Vehicle[] = [];
     const vehiclesInfo = [
-      { plateNumber: '51C-432.10', type: VehicleType.MEDIUM, capacity: 3500, model: 'Isuzu NPR400', year: 2022, status: VehicleStatus.DELIVERING },
-      { plateNumber: '51D-876.54', type: VehicleType.LARGE, capacity: 8000, model: 'Hino 500', year: 2021, status: VehicleStatus.MAINTENANCE },
-      { plateNumber: '51A-999.99', type: VehicleType.SMALL, capacity: 1500, model: 'Suzuki Carry Pro', year: 2023, status: VehicleStatus.AVAILABLE },
+      { plateNumber: '29C-432.10', type: VehicleType.MEDIUM, capacity: 3500, model: 'Isuzu NPR400', year: 2022, status: VehicleStatus.DELIVERING },
+      { plateNumber: '29D-876.54', type: VehicleType.LARGE, capacity: 8000, model: 'Hino 500', year: 2021, status: VehicleStatus.MAINTENANCE },
+      { plateNumber: '30A-999.99', type: VehicleType.SMALL, capacity: 1500, model: 'Suzuki Carry Pro', year: 2023, status: VehicleStatus.AVAILABLE },
       { plateNumber: '29C-543.21', type: VehicleType.MEDIUM, capacity: 4000, model: 'Hyundai Mighty', year: 2020, status: VehicleStatus.AVAILABLE },
-      { plateNumber: '43C-888.88', type: VehicleType.LARGE, capacity: 10000, model: 'Thaco Auman', year: 2019, status: VehicleStatus.DELIVERING },
+      { plateNumber: '30E-888.88', type: VehicleType.LARGE, capacity: 10000, model: 'Thaco Auman', year: 2019, status: VehicleStatus.DELIVERING },
     ];
 
     for (let i = 0; i < vehiclesInfo.length; i++) {
@@ -152,7 +152,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
           imageUrl: `https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&h=400&fit=crop`,
           lastKnownLocation: {
             type: 'Point',
-            coordinates: [106.660172 + i * 0.015, 10.762622 + i * 0.012],
+            coordinates: [105.834159 + i * 0.015, 21.027764 + i * 0.012],
           },
         })
       );
@@ -160,20 +160,20 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     }
     console.log(`Seeded ${vehiclesData.length} vehicles.`);
 
-    // 10 Orders centered in HCM City
+    // 10 Orders centered in Hanoi
     console.log('Seeding realistic orders...');
     const ordersData: Order[] = [];
     const ordersInfo = [
-      { weight: 1200, desc: 'Lô hàng may mặc xuất khẩu - Quận 1', pickup: 'Chợ Bến Thành, Quận 1, TP. HCM', pLng: 106.6979, pLat: 10.7725, deliv: 'Cảng Cát Lái, Quận 2, TP. HCM', dLng: 106.7900, dLat: 10.7600, status: OrderStatus.DELIVERED },
-      { weight: 800, desc: 'Thiết bị điện tử gia dụng - Phú Nhuận', pickup: 'Nguyễn Kiệm, Phú Nhuận, TP. HCM', pLng: 106.6800, pLat: 10.8000, deliv: 'Khu công nghệ cao Q9, TP. HCM', dLng: 106.7972, dLat: 10.8444, status: OrderStatus.DELIVERED },
-      { weight: 2400, desc: 'Thực phẩm đông lạnh nhập khẩu - Tân Bình', pickup: 'Cảng Hàng Không Tân Sơn Nhất, Tân Bình, TP. HCM', pLng: 106.6600, pLat: 10.8166, deliv: 'Siêu thị Co.opmart Thủ Đức, TP. HCM', dLng: 106.7600, dLat: 10.8500, status: OrderStatus.DELIVERED },
-      { weight: 1500, desc: 'Vật liệu xây dựng & phụ gia - Quận 7', pickup: 'Lotte Mart Quận 7, TP. HCM', pLng: 106.7020, pLat: 10.7410, deliv: 'Khu đô thị Sala, Quận 2, TP. HCM', dLng: 106.7230, dLat: 10.7750, status: OrderStatus.DELIVERED },
-      { weight: 950, desc: 'Nông sản & Trái cây miền Tây - Bình Tân', pickup: 'Chợ đầu mối Bình Điền, Bình Chánh, TP. HCM', pLng: 106.6080, pLat: 10.6860, deliv: 'Chợ Tân Định, Quận 1, TP. HCM', dLng: 106.6890, dLat: 10.7890, status: OrderStatus.DELIVERED },
-      { weight: 3100, desc: 'Hóa mỹ phẩm & Chai lọ thủy tinh - Bình Dương', pickup: 'VSIP 1, Thuận An, Bình Dương', pLng: 106.7050, pLat: 10.9300, deliv: 'Kho tổng kho ngoại quan Cát Lái, TP. HCM', dLng: 106.7950, dLat: 10.7650, status: OrderStatus.DELIVERED },
-      { weight: 1900, desc: 'Dược phẩm & Vật tư y tế - Quận 10', pickup: 'Bệnh viện Chợ Rẫy, Quận 5, TP. HCM', pLng: 106.6600, pLat: 10.7570, deliv: 'Trung tâm Y tế Quận 9, TP. HCM', dLng: 106.8100, dLat: 10.8300, status: OrderStatus.DELIVERING },
-      { weight: 700, desc: 'Phụ tùng ô tô & Xe máy chuyên dụng - Thủ Đức', pickup: 'Linh Trung 1, Thủ Đức, TP. HCM', pLng: 106.7850, pLat: 10.8650, deliv: 'Đường Cộng Hòa, Tân Bình, TP. HCM', dLng: 106.6400, dLat: 10.8000, status: OrderStatus.ASSIGNED },
-      { weight: 1350, desc: 'Bao bì giấy & Hộp carton - Tân Phú', pickup: 'KCN Tân Bình, Tân Phú, TP. HCM', pLng: 106.6200, pLat: 10.8100, deliv: 'Đại lộ Võ Văn Kiệt, Quận 5, TP. HCM', dLng: 106.6750, dLat: 10.7520, status: OrderStatus.ASSIGNED },
-      { weight: 2800, desc: 'Thức ăn chăn nuôi dạng hạt - Long An', pickup: 'KCN Tân Đô, Đức Hòa, Long An', pLng: 106.4900, pLat: 10.7800, deliv: 'Trang trại chăn nuôi Củ Chi, TP. HCM', dLng: 106.5200, dLat: 10.9600, status: OrderStatus.ASSIGNED },
+      { weight: 1200, desc: 'Lô hàng may mặc xuất khẩu - Hoàn Kiếm', pickup: 'Chợ Đồng Xuân, Hoàn Kiếm, Hà Nội', pLng: 105.8492, pLat: 21.0382, deliv: 'Ga Hà Nội, Đống Đa, Hà Nội', dLng: 105.8405, dLat: 21.0253, status: OrderStatus.DELIVERED },
+      { weight: 800, desc: 'Thiết bị điện tử gia dụng - Cầu Giấy', pickup: 'Trần Duy Hưng, Cầu Giấy, Hà Nội', pLng: 105.7960, pLat: 21.0090, deliv: 'Khu công nghiệp Bắc Thăng Long, Đông Anh, Hà Nội', dLng: 105.7830, dLat: 21.1150, status: OrderStatus.DELIVERED },
+      { weight: 2400, desc: 'Thực phẩm đông lạnh nhập khẩu - Nội Bài', pickup: 'Cảng Hàng Không Nội Bài, Sóc Sơn, Hà Nội', pLng: 105.8056, pLat: 21.2187, deliv: 'Siêu thị Big C Thăng Long, Cầu Giấy, Hà Nội', dLng: 105.7942, dLat: 21.0068, status: OrderStatus.DELIVERED },
+      { weight: 1500, desc: 'Vật liệu xây dựng & phụ gia - Hà Đông', pickup: 'Khu đô thị Văn Quán, Hà Đông, Hà Nội', pLng: 105.7830, pLat: 20.9780, deliv: 'Khu đô thị Times City, Hai Bà Trưng, Hà Nội', dLng: 105.8690, dLat: 21.0060, status: OrderStatus.DELIVERED },
+      { weight: 950, desc: 'Nông sản & Trái cây miền Bắc - Long Biên', pickup: 'Chợ đầu mối Long Biên, Ba Đình, Hà Nội', pLng: 105.8499, pLat: 21.0450, deliv: 'Chợ Hôm, Hai Bà Trưng, Hà Nội', dLng: 105.8495, dLat: 21.0182, status: OrderStatus.DELIVERED },
+      { weight: 3100, desc: 'Hóa mỹ phẩm & Chai lọ thủy tinh - Bắc Ninh', pickup: 'KCN Tiên Sơn, Tiên Du, Bắc Ninh', pLng: 106.0150, pLat: 21.0900, deliv: 'Kho tổng Đức Giang, Long Biên, Hà Nội', dLng: 105.8950, dLat: 21.0550, status: OrderStatus.DELIVERED },
+      { weight: 1900, desc: 'Dược phẩm & Vật tư y tế - Đống Đa', pickup: 'Bệnh viện Bạch Mai, Đống Đa, Hà Nội', pLng: 105.8418, pLat: 21.0015, deliv: 'Trung tâm Y tế Sóc Sơn, Hà Nội', dLng: 105.8300, dLat: 21.2580, status: OrderStatus.DELIVERING },
+      { weight: 700, desc: 'Phụ tùng ô tô & Xe máy chuyên dụng - Gia Lâm', pickup: 'KCN Sài Đồng B, Long Biên, Hà Nội', pLng: 105.9050, pLat: 21.0250, deliv: 'Đường Nguyễn Trãi, Thanh Xuân, Hà Nội', dLng: 105.8100, dLat: 20.9980, status: OrderStatus.ASSIGNED },
+      { weight: 1350, desc: 'Bao bì giấy & Hộp carton - Thanh Trì', pickup: 'KCN Ngọc Hồi, Thanh Trì, Hà Nội', pLng: 105.8400, pLat: 20.9320, deliv: 'Đường Giải Phóng, Hai Bà Trưng, Hà Nội', dLng: 105.8420, dLat: 20.9850, status: OrderStatus.ASSIGNED },
+      { weight: 2800, desc: 'Thức ăn chăn nuôi dạng hạt - Hưng Yên', pickup: 'KCN Phố Nối A, Yên Mỹ, Hưng Yên', pLng: 106.0300, pLat: 20.9600, deliv: 'Trang trại chăn nuôi Đông Anh, Hà Nội', dLng: 105.8400, dLat: 21.1500, status: OrderStatus.ASSIGNED },
     ];
 
     for (const info of ordersInfo) {
@@ -197,7 +197,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     // Trips and verifications
     console.log('Seeding trips & journey verifications...');
     
-    // Trip 1 (Nguyễn Văn Hùng - Isuzu medium plate '51C-432.10') - status: PENDING
+    // Trip 1 (Nguyễn Văn Hùng - Isuzu medium plate '29C-432.10') - status: PENDING
     const trip1 = await tripRepository.save(
       tripRepository.create({
         vehicle: vehiclesData[0],
@@ -208,10 +208,10 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
         plannedRoute: {
           type: 'LineString',
           coordinates: [
-            [106.6600, 10.7570],
-            [106.7000, 10.7800],
-            [106.7500, 10.8000],
-            [106.8100, 10.8300],
+            [105.8418, 21.0015],
+            [105.8390, 21.0250],
+            [105.8350, 21.0500],
+            [105.8300, 21.2580],
           ]
         }
       })
@@ -272,9 +272,9 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
             weightKg: Math.round(400 + (dayOffset % 5) * 300 + Math.random() * 200),
             description: `Vận chuyển hàng tiêu dùng ngày D-${dayOffset} T-${t}`,
             pickupAddress: `Kho hàng ${driver.user.fullName} lấy`,
-            pickupLocation: { type: 'Point', coordinates: [106.6600 + (dayOffset % 5) * 0.01, 10.7570 + (t % 3) * 0.01] },
+            pickupLocation: { type: 'Point', coordinates: [105.8341 + (dayOffset % 5) * 0.01, 21.0277 + (t % 3) * 0.01] },
             deliveryAddress: `Điểm giao hàng ${vehicle.plateNumber}`,
-            deliveryLocation: { type: 'Point', coordinates: [106.7900 + (dayOffset % 3) * 0.01, 10.7600 + (t % 2) * 0.01] },
+            deliveryLocation: { type: 'Point', coordinates: [105.8525 + (dayOffset % 3) * 0.01, 21.0285 + (t % 2) * 0.01] },
             status: OrderStatus.DELIVERED,
             createdAt: startedAt,
           })
@@ -291,7 +291,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
               fingerprintStatus: true,
               facePhotoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop',
               cargoPhotoUrl: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&h=400&fit=crop',
-              location: { type: 'Point', coordinates: [106.6979, 10.7725] },
+              location: { type: 'Point', coordinates: [105.8492, 21.0382] },
             })
           );
           await verificationRepository.save(
@@ -301,7 +301,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
               fingerprintStatus: true,
               facePhotoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop',
               cargoPhotoUrl: 'https://images.unsplash.com/photo-1598257006458-087169a1f08d?w=400&h=400&fit=crop',
-              location: { type: 'Point', coordinates: [106.7900, 10.7600] },
+              location: { type: 'Point', coordinates: [105.8405, 21.0253] },
             })
           );
         }
@@ -347,7 +347,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
         driver: driversData[0],
         type: AlertType.INCIDENT,
         severity: AlertSeverity.CRITICAL,
-        message: 'Tài xế Nguyễn Văn Hùng báo cáo sự cố va chạm giao thông khẩn cấp trên Quốc lộ 1A!',
+        message: 'Tài xế Nguyễn Văn Hùng báo cáo sự cố va chạm giao thông khẩn cấp trên Đường Giải Phóng!',
         createdAt: new Date(Date.now() - 15 * 60000), // 15 mins ago
         isResolved: false,
       })
@@ -371,7 +371,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
         driver: driversData[4],
         type: AlertType.ROUTE_DEVIATION,
         severity: AlertSeverity.MEDIUM,
-        message: 'Xe 43C-888.88 đi chệch khỏi tuyến đường cao tốc!',
+        message: 'Xe 30E-888.88 đi chệch khỏi lộ trình quy định!',
         createdAt: new Date(Date.now() - 60 * 60000), // 1 hour ago
         isResolved: false,
       })
@@ -379,11 +379,11 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
 
     console.log('Seeding GPS locations...');
     const gpsPoints = [
-      { lng: 106.6600, lat: 10.7570, speed: 0, heading: 0 },
-      { lng: 106.6700, lat: 10.7620, speed: 45, heading: 60 },
-      { lng: 106.6800, lat: 10.7680, speed: 50, heading: 60 },
-      { lng: 106.6900, lat: 10.7750, speed: 12, heading: 75 }, // Abnormal slow stop violation point
-      { lng: 106.7020, lat: 10.7820, speed: 30, heading: 45 },
+      { lng: 105.8418, lat: 21.0015, speed: 0, heading: 0 },
+      { lng: 105.8390, lat: 21.0250, speed: 45, heading: 340 },
+      { lng: 105.8350, lat: 21.0500, speed: 50, heading: 340 },
+      { lng: 105.8250, lat: 21.1000, speed: 12, heading: 330 }, // Abnormal slow stop violation point
+      { lng: 105.8300, lat: 21.1500, speed: 30, heading: 10 },
     ];
 
     for (let idx = 0; idx < gpsPoints.length; idx++) {

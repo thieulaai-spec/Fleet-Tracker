@@ -48,7 +48,7 @@ let deviceId = 'device_001';
 let gpsState = {
   latitude: 10.762622,
   longitude: 106.660172,
-  speed: 40, // km/h
+  speed: 80, // km/h (doubled from 40)
   heading: 90, // East
   isActive: false,
   intervalId: null
@@ -162,9 +162,9 @@ function toggleGpsStreaming() {
     sendGpsTick();
     
     gpsState.intervalId = setInterval(() => {
-      // Simulate movement: vehicle moves slightly North-East
-      gpsState.latitude += 0.00015 * (Math.random() * 0.4 + 0.8);
-      gpsState.longitude += 0.00022 * (Math.random() * 0.4 + 0.8);
+      // Simulate movement: vehicle moves slightly North-East (doubled increments)
+      gpsState.latitude += 0.00030 * (Math.random() * 0.4 + 0.8);
+      gpsState.longitude += 0.00044 * (Math.random() * 0.4 + 0.8);
       gpsState.heading = (gpsState.heading + Math.floor(Math.random() * 20 - 10) + 360) % 360;
       
       sendGpsTick();

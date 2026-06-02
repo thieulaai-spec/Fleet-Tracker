@@ -15,6 +15,7 @@ interface DashboardState {
   trips: any[];
   isLoading: boolean;
   error: string | null;
+  clockOffset: number;
   fetchStats: () => Promise<void>;
 }
 
@@ -32,6 +33,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   trips: [],
   isLoading: false,
   error: null,
+  clockOffset: 0,
   fetchStats: async () => {
     set({ isLoading: true, error: null });
     const { token } = useAuthStore.getState();
@@ -51,6 +53,17 @@ export const useDashboardStore = create<DashboardState>((set) => ({
 
       if (!vehiclesRes.ok || !ordersRes.ok || !alertsRes.ok) {
         throw new Error('Failed to fetch real-time dashboard data');
+      }
+
+      // Calculate clock offset from server HTTP Date header
+      let calculatedOffset = 0;
+      const dateHeader = vehiclesRes.headers.get('date') || vehiclesRes.headers.get('Date');
+      if (dateHeader) {
+        const serverTime = new Date(dateHeader).getTime();
+        if (!isNaN(serverTime)) {
+          calculatedOffset = serverTime - Date.now();
+          console.log(`[Clock Sync] Server time: ${dateHeader}, client time: ${new Date().toISOString()}, calculated offset: ${calculatedOffset}ms`);
+        }
       }
 
       const vehicles = await vehiclesRes.json();
@@ -86,6 +99,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
         orders: ordersData,
         alerts: alertsData,
         trips: tripsData,
+        clockOffset: calculatedOffset,
         isLoading: false,
       });
     } catch (err: any) {

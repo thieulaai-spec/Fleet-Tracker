@@ -28,6 +28,7 @@ async function bootstrap() {
   app.enableCors({
     origin: origins,
     credentials: true,
+    exposedHeaders: ['date', 'Date'],
   });
 
   // Global validation pipe

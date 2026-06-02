@@ -280,31 +280,31 @@ export const MapPicker: React.FC<MapPickerProps> = ({
               </TouchableOpacity>
             ) : null}
           </View>
-
-          {showSuggestions && suggestions.length > 0 && (
-            <View className="absolute top-[148px] left-5 right-5 bg-slate-800 rounded-xl border border-white/15 max-h-[200px] shadow-2xl z-50">
-              <ScrollView keyboardShouldPersistTaps="handled" className="rounded-xl">
-                {suggestions.map((item, index) => (
-                  <TouchableOpacity
-                    key={`${item.id || 'suggestion'}-${index}`}
-                    className="flex-row p-3 border-b border-white/5 items-center"
-                    onPress={() => handleSuggestionSelect(item)}
-                  >
-                    <MapPin size={16} color="#6366f1" className="mr-2.5" />
-                    <View className="flex-1">
-                      <Text className="text-slate-50 text-sm font-semibold" numberOfLines={1}>
-                        {item.text}
-                      </Text>
-                      <Text className="text-slate-400 text-[11px] mt-0.5" numberOfLines={1}>
-                        {item.place_name.replace(`${item.text}, `, '')}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
         </BlurView>
+
+        {showSuggestions && suggestions.length > 0 && (
+          <View className="absolute top-[148px] left-5 right-5 bg-slate-800 rounded-xl border border-white/15 max-h-[200px] shadow-2xl z-50">
+            <ScrollView keyboardShouldPersistTaps="handled" className="rounded-xl">
+              {suggestions.map((item, index) => (
+                <TouchableOpacity
+                  key={`${item.id || 'suggestion'}-${index}`}
+                  className="flex-row p-3 border-b border-white/5 items-center"
+                  onPress={() => handleSuggestionSelect(item)}
+                >
+                  <MapPin size={16} color="#6366f1" className="mr-2.5" />
+                  <View className="flex-1">
+                    <Text className="text-slate-50 text-sm font-semibold" numberOfLines={1}>
+                      {item.text}
+                    </Text>
+                    <Text className="text-slate-400 text-[11px] mt-0.5" numberOfLines={1}>
+                      {item.place_name.replace(`${item.text}, `, '')}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         <View className="p-5 pb-10 gap-3 z-10" pointerEvents="box-none">
           {selectedAddress ? (

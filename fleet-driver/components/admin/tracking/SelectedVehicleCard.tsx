@@ -6,11 +6,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { User, Navigation, Truck } from 'lucide-react-native';
+import { User, Navigation, Truck, MapPin } from 'lucide-react-native';
 import { getStatusColor } from './trackingUtils';
 
 interface SelectedVehicleCardProps {
   selectedVehicle: any;
+  activeTrip: any | null;
   onClose: () => void;
   isFetchingDetails: boolean;
   onFetchDetails: (tripId: string) => void;
@@ -18,6 +19,7 @@ interface SelectedVehicleCardProps {
 
 export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
   selectedVehicle,
+  activeTrip,
   onClose,
   isFetchingDetails,
   onFetchDetails,
@@ -41,7 +43,7 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
         </TouchableOpacity>
       </View>
 
-      <View className="gap-3 mb-5">
+      <View className="gap-3 mb-4">
         <View className="flex-row justify-between">
           <View className="flex-row items-center gap-2 flex-1">
             <User size={16} color="#94a3b8" />
@@ -64,6 +66,36 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
           </View>
         </View>
       </View>
+
+      {/* Render active trip destinations directly on card */}
+      {activeTrip && activeTrip.tripOrders && activeTrip.tripOrders.length > 0 && (
+        <View className="mt-1 pt-3 border-t border-white/10 gap-2 mb-4">
+          <View className="flex-row items-center gap-1.5 mb-1">
+            <MapPin size={12} color="#818cf8" />
+            <Text className="text-indigo-400 text-[10px] font-black uppercase tracking-wider">Thông tin địa điểm chuyến đi</Text>
+          </View>
+          {activeTrip.tripOrders.map((to: any) => {
+            const order = to.order;
+            if (!order) return null;
+            return (
+              <View key={order.id} className="bg-white/5 rounded-xl p-3 border border-white/5 gap-1.5">
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-white text-xs font-bold font-mono">Đơn: #{order.id.substring(0, 8)}</Text>
+                  <Text className="text-emerald-400 text-[9px] font-black uppercase px-2 py-0.5 bg-emerald-500/10 rounded-full">{order.status}</Text>
+                </View>
+                <View className="gap-1">
+                  <Text className="text-slate-300 text-xs" numberOfLines={1} ellipsizeMode="tail">
+                    📍 <Text className="font-semibold text-indigo-300">Lấy:</Text> {order.pickupAddress}
+                  </Text>
+                  <Text className="text-slate-300 text-xs" numberOfLines={1} ellipsizeMode="tail">
+                    🏁 <Text className="font-semibold text-emerald-300">Giao:</Text> {order.deliveryAddress}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
 
       {selectedVehicle.tripId ? (
         <TouchableOpacity

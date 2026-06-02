@@ -7,10 +7,10 @@ import {
   ActivityIndicator,
   Keyboard,
 } from 'react-native';
-import { MapComponent, PROVIDER_GOOGLE } from '../../components/map/MapComponents';
+import { MapComponent, MarkerComponent, PROVIDER_GOOGLE } from '../../components/map/MapComponents';
 import { FleetMarker } from '../../components/map/FleetMarker';
 import { useFleetTrackingStore } from '../../store/useFleetTrackingStore';
-import { Layers, Maximize } from 'lucide-react-native';
+import { Layers, Maximize, MapPin } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { authFetch } from '../../lib/authFetch';
 import { normalizePlate } from '../../components/admin/tracking/trackingUtils';
@@ -36,6 +36,30 @@ export default function AdminTrackingScreen() {
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
+  const fetchActiveTripDetails = async (tripId: string, showModal = true) => {
+    setIsFetchingDetails(true);
+    try {
+      const tripRes = await authFetch(`/trips/${tripId}`);
+      if (tripRes.ok) {
+        const tripData = await tripRes.json();
+        setActiveTrip(tripData?.data ?? tripData);
+      }
+      
+      const verifRes = await authFetch(`/trips/${tripId}/verifications`);
+      if (verifRes.ok) {
+        const verifData = await verifRes.json();
+        setVerifications(verifData?.data ?? verifData);
+      }
+      if (showModal) {
+        setIsDetailsVisible(true);
+      }
+    } catch (err) {
+      console.log('Error fetching live tracking detail:', err);
+    } finally {
+      setIsFetchingDetails(false);
+    }
+  };
+
   const vehicleList = useMemo(() => Object.values(vehicles), [vehicles]);
   const selectedVehicle = selectedVehicleId ? vehicles[selectedVehicleId] : null;
 
@@ -45,6 +69,14 @@ export default function AdminTrackingScreen() {
     setIsFollowing(true);
     setIsSearching(false);
     Keyboard.dismiss();
+
+    // Auto-fetch active trip details quietly to display order markers
+    if (v.tripId) {
+      fetchActiveTripDetails(v.tripId, false);
+    } else {
+      setActiveTrip(null);
+      setVerifications([]);
+    }
   }, []);
 
   // Filter vehicles for search list and map display
@@ -114,28 +146,6 @@ export default function AdminTrackingScreen() {
     setMapType(types[nextIndex]);
   }, [mapType]);
 
-  const fetchActiveTripDetails = async (tripId: string) => {
-    setIsFetchingDetails(true);
-    try {
-      const tripRes = await authFetch(`/trips/${tripId}`);
-      if (tripRes.ok) {
-        const tripData = await tripRes.json();
-        setActiveTrip(tripData?.data ?? tripData);
-      }
-      
-      const verifRes = await authFetch(`/trips/${tripId}/verifications`);
-      if (verifRes.ok) {
-        const verifData = await verifRes.json();
-        setVerifications(verifData?.data ?? verifData);
-      }
-      setIsDetailsVisible(true);
-    } catch (err) {
-      console.log('Error fetching live tracking detail:', err);
-    } finally {
-      setIsFetchingDetails(false);
-    }
-  };
-
   return (
     <View className="flex-1 bg-black">
       <StatusBar style="light" />
@@ -160,6 +170,8 @@ export default function AdminTrackingScreen() {
             return;
           }
           setSelectedVehicleId(null);
+          setActiveTrip(null);
+          setVerifications([]);
           setIsSearching(false);
           Keyboard.dismiss();
         }}
@@ -171,6 +183,59 @@ export default function AdminTrackingScreen() {
             onPress={handleMarkerPress}
           />
         ))}
+
+        {/* Render Active Trip Order Markers for Selected Driver */}
+        {selectedVehicle && activeTrip && activeTrip.vehicleId === selectedVehicle.id && activeTrip.tripOrders && activeTrip.tripOrders.map((to: any) => {
+          const order = to.order;
+          if (!order) return null;
+
+          const getCoord = (loc: any) => {
+            if (!loc) return null;
+            if (loc.latitude !== undefined && loc.longitude !== undefined) {
+              return { latitude: loc.latitude, longitude: loc.longitude };
+            }
+            if (loc.coordinates && loc.coordinates.length >= 2) {
+              return { latitude: loc.coordinates[1], longitude: loc.coordinates[0] };
+            }
+            return null;
+          };
+
+          const pickupCoord = getCoord(order.pickupLocation);
+          const deliveryCoord = getCoord(order.deliveryLocation);
+
+          return (
+            <React.Fragment key={order.id}>
+              {pickupCoord && (
+                <MarkerComponent
+                  coordinate={pickupCoord}
+                  title={`Lấy hàng: ${order.id.substring(0, 8)}`}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                >
+                  <View 
+                    className="w-8 h-8 rounded-full border-2 border-white items-center justify-center shadow shadow-black/25"
+                    style={{ backgroundColor: '#6366f1' }}
+                  >
+                    <MapPin size={16} color="#fff" strokeWidth={3} />
+                  </View>
+                </MarkerComponent>
+              )}
+              {deliveryCoord && (
+                <MarkerComponent
+                  coordinate={deliveryCoord}
+                  title={`Giao hàng: ${order.id.substring(0, 8)}`}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                >
+                  <View 
+                    className="w-8 h-8 rounded-full border-2 border-white items-center justify-center shadow shadow-black/25"
+                    style={{ backgroundColor: '#10b981' }}
+                  >
+                    <MapPin size={16} color="#fff" strokeWidth={3} />
+                  </View>
+                </MarkerComponent>
+              )}
+            </React.Fragment>
+          );
+        })}
       </MapComponent>
 
       {/* Floating Header & Search */}
@@ -184,6 +249,13 @@ export default function AdminTrackingScreen() {
         onSelectVehicle={(id) => {
           setSelectedVehicleId(id);
           setIsFollowing(true);
+          const v = vehicles[id];
+          if (v && v.tripId) {
+            fetchActiveTripDetails(v.tripId, false);
+          } else {
+            setActiveTrip(null);
+            setVerifications([]);
+          }
         }}
       />
 
@@ -200,6 +272,7 @@ export default function AdminTrackingScreen() {
       {/* Selected Vehicle Card */}
       <SelectedVehicleCard
         selectedVehicle={selectedVehicle}
+        activeTrip={activeTrip}
         onClose={() => setSelectedVehicleId(null)}
         isFetchingDetails={isFetchingDetails}
         onFetchDetails={fetchActiveTripDetails}

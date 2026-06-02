@@ -90,8 +90,9 @@ export default function AdminDashboardScreen() {
     // 2. Alerts
     if (Array.isArray(alerts)) {
       alerts.forEach((alert: any) => {
-        // Only include abnormal stops (speed_violation removed)
-        if (alert.type !== 'abnormal_stop') return;
+        // Only include abnormal stops and SOS incidents
+        const isSOS = alert.type === 'SOS' || alert.type === 'incident' || alert.severity === 'critical';
+        if (alert.type !== 'abnormal_stop' && !isSOS) return;
 
         const createdDate = safeDate(alert.createdAt);
         if (createdDate) {
@@ -179,8 +180,18 @@ export default function AdminDashboardScreen() {
 
     // 1. Operational Alerts
     const handleNewAlert = (payload: any) => {
-      // Only notify/log abnormal stops (speed_violation removed)
-      if (payload.type !== 'abnormal_stop') return;
+      const isSOS = payload.type === 'SOS' || payload.type === 'incident' || payload.severity === 'CRITICAL' || payload.severity === 'critical';
+      // Only notify/log abnormal stops and SOS incidents
+      if (payload.type !== 'abnormal_stop' && !isSOS) return;
+
+      if (isSOS) {
+        Toast.show({
+          type: 'error',
+          text1: '🚨 SOS EMERGENCY',
+          text2: `${payload.message || 'Driver triggered SOS!'} (${payload.vehicle?.plateNumber || 'Unknown Vehicle'})`,
+          visibilityTime: 15000,
+        });
+      }
 
       const newAlertItem = {
         id: `live-alert-${payload.id || Date.now()}`,

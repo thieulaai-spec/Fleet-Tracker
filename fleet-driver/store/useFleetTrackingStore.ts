@@ -60,6 +60,7 @@ export const useFleetTrackingStore = create<FleetTrackingState>((set, get) => ({
           heading: 0,
           status: v.status || 'available',
           lastUpdate: new Date().toISOString(),
+          tripId: v.tripId,
         };
       });
       

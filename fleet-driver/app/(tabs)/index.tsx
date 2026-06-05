@@ -241,8 +241,8 @@ export default function TripsScreen() {
   ];
 
   return (
-    <View className="flex-1 bg-[#020617]">
-      <StatusBar barStyle="light-content" />
+    <View className="flex-1 bg-slate-950">
+      <StatusBar barStyle="dark-content" />
       
       {/* Background Decorative Elements */}
       <View className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px]" />
@@ -266,7 +266,7 @@ export default function TripsScreen() {
         {isLoading && !refreshing && sections.length === 0 ? (
           <View className="flex-1 justify-center items-center">
             <View className="w-20 h-20 bg-indigo-500/10 rounded-3xl items-center justify-center border border-indigo-500/20 mb-6">
-              <ActivityIndicator size="large" color="#6366f1" />
+              <ActivityIndicator size="large" color="#10b981" />
             </View>
             <Text className="text-indigo-400 font-black tracking-[4px] uppercase text-[10px]">Synchronizing Fleet</Text>
           </View>
@@ -279,7 +279,7 @@ export default function TripsScreen() {
             contentContainerStyle={{ paddingBottom: 140 }}
             stickySectionHeadersEnabled={false}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
             }
             ListEmptyComponent={<EmptyTrips onRefresh={onRefresh} />}
           />

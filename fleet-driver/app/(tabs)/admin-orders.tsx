@@ -139,7 +139,7 @@ export default function AdminOrdersScreen() {
       </View>
 
       <View className="px-5 mb-4">
-        <BlurView intensity={40} tint="dark" className="flex-row items-center rounded-2xl px-4 h-[52px] border border-white/10 overflow-hidden">
+        <BlurView intensity={40} tint="light" className="flex-row items-center rounded-2xl px-4 h-[52px] border border-white/10 overflow-hidden">
           <Search size={20} color="#64748b" className="mr-3" />
           <TextInput
             placeholder="Search orders, addresses..."

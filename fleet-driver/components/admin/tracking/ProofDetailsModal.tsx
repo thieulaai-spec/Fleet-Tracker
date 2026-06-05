@@ -48,8 +48,8 @@ export const ProofDetailsModal: React.FC<ProofDetailsModalProps> = ({
     >
       <View className="flex-1">
         <View className="absolute inset-0 bg-black/80" />
-        <BlurView intensity={90} tint="dark" className="flex-1 justify-end">
-          <View className="bg-[#0b1329] rounded-t-[44px] border-t border-white/10 p-6 shadow-2xl overflow-hidden min-h-[75%] max-h-[85%]">
+        <BlurView intensity={90} tint="light" className="flex-1 justify-end">
+          <View className="bg-slate-950 rounded-t-[44px] border-t border-slate-700 p-6 shadow-2xl overflow-hidden min-h-[75%] max-h-[85%]">
             
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6 pb-4 border-b border-white/5">
@@ -102,7 +102,7 @@ export const ProofDetailsModal: React.FC<ProofDetailsModalProps> = ({
                   {verifications.map((v) => (
                     <View key={v.id} className="relative">
                       {/* Dot indicator */}
-                      <View className="absolute -left-[27px] top-1 bg-emerald-500 w-3.5 h-3.5 rounded-full border-[3px] border-[#0b1329] shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                      <View className="absolute -left-[27px] top-1 bg-emerald-500 w-3.5 h-3.5 rounded-full border-[3px] border-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
                       
                       <View className="space-y-1.5">
                         <View className="flex-row justify-between items-center">

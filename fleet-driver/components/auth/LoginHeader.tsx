@@ -15,14 +15,14 @@ export const LoginHeader = ({ onBack, isForgotMode }: LoginHeaderProps) => (
         onPress={onBack}
         className="absolute left-0 top-0 p-2 z-10"
       >
-        <ArrowLeft color="#818cf8" size={28} />
+        <ArrowLeft color="#10b981" size={28} />
       </TouchableOpacity>
     )}
     <MotiView
       from={{ scale: 0.5, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', damping: 15 }}
-      className="w-20 h-20 bg-indigo-500 rounded-3xl items-center justify-center shadow-2xl shadow-indigo-500/50"
+      className="w-20 h-20 bg-emerald-500 rounded-3xl items-center justify-center shadow-2xl shadow-emerald-500/50"
     >
       <Truck color="white" size={40} />
     </MotiView>
@@ -33,9 +33,9 @@ export const LoginHeader = ({ onBack, isForgotMode }: LoginHeaderProps) => (
       className="mt-6 items-center"
     >
       <Text className="text-white text-3xl font-black tracking-tighter">
-        {isForgotMode ? 'RESET' : 'FLEET'}<Text className="text-indigo-500">{isForgotMode ? 'PASS' : 'DRIVER'}</Text>
+        {isForgotMode ? 'RESET' : 'FLEET'}<Text className="text-emerald-500">{isForgotMode ? 'PASS' : 'DRIVER'}</Text>
       </Text>
-      <View className="h-1 w-12 bg-indigo-500 rounded-full mt-1" />
+      <View className="h-1 w-12 bg-emerald-500 rounded-full mt-1" />
     </MotiView>
   </View>
 );

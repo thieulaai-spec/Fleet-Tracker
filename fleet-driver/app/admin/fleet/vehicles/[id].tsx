@@ -145,7 +145,7 @@ export default function VehicleDetailScreen() {
                 resizeMode="cover"
               />
               <View className="absolute inset-0 bg-black/50 justify-end items-center pb-8 pt-20">
-                <Text className="text-4xl font-black text-white mb-3 tracking-wider" style={{ textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}>
+                <Text className="text-4xl font-black text-slate-950 mb-3 tracking-wider" style={{ textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}>
                   {vehicle?.plateNumber}
                 </Text>
                 {status && (
@@ -154,7 +154,7 @@ export default function VehicleDetailScreen() {
                     style={{ backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
                   >
                     <View className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: status.color, shadowColor: status.color, shadowOpacity: 0.8, shadowRadius: 4 }} />
-                    <Text className="text-sm font-extrabold uppercase tracking-wide text-white">{status.label}</Text>
+                    <Text className="text-sm font-extrabold uppercase tracking-wide text-slate-950">{status.label}</Text>
                   </View>
                 )}
               </View>

@@ -18,8 +18,8 @@ export default function TabLayout() {
     <Tabs
       key={user.id}
       screenOptions={{
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#94a3b8',
+        tabBarActiveTintColor: '#059669',
+        tabBarInactiveTintColor: '#64748b',
         tabBarLabelStyle: {
           fontSize: 10,
           fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
@@ -42,23 +42,23 @@ export default function TabLayout() {
           left: 16,
           right: 16,
           height: 72,
-          elevation: 0,
+          elevation: 8,
           backgroundColor: 'transparent',
           borderRadius: 32,
           borderTopWidth: 0,
-          borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.12)',
+          borderWidth: 1.5,
+          borderColor: 'rgba(16, 185, 129, 0.3)',
           paddingBottom: 0,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 12 },
-          shadowOpacity: 0.4,
-          shadowRadius: 24,
+          shadowColor: '#047857',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.15,
+          shadowRadius: 20,
         },
         tabBarBackground: () => (
           <BlurView 
-            intensity={Platform.OS === 'ios' ? 80 : 40} 
-            tint="dark" 
-            style={[StyleSheet.absoluteFill, { borderRadius: 32, overflow: 'hidden', backgroundColor: 'rgba(15, 23, 42, 0.6)' }]} 
+            intensity={Platform.OS === 'ios' ? 85 : 50} 
+            tint="light" 
+            style={[StyleSheet.absoluteFill, { borderRadius: 32, overflow: 'hidden', backgroundColor: 'rgba(240, 253, 244, 0.95)' }]} 
           />
         ),
         headerShown: false,

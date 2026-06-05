@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Truck, User, Gauge, ChevronRight, Sparkles } from 'lucide-react-native';
 import { Vehicle } from '../../../store/useFleetStore';
 
@@ -64,12 +64,20 @@ export const VehicleDispatchItem: React.FC<VehicleDispatchItemProps> = ({
     >
       <View className="flex-row justify-between items-start mb-3">
         <View className="flex-row items-center flex-1 mr-2">
-          <View 
-            className="w-10 h-10 rounded-xl justify-center items-center mr-3"
-            style={iconBgStyle}
-          >
-            <Truck size={20} color={iconColor} />
-          </View>
+          {vehicle.imageUrl ? (
+            <Image 
+              source={{ uri: vehicle.imageUrl }} 
+              className="w-10 h-10 rounded-xl mr-3 bg-slate-800 border border-slate-700" 
+              resizeMode="cover"
+            />
+          ) : (
+            <View 
+              className="w-10 h-10 rounded-xl justify-center items-center mr-3"
+              style={iconBgStyle}
+            >
+              <Truck size={20} color={iconColor} />
+            </View>
+          )}
           <View className="flex-1">
             <Text className="text-slate-50 font-bold text-sm" numberOfLines={1}>{vehicle.plateNumber}</Text>
             <Text className="text-slate-400 text-[11px] uppercase" numberOfLines={1}>{vehicle.type} Truck</Text>

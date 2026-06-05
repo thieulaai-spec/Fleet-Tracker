@@ -104,7 +104,7 @@ export const SosButton: React.FC<SosButtonProps> = ({ tripId }) => {
       >
         <View className="flex-1">
           <View className="absolute inset-0 bg-black/60" />
-          <BlurView intensity={80} tint="dark" className="flex-1 justify-center p-6">
+          <BlurView intensity={80} tint="light" className="flex-1 justify-center p-6">
             <View className="bg-[#0f172a] rounded-[40px] p-8 border border-white/10 shadow-2xl overflow-hidden">
               <View className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl" />
               

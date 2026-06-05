@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, Image } from 'react-native';
 import { MarkerComponent } from './MapComponents';
 import { Truck } from 'lucide-react-native';
 import { TrackedVehicle } from '@/store/useFleetTrackingStore';
@@ -56,15 +56,23 @@ export const FleetMarker = memo(({ vehicle, onPress }: FleetMarkerProps) => {
     >
       <View
         pointerEvents="none"
-        className="w-9 h-9 rounded-full border-[3px] border-white items-center justify-center shadow-lg shadow-black/30"
+        className="w-9 h-9 rounded-full border-[3px] border-white items-center justify-center shadow-lg shadow-black/30 overflow-hidden"
         style={[
           {
             backgroundColor: statusColors.bg,
-            transform: [{ rotate: `${(vehicle.heading || 0) - 90}deg` }],
+            transform: vehicle.imageUrl ? [] : [{ rotate: `${(vehicle.heading || 0) - 90}deg` }],
           }
         ]}
       >
-        <Truck size={16} color="#fff" strokeWidth={3} />
+        {vehicle.imageUrl ? (
+          <Image 
+            source={{ uri: vehicle.imageUrl }} 
+            className="w-full h-full" 
+            resizeMode="cover"
+          />
+        ) : (
+          <Truck size={16} color="#fff" strokeWidth={3} />
+        )}
       </View>
     </MarkerComponent>
   );

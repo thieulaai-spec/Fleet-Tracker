@@ -311,7 +311,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
       </View>
 
       <View className="flex-1 justify-between" pointerEvents="box-none">
-        <BlurView intensity={80} tint="dark" className="p-5 pt-[60px] border-b border-white/10 z-50 overflow-visible">
+        <BlurView intensity={80} tint="light" className="p-5 pt-[60px] border-b border-white/10 z-50 overflow-visible">
           <View className="items-center mb-3">
             <Text className="text-base font-black text-slate-50 text-center uppercase tracking-widest">{title}</Text>
             <Text className="text-xs text-slate-400 text-center mt-0.5">Search location or move map to set point</Text>

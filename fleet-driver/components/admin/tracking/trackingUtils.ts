@@ -17,9 +17,9 @@ export const normalizePlate = (plate: string) => {
 
 export const getStatusColor = (status: string) => {
   switch (status) {
-    case 'available': return '#10b981';
-    case 'on_trip': return '#6366f1';
-    case 'maintenance': return '#f59e0b';
-    default: return '#64748b';
+    case 'available': return '#10b981';   // Emerald-500
+    case 'on_trip': return '#059669';     // Emerald-600 (darker green)
+    case 'maintenance': return '#d97706'; // Amber-600 (high contrast yellow/brown)
+    default: return '#475569';
   }
 };

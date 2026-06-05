@@ -348,7 +348,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
         type: AlertType.INCIDENT,
         severity: AlertSeverity.CRITICAL,
         message: 'Tài xế Nguyễn Văn Hùng báo cáo sự cố va chạm giao thông khẩn cấp trên Đường Giải Phóng!',
-        createdAt: new Date(Date.now() - 15 * 60000), // 15 mins ago
+        createdAt: new Date('2026-06-02T19:36:56+07:00'), // Fixed date (15 mins before 2026-06-02T19:51:56+07:00)
         isResolved: false,
       })
     );
@@ -360,7 +360,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
         type: AlertType.SPEED_VIOLATION,
         severity: AlertSeverity.HIGH,
         message: 'Xe 29C-543.21 chạy quá tốc độ 85 km/h ở khu vực nội thành!',
-        createdAt: new Date(Date.now() - 45 * 60000), // 45 mins ago
+        createdAt: new Date('2026-06-02T19:06:56+07:00'), // Fixed date (45 mins before 2026-06-02T19:51:56+07:00)
         isResolved: false,
       })
     );
@@ -372,7 +372,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
         type: AlertType.ROUTE_DEVIATION,
         severity: AlertSeverity.MEDIUM,
         message: 'Xe 30E-888.88 đi chệch khỏi lộ trình quy định!',
-        createdAt: new Date(Date.now() - 60 * 60000), // 1 hour ago
+        createdAt: new Date('2026-06-02T18:51:56+07:00'), // Fixed date (60 mins before 2026-06-02T19:51:56+07:00)
         isResolved: false,
       })
     );

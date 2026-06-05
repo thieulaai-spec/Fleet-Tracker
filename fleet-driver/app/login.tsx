@@ -32,10 +32,10 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 bg-slate-950" style={{ flex: 1 }}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       
       <LinearGradient
-        colors={["#020617", "#0f172a", "#020617"]}
+        colors={["#ffffff", "#f0fdf4", "#ffffff"]}
         style={{ flex: 1 }}
       >
         <AuthBackground />

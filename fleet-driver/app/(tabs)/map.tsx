@@ -2,7 +2,8 @@ import React from 'react';
 import { 
   View, 
   StatusBar,
-  StyleSheet
+  StyleSheet,
+  Image
 } from 'react-native';
 import { MapPin, Calendar, Clock, ChevronLeft, Package, Truck, CheckCircle2, AlertTriangle, Navigation, Camera, Fuel, Route } from 'lucide-react-native';
 import { useTripStore, TripStatus } from '../../store/useTripStore';
@@ -50,7 +51,7 @@ export default function ActiveTripMap() {
 
   return (
     <View className="flex-1 bg-slate-950">
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       
       <MapComponent
         ref={mapRef}
@@ -72,7 +73,7 @@ export default function ActiveTripMap() {
         {activeTrip.plannedRoute && activeTrip.plannedRoute.length > 0 && (
           <PolylineComponent
             coordinates={activeTrip.plannedRoute}
-            strokeColor="#6366f1"
+            strokeColor="#059669"
             strokeWidth={4}
             lineDashPattern={[0]}
           />
@@ -102,13 +103,22 @@ export default function ActiveTripMap() {
             anchor={{ x: 0.5, y: 0.5 }}
           >
             <View
-              className="w-9 h-9 rounded-full border-[3px] border-white items-center justify-center shadow-lg shadow-black/30"
+              className="w-9 h-9 rounded-full border-[3px] items-center justify-center shadow-lg shadow-black/30 overflow-hidden"
               style={{
-                backgroundColor: activeTrip?.status === TripStatus.IN_PROGRESS ? '#6366f1' : '#10b981',
-                transform: [{ rotate: `${(location.coords.heading || 0) - 90}deg` }],
+                backgroundColor: '#10b981',
+                borderColor: '#ffffff',
+                transform: activeTrip.vehicle?.imageUrl ? [] : [{ rotate: `${(location.coords.heading || 0) - 90}deg` }],
               }}
             >
-              <Truck size={16} color="#fff" strokeWidth={3} />
+              {activeTrip.vehicle?.imageUrl ? (
+                <Image
+                  source={{ uri: activeTrip.vehicle.imageUrl }}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                />
+              ) : (
+                <Truck size={16} color="#ffffff" strokeWidth={3} />
+              )}
             </View>
           </MarkerComponent>
         )}
@@ -123,10 +133,10 @@ export default function ActiveTripMap() {
                 anchor={{ x: 0.5, y: 0.5 }}
               >
                 <View 
-                  className="w-8 h-8 rounded-full border-2 border-white items-center justify-center shadow shadow-black/25"
-                  style={{ backgroundColor: '#6366f1' }}
+                  className="w-8 h-8 rounded-full border-2 items-center justify-center shadow shadow-black/25"
+                  style={{ backgroundColor: '#ffffff', borderColor: '#10b981' }}
                 >
-                  <MapPin size={16} color="#fff" strokeWidth={3} />
+                  <MapPin size={16} color="#10b981" strokeWidth={3} />
                 </View>
               </MarkerComponent>
             )}

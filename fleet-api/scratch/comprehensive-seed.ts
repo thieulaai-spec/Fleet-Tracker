@@ -112,6 +112,7 @@ async function seedComprehensive() {
         message: 'Vehicle exceeded speed limit (75 km/h in 60 km/h zone)',
         location: { type: 'Point', coordinates: [105.839159, 21.032764] },
         isResolved: false,
+        createdAt: new Date('2026-06-02T18:45:00+07:00'),
       });
 
 
@@ -149,7 +150,8 @@ async function seedComprehensive() {
         message: 'Vehicle deviated from planned route by 2km',
         location: { type: 'Point', coordinates: [105.8575, 21.0335] },
         isResolved: true,
-        resolvedAt: new Date(),
+        resolvedAt: new Date('2026-06-02T19:00:00+07:00'),
+        createdAt: new Date('2026-06-02T18:00:00+07:00'),
       });
     } else {
       console.log('Trips already seeded. Skipping Trip creation to avoid duplicates.');

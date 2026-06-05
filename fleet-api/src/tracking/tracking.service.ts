@@ -139,6 +139,8 @@ export class TrackingService implements OnModuleDestroy {
       status: vehicle?.status || 'available',
       licensePlate: vehicle?.plateNumber || `VH-${vehicleId.slice(0, 6)}`,
       driverName: vehicle?.driver?.user?.fullName || 'Unknown Driver',
+      driverId: vehicle?.driver?.id || null,
+      driverPhone: vehicle?.driver?.user?.phone || null,
     };
   }
 
@@ -260,6 +262,8 @@ export class TrackingService implements OnModuleDestroy {
       status: vehicle.status,
       licensePlate: vehicle.plateNumber,
       driverName: vehicle.driver?.user?.fullName || 'Unknown Driver',
+      driverId: vehicle.driver?.id || null,
+      driverPhone: vehicle.driver?.user?.phone || null,
     };
   }
 
@@ -286,11 +290,13 @@ export class TrackingService implements OnModuleDestroy {
         plateNumber: true,
         type: true,
         status: true,
+        imageUrl: true,
         lastKnownLocation: true,
         driver: {
           id: true,
           user: {
             fullName: true,
+            phone: true,
           },
         },
       },

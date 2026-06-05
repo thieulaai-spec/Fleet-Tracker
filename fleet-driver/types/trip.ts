@@ -38,6 +38,7 @@ export interface Trip {
     type: string;
     deviceId?: string | null;
     lastKnownLocation?: { latitude: number; longitude: number };
+    imageUrl?: string;
   };
   driverId: string;
   driver?: {

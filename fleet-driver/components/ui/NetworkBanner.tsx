@@ -33,7 +33,7 @@ export const NetworkBanner = () => {
         { transform: [{ translateY }] },
       ]}
     >
-      <BlurView intensity={80} tint="dark" className="border-b border-red-500/30 shadow-2xl shadow-black/50">
+      <BlurView intensity={80} tint="light" className="border-b border-red-500/30 shadow-2xl shadow-black/50">
         <View 
           className="flex-row items-center justify-center gap-3 px-6 pb-4"
           style={{ paddingTop: Platform.OS === 'ios' ? insets.top + 8 : 16 }}

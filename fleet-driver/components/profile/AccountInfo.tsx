@@ -19,7 +19,7 @@ export const AccountInfo: React.FC<AccountInfoProps> = ({ user, activeTrip }) =>
       
       <BlurView 
         intensity={20} 
-        tint="dark"
+        tint="light"
         className="rounded-[32px] overflow-hidden border border-white/5 bg-slate-900/40"
       >
         <View className="p-2">

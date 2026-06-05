@@ -31,7 +31,7 @@ export const AssignedTripCard: React.FC<AssignedTripCardProps> = ({ assignedTrip
   return (
     <BlurView 
       intensity={10} 
-      tint="dark" 
+      tint="light" 
       className="mx-4 mt-4 p-4 rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden"
     >
       <View className="flex-row items-center justify-between mb-3 border-b border-white/5 pb-2">

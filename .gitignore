@@ -46,3 +46,8 @@ android/
 
 # AI Brain
 .brain/
+
+# Agent Skills
+.agents/
+skills-lock.json
+

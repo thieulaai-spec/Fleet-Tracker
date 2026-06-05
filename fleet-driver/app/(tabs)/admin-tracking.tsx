@@ -148,7 +148,7 @@ export default function AdminTrackingScreen() {
 
   return (
     <View className="flex-1 bg-black">
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       
       <MapComponent
         ref={mapRef}
@@ -212,10 +212,10 @@ export default function AdminTrackingScreen() {
                   anchor={{ x: 0.5, y: 0.5 }}
                 >
                   <View 
-                    className="w-8 h-8 rounded-full border-2 border-white items-center justify-center shadow shadow-black/25"
-                    style={{ backgroundColor: '#6366f1' }}
+                    className="w-8 h-8 rounded-full border-2 items-center justify-center shadow shadow-black/25"
+                    style={{ backgroundColor: '#ffffff', borderColor: '#10b981' }}
                   >
-                    <MapPin size={16} color="#fff" strokeWidth={3} />
+                    <MapPin size={16} color="#10b981" strokeWidth={3} />
                   </View>
                 </MarkerComponent>
               )}
@@ -260,12 +260,20 @@ export default function AdminTrackingScreen() {
       />
 
       {/* Map Controls */}
-      <View className="absolute right-4 top-[170px] gap-3">
-        <TouchableOpacity className="w-12 h-12 rounded-full bg-slate-900/80 items-center justify-center border border-white/10" onPress={toggleMapType}>
-          <Layers size={22} color="#fff" />
+      <View className="absolute right-4 top-0 bottom-0 justify-center gap-3">
+        <TouchableOpacity 
+          className="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10" 
+          style={{ justifyContent: 'center', alignItems: 'center' }}
+          onPress={toggleMapType}
+        >
+          <Layers size={22} color="#475569" />
         </TouchableOpacity>
-        <TouchableOpacity className="w-12 h-12 rounded-full bg-slate-900/80 items-center justify-center border border-white/10" onPress={fitFleet}>
-          <Maximize size={22} color="#fff" />
+        <TouchableOpacity 
+          className="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10" 
+          style={{ justifyContent: 'center', alignItems: 'center' }}
+          onPress={fitFleet}
+        >
+          <Maximize size={22} color="#475569" />
         </TouchableOpacity>
       </View>
 
@@ -280,7 +288,7 @@ export default function AdminTrackingScreen() {
 
       {isLoading && vehicleList.length === 0 && (
         <View className="absolute inset-0 bg-slate-900/60 items-center justify-center gap-4">
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color="#10b981" />
           <Text className="text-slate-400 text-base">Connecting to fleet...</Text>
         </View>
       )}

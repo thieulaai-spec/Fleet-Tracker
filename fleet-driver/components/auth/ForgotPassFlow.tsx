@@ -25,7 +25,7 @@ export const ForgotPassFlow = (props: ForgotPassFlowProps) => {
   return (
     <View className="gap-2">
       <View className="flex-row items-center mb-6">
-        <AuthButton title="" variant="ghost" onPress={props.onBack} icon={<ArrowLeft color="#818cf8" size={24} />} />
+        <AuthButton title="" variant="ghost" onPress={props.onBack} icon={<ArrowLeft color="#10b981" size={24} />} />
         <Text className="text-white text-2xl font-bold ml-2">Reset Password</Text>
       </View>
 
@@ -40,7 +40,7 @@ export const ForgotPassFlow = (props: ForgotPassFlowProps) => {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            icon={<Mail color="#818cf8" size={20} />}
+            icon={<Mail color="#10b981" size={20} />}
           />
           <AuthButton title="Send Reset Code" onPress={props.onSendCode} isLoading={props.isLoading} />
         </>
@@ -55,7 +55,7 @@ export const ForgotPassFlow = (props: ForgotPassFlowProps) => {
             onChangeText={props.setResetCode}
             placeholder="123456"
             keyboardType="numeric"
-            icon={<ShieldCheck color="#818cf8" size={20} />}
+            icon={<ShieldCheck color="#10b981" size={20} />}
           />
           <AuthButton title="Verify Code" onPress={props.onVerifyCode} isLoading={props.isLoading} />
         </>
@@ -70,7 +70,7 @@ export const ForgotPassFlow = (props: ForgotPassFlowProps) => {
             onChangeText={props.setNewPassword}
             placeholder="••••••••"
             secureTextEntry
-            icon={<Lock color="#818cf8" size={20} />}
+            icon={<Lock color="#10b981" size={20} />}
           />
           <AuthInput
             label="Confirm Password"
@@ -78,7 +78,7 @@ export const ForgotPassFlow = (props: ForgotPassFlowProps) => {
             onChangeText={props.setConfirmPassword}
             placeholder="••••••••"
             secureTextEntry
-            icon={<Lock color="#818cf8" size={20} />}
+            icon={<Lock color="#10b981" size={20} />}
           />
           <AuthButton title="Reset Password" onPress={props.onResetPassword} isLoading={props.isLoading} />
         </>

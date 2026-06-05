@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Truck, User as UserIcon, Settings2, ChevronRight } from 'lucide-react-native';
 import { Vehicle, VehicleStatus, VehicleType } from '../../../store/useFleetStore';
 
@@ -26,9 +26,17 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onPress }) =>
   return (
     <TouchableOpacity className="bg-slate-800 rounded-[24px] p-5 mb-4 border border-white/5" onPress={onPress}>
       <View className="flex-row items-center mb-4">
-        <View className="w-12 h-12 rounded-2xl bg-emerald-500/10 justify-center items-center mr-3">
-          <Truck size={24} color="#10b981" />
-        </View>
+        {vehicle.imageUrl ? (
+          <Image 
+            source={{ uri: vehicle.imageUrl }} 
+            className="w-12 h-12 rounded-2xl mr-3 bg-slate-900 border border-slate-700" 
+            resizeMode="cover"
+          />
+        ) : (
+          <View className="w-12 h-12 rounded-2xl bg-emerald-500/10 justify-center items-center mr-3">
+            <Truck size={24} color="#10b981" />
+          </View>
+        )}
         <View className="flex-1">
           <Text className="text-base font-bold text-slate-50">{vehicle.plateNumber}</Text>
           <Text className="text-[13px] text-slate-500">{VEHICLE_TYPE_LABELS[vehicle.type]}</Text>

@@ -400,8 +400,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     >
       <View className="flex-1">
         <View className="absolute inset-0 bg-black/70" />
-        <BlurView intensity={90} tint="dark" className="flex-1 justify-end">
-          <View className="bg-[#0b1329] rounded-t-[44px] border-t border-white/10 p-8 shadow-2xl overflow-hidden min-h-[60%]">
+        <BlurView intensity={90} tint="light" className="flex-1 justify-end" style={{ backgroundColor: 'rgba(15, 23, 42, 0.3)' }}>
+          <View className="bg-slate-950 rounded-t-[44px] border-t border-slate-700 p-8 shadow-2xl overflow-hidden min-h-[60%]">
             <View className="absolute -top-32 -left-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
             
             {/* Header */}
@@ -450,8 +450,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                             transform: [{ scale: pulseAnim }],
                           }}
                         />
-                        <View className="bg-indigo-950/80 p-6 rounded-full border border-indigo-500/50">
-                          <Cpu size={48} color="#6366f1" />
+                        <View className="bg-indigo-100 p-6 rounded-full border border-indigo-300">
+                          <Cpu size={48} color="#059669" />
                         </View>
                       </View>
                       

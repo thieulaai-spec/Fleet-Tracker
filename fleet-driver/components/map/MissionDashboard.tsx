@@ -37,7 +37,7 @@ export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, 
   return (
     <SafeAreaView className="absolute top-0 left-0 right-0 pointer-events-none">
       <View className="px-5 pt-20 pointer-events-auto">
-        <BlurView intensity={35} tint="dark" className="rounded-[32px] border border-white/10 shadow-2xl overflow-hidden">
+        <BlurView intensity={35} tint="light" className="rounded-[32px] border border-white/10 shadow-2xl overflow-hidden">
           <View className="p-5 bg-slate-900/40">
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center gap-4">

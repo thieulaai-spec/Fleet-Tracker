@@ -27,7 +27,7 @@ export const LoginForm = (props: LoginFormProps) => {
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
-        icon={<Mail color="#818cf8" size={20} />}
+        icon={<Mail color="#10b981" size={20} />}
       />
 
       <AuthInput
@@ -36,7 +36,7 @@ export const LoginForm = (props: LoginFormProps) => {
         onChangeText={props.setPassword}
         placeholder="••••••••"
         secureTextEntry
-        icon={<Lock color="#818cf8" size={20} />}
+        icon={<Lock color="#10b981" size={20} />}
       />
 
       <View className="items-end mb-8">

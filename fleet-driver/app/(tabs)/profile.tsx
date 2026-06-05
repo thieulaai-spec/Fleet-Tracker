@@ -39,7 +39,7 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1 bg-slate-950">
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       
       {/* Background Glows */}
       <View className="absolute -top-[150px] -right-[150px] w-[400px] h-[400px] rounded-full bg-indigo-500/[0.08]" pointerEvents="none" />

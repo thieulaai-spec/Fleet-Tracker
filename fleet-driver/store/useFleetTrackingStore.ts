@@ -9,6 +9,8 @@ export interface TrackedVehicle {
   vehicleId: string;
   licensePlate: string;
   driverName: string;
+  driverId?: string;
+  driverPhone?: string;
   latitude: number;
   longitude: number;
   speed: number;
@@ -16,6 +18,7 @@ export interface TrackedVehicle {
   status: 'available' | 'on_trip' | 'maintenance' | 'offline';
   lastUpdate: string;
   tripId?: string;
+  imageUrl?: string;
 }
 
 interface FleetTrackingState {
@@ -54,6 +57,8 @@ export const useFleetTrackingStore = create<FleetTrackingState>((set, get) => ({
           vehicleId: v.id,
           licensePlate: v.plateNumber,
           driverName: v.driver?.user?.fullName || 'Unknown',
+          driverId: v.driver?.id || undefined,
+          driverPhone: v.driver?.user?.phone || undefined,
           latitude: location?.latitude || 0,
           longitude: location?.longitude || 0,
           speed: 0,
@@ -61,6 +66,7 @@ export const useFleetTrackingStore = create<FleetTrackingState>((set, get) => ({
           status: v.status || 'available',
           lastUpdate: new Date().toISOString(),
           tripId: v.tripId,
+          imageUrl: v.imageUrl,
         };
       });
       
@@ -71,7 +77,7 @@ export const useFleetTrackingStore = create<FleetTrackingState>((set, get) => ({
   },
 
   updateVehicleLocation: (data: any) => {
-    const { vehicleId, latitude, longitude, speed, heading, status, licensePlate, driverName, tripId } = data;
+    const { vehicleId, latitude, longitude, speed, heading, status, licensePlate, driverName, driverId, driverPhone, tripId, imageUrl } = data;
     
     set((state) => ({
       vehicles: {
@@ -87,8 +93,11 @@ export const useFleetTrackingStore = create<FleetTrackingState>((set, get) => ({
           status: status || state.vehicles[vehicleId]?.status || 'available',
           licensePlate: licensePlate || state.vehicles[vehicleId]?.licensePlate || 'Unknown',
           driverName: driverName || state.vehicles[vehicleId]?.driverName || 'Unknown',
+          driverId: driverId || state.vehicles[vehicleId]?.driverId,
+          driverPhone: driverPhone || state.vehicles[vehicleId]?.driverPhone,
           lastUpdate: new Date().toISOString(),
           tripId,
+          imageUrl: imageUrl || state.vehicles[vehicleId]?.imageUrl,
         }
       }
     }));

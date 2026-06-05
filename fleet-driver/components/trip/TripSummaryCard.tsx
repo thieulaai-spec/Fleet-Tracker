@@ -16,7 +16,7 @@ export const TripSummaryCard: React.FC<TripSummaryCardProps> = ({ totalDistanceK
   return (
     <BlurView 
       intensity={30} 
-      tint="dark" 
+      tint="light" 
       className="rounded-[32px] p-6 mt-4 border border-indigo-500/20 bg-indigo-500/5 overflow-hidden"
     >
       <Text className="text-white text-lg font-black italic mb-5 uppercase tracking-tight">Trip Summary</Text>

@@ -245,7 +245,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
 
   return (
     <View className="absolute bottom-32 left-5 right-5">
-      <BlurView intensity={45} tint="dark" className="rounded-[44px] border border-white/10 shadow-2xl overflow-hidden">
+      <BlurView intensity={45} tint="light" className="rounded-[44px] border border-white/10 shadow-2xl overflow-hidden">
         <View className="p-6 bg-slate-900/60">
           {/* Mission Progress Indicator */}
           <View className="absolute top-0 left-0 right-0 h-1.5 bg-white/5">

@@ -6,9 +6,9 @@ import { MotiView } from 'moti';
 
 // AuthBackground
 export const AuthBackground = () => (
-  <View className="absolute inset-0 bg-[#0f172a]" style={StyleSheet.absoluteFill}>
+  <View className="absolute inset-0 bg-slate-950" style={StyleSheet.absoluteFill}>
     <LinearGradient
-      colors={['#1e293b', '#0f172a', '#020617']}
+      colors={['#ffffff', '#f0fdf4', '#dcfce7']}
       style={StyleSheet.absoluteFill}
     />
     {/* Animated Shapes */}
@@ -22,7 +22,7 @@ export const AuthBackground = () => (
       from={{ opacity: 0.2, scale: 0.8, translateY: 100 }}
       animate={{ opacity: 0.4, scale: 1.5, translateY: -50 }}
       transition={{ type: 'timing', duration: 15000, loop: true }}
-      className="absolute bottom-[-10%] right-[-20%] w-[400] h-[400] rounded-full bg-emerald-500/5"
+      className="absolute bottom-[-10%] right-[-20%] w-[400] h-[400] rounded-full bg-indigo-500/5"
     />
   </View>
 );
@@ -61,12 +61,12 @@ export const AuthInput = ({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#64748b"
+        placeholderTextColor="#94a3b8"
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         autoCorrect={autoCorrect}
-        className="bg-slate-800/50 border border-slate-700/50 rounded-2xl py-4 pl-12 pr-4 text-white text-base"
+        className="bg-slate-900 border border-slate-700 rounded-2xl py-4 pl-12 pr-4 text-slate-100 text-base"
       />
     </View>
   </View>
@@ -91,14 +91,14 @@ export const AuthButton = ({ title, onPress, isLoading, variant = 'primary', ico
   }
 
   const bgColors = variant === 'primary' 
-    ? (['#6366f1', '#4f46e5'] as const) 
-    : (['#334155', '#1e293b'] as const);
+    ? (['#10b981', '#059669'] as const) 
+    : (['#f1f5f9', '#e2e8f0'] as const);
 
   return (
     <TouchableOpacity 
       onPress={onPress} 
       disabled={isLoading}
-      className={`overflow-hidden rounded-2xl shadow-lg ${variant === 'primary' ? 'shadow-indigo-500/30' : ''}`}
+      className={`overflow-hidden rounded-2xl shadow-lg ${variant === 'primary' ? 'shadow-indigo-500/20' : 'border border-slate-700'}`}
     >
       <LinearGradient
         colors={bgColors}
@@ -107,11 +107,11 @@ export const AuthButton = ({ title, onPress, isLoading, variant = 'primary', ico
         style={{ paddingVertical: 16, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}
       >
         {isLoading ? (
-          <ActivityIndicator color="#fff" size="small" />
+          <ActivityIndicator color={variant === 'primary' ? '#fff' : '#0f172a'} size="small" />
         ) : (
           <>
             {icon && <View className="mr-2">{icon}</View>}
-            <Text className="text-white font-bold text-lg">{title}</Text>
+            <Text className={`${variant === 'primary' ? 'text-slate-950' : 'text-slate-100'} font-bold text-lg`}>{title}</Text>
           </>
         )}
       </LinearGradient>

@@ -61,6 +61,19 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../components/ui/ExpandableToast';
 
+const MyLightTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#10b981',
+    background: '#ffffff',
+    card: '#ffffff',
+    text: '#0f172a',
+    border: '#e2e8f0',
+    notification: '#10b981',
+  },
+};
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -195,7 +208,7 @@ function RootLayoutNav() {
 
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
-      <ThemeProvider value={DarkTheme}>
+      <ThemeProvider value={MyLightTheme}>
         <NetworkBanner />
         <Stack>
           <Stack.Screen name="login" options={{ headerShown: false }} />

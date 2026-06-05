@@ -34,7 +34,7 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
       onRequestClose={() => !isChanging && onClose()}
     >
       <View className="flex-1 justify-end bg-black/80">
-        <BlurView intensity={100} tint="dark" className="bg-slate-900 rounded-t-[40px] p-8 border-t border-white/10">
+        <BlurView intensity={100} tint="light" className="bg-slate-900 rounded-t-[40px] p-8 border-t border-white/10">
           <View className="flex-row justify-between items-center mb-10">
             <View>
               <Text className="text-2xl font-black text-white tracking-tight">Security</Text>

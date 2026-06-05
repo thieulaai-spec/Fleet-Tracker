@@ -199,7 +199,7 @@ export default function TripDetails() {
           {/* Quick Info Card */}
           <BlurView 
             intensity={20} 
-            tint="dark" 
+            tint="light" 
             className="rounded-[32px] p-6 mb-8 border border-white/10 overflow-hidden"
           >
             <View className="flex-row items-center justify-between">

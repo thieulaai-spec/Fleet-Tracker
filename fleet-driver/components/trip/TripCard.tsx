@@ -30,7 +30,7 @@ export function TripCard({ item, section, onPress, onAccept, onReject, isLoading
     >
       <BlurView
         intensity={40}
-        tint="dark"
+        tint="light"
         className={`rounded-[32px] overflow-hidden border ${isStarted ? 'border-indigo-500/50' : 'border-white/5'}`}
       >
         <View className="p-6 bg-slate-900/40">

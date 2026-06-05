@@ -16,8 +16,8 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, co
     <BlurView 
       intensity={Platform.OS === 'ios' ? 40 : 100}
       tint="light"
-      className="w-[48%] rounded-xl overflow-hidden border border-white/5"
-      style={{ backgroundColor: Platform.OS === 'android' ? 'rgba(15, 23, 42, 0.8)' : 'transparent' }}
+      className="w-[48%] rounded-xl overflow-hidden border border-slate-700/50"
+      style={{ backgroundColor: 'rgba(255, 255, 255, 0.85)' }}
     >
       <View className="p-4 items-center">
         <View 

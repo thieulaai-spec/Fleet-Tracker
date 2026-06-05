@@ -1,3 +1,28 @@
+## [2026-06-06] - Dedicated History Tab, Lightbox Proof Verification, StatusBar Fix & UI/UX Polish
+
+### Added
+- **Dedicated History Tab in Driver App**:
+  - Created a new dedicated history screen in [history.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/app/%28tabs%29/history.tsx) that displays past trips dynamically, keeping a consistent dark/light theme (light theme with inversed Tailwind styling).
+  - Integrated the history screen into the tab layout in [_layout.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/app/%28tabs%29/_layout.tsx) using the `history` icon.
+  - Linked the "View All" button on the trip summary dashboard to route driver to this tab.
+- **Lightbox Verification Proofs**:
+  - Integrated `LightboxModal` in [OrderCard.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/components/trip/OrderCard.tsx) to allow driver to tap and zoom photos of Face ID, Cargo, and Customer Signature.
+
+### Fixed & Polished
+- **Android Black StatusBar & Dark Screen**:
+  - Resolved the black background StatusBar on Android post-login. Configured transparent status bar (`translucent backgroundColor="transparent"`) in [index.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/app/%28tabs%29/index.tsx) and [[id].tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/app/trip/%5Bid%5D.tsx).
+- **Map Control Clicks (Pointer Events)**:
+  - Added `pointerEvents="box-none"` on map controllers in [MapControls.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/components/map/MapControls.tsx) so users can tap through container boundaries to collapse/expand panels.
+- **Trip Dashboard UI/UX Refinement**:
+  - Compacted icons, paddings, and font sizes in [MissionDashboard.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/components/map/MissionDashboard.tsx) and [MissionPanel.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/components/map/MissionPanel.tsx) to maximize map viewport.
+  - Removed unnecessary delivery progress bar from [MissionPanel.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/components/map/MissionPanel.tsx) as requested.
+  - Fixed Android transparent elevation grey box bug in [MissionPanel.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/components/map/MissionPanel.tsx) by removing shadow styles on transparent containers.
+  - Resolved text overflow of addresses in [MissionPanel.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/components/map/MissionPanel.tsx) by utilizing `flex-1 min-w-0` and `ellipsizeMode="tail"`.
+- **Trip Details Padding**:
+  - Increased top padding of scroll containers in [[id].tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/app/trip/%5Bid%5D.tsx) to 32px to create breathing room beneath headers.
+- **Profile Page Cleanup**:
+  - Removed "Mission History" listings from the profile screen [profile.tsx](file:///home/dunggawr/Documents/project/Fleet-Tracker/fleet-driver/app/%28tabs%29/profile.tsx) to prevent duplicate entries and promote the dedicated History tab.
+
 ## [2026-06-02] - Vietnam Hybrid Map Search, Hanoi Seed Centering & Mobile KPI Alignment
 ### Added
 - **Vietnam-Optimized Hybrid Map Search**:

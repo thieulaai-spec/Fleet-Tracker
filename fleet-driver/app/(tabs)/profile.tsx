@@ -13,7 +13,6 @@ import { useProfileFlow } from '../../hooks/profile/useProfileFlow';
 import { ProfileHeader } from '../../components/profile/ProfileHeader';
 import { ProfileStats } from '../../components/profile/ProfileStats';
 import { AccountInfo } from '../../components/profile/AccountInfo';
-import { MissionHistory } from '../../components/profile/MissionHistory';
 import { SettingsSection } from '../../components/profile/SettingsSection';
 import { PasswordModal } from '../../components/profile/PasswordModal';
 
@@ -39,7 +38,7 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1 bg-slate-950">
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       
       {/* Background Glows */}
       <View className="absolute -top-[150px] -right-[150px] w-[400px] h-[400px] rounded-full bg-indigo-500/[0.08]" pointerEvents="none" />
@@ -62,9 +61,7 @@ export default function ProfileScreen() {
 
         <AccountInfo user={user} activeTrip={activeTrip} />
 
-        {user?.role !== 'admin' && (
-          <MissionHistory tripHistory={tripHistory} />
-        )}
+
 
         <SettingsSection 
           isOnline={isOnline}

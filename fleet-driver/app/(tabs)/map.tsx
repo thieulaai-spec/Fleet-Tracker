@@ -51,7 +51,7 @@ export default function ActiveTripMap() {
 
   return (
     <View className="flex-1 bg-slate-950">
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       
       <MapComponent
         ref={mapRef}

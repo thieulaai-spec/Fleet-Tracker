@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
-import { MapPin, User, ShieldCheck, Navigation, Phone, Truck, CheckCircle2, Eye } from 'lucide-react-native';
+import { MapPin, User, ShieldCheck, Navigation, Phone, Truck, CheckCircle2, Eye, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Trip, TripStatus, OrderStatus } from '@/types/trip';
@@ -30,6 +30,8 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
   onProofOfDelivery,
   onCheckpoint
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const pickupDistance = React.useMemo(() => {
     if (!location || !currentOrder?.pickupLocation) return null;
     return calculateDistance(
@@ -72,10 +74,10 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               colors={['#f59e0b', '#d97706']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}
+              style={{ height: 48, borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5 }}
             >
-              <Truck size={18} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[11px] uppercase tracking-wide" numberOfLines={1}>Xác nhận lấy hàng</Text>
+              <Truck size={16} color="#fff" strokeWidth={2.5} />
+              <Text className="text-white font-black text-xs uppercase tracking-wide" numberOfLines={1}>Xác nhận lấy hàng</Text>
             </LinearGradient>
           </TouchableOpacity>
         );
@@ -84,7 +86,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
         return (
           <TouchableOpacity
             style={{ flex: 1, width: '100%' }}
-            className="shadow-2xl border border-slate-700 bg-slate-800"
+            className="shadow-2xl"
             onPress={() => {
               Alert.alert(
                 'Cảnh báo khoảng cách',
@@ -93,9 +95,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
             }}
             activeOpacity={0.8}
           >
-            <View style={{ height: 56, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }} className="bg-slate-800">
-              <Truck size={18} color="#64748b" strokeWidth={2.5} />
-              <Text className="text-slate-400 font-bold text-[11px] uppercase tracking-wide" numberOfLines={1}>
+            <View style={{ height: 48, borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5 }} className="bg-slate-800 border border-slate-700">
+              <Truck size={16} color="#64748b" strokeWidth={2.5} />
+              <Text className="text-slate-400 font-bold text-xs uppercase tracking-wide" numberOfLines={1}>
                 Lấy hàng ({distText})
               </Text>
             </View>
@@ -118,10 +120,10 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               colors={['#3b82f6', '#2563eb']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ height: 56, borderRadius: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }}
+              style={{ height: 48, borderRadius: 10, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 6 }}
             >
-              <CheckCircle2 size={20} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[11px] uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">Hoàn thành chuyến</Text>
+              <CheckCircle2 size={18} color="#fff" strokeWidth={2.5} />
+              <Text className="text-white font-black text-xs uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">Hoàn thành chuyến</Text>
             </LinearGradient>
           </TouchableOpacity>
         );
@@ -141,10 +143,10 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
                 colors={['#f59e0b', '#d97706']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={{ height: 56, borderRadius: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }}
+                style={{ height: 48, borderRadius: 10, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 6 }}
               >
-                <Truck size={20} color="#fff" strokeWidth={2.5} />
-                <Text className="text-white font-black text-[11px] uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">Xác nhận lấy hàng</Text>
+                <Truck size={18} color="#fff" strokeWidth={2.5} />
+                <Text className="text-white font-black text-xs uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">Xác nhận lấy hàng</Text>
               </LinearGradient>
             </TouchableOpacity>
           );
@@ -153,7 +155,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
           return (
             <TouchableOpacity
               style={{ flex: 1, width: '100%' }}
-              className="shadow-2xl border border-slate-700 bg-slate-800"
+              className="shadow-2xl"
               onPress={() => {
                 Alert.alert(
                   'Cảnh báo khoảng cách',
@@ -162,9 +164,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <View style={{ height: 56, borderRadius: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }} className="bg-slate-800">
-                <Truck size={20} color="#64748b" strokeWidth={2.5} />
-                <Text className="text-slate-400 font-bold text-[11px] uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">
+              <View style={{ height: 48, borderRadius: 10, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 6 }} className="bg-slate-800 border border-slate-700">
+                <Truck size={18} color="#64748b" strokeWidth={2.5} />
+                <Text className="text-slate-400 font-bold text-xs uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">
                   Lấy hàng ({distText})
                 </Text>
               </View>
@@ -186,10 +188,10 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               colors={['#8b5cf6', '#7c3aed']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ height: 56, borderRadius: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }}
+              style={{ height: 48, borderRadius: 10, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 6 }}
             >
-              <Navigation size={20} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[11px] uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">Bắt đầu giao hàng</Text>
+              <Navigation size={18} color="#fff" strokeWidth={2.5} />
+              <Text className="text-white font-black text-xs uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">Bắt đầu giao hàng</Text>
             </LinearGradient>
           </TouchableOpacity>
         );
@@ -208,10 +210,10 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
               colors={['#10b981', '#059669']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ height: 56, borderRadius: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }}
+              style={{ height: 48, borderRadius: 10, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 6 }}
             >
-              <CheckCircle2 size={20} color="#fff" strokeWidth={2.5} />
-              <Text className="text-white font-black text-[11px] uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">Xác nhận giao hàng</Text>
+              <CheckCircle2 size={18} color="#fff" strokeWidth={2.5} />
+              <Text className="text-white font-black text-xs uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">Xác nhận giao hàng</Text>
             </LinearGradient>
           </TouchableOpacity>
         );
@@ -220,7 +222,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
         return (
           <TouchableOpacity
             style={{ flex: 1, width: '100%' }}
-            className="shadow-2xl border border-slate-700 bg-slate-800"
+            className="shadow-2xl"
             onPress={() => {
               Alert.alert(
                 'Cảnh báo khoảng cách',
@@ -229,9 +231,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
             }}
             activeOpacity={0.8}
           >
-            <View style={{ height: 56, borderRadius: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }} className="bg-slate-800">
-              <CheckCircle2 size={20} color="#64748b" strokeWidth={2.5} />
-              <Text className="text-slate-400 font-bold text-[11px] uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">
+            <View style={{ height: 48, borderRadius: 10, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 6 }} className="bg-slate-800 border border-slate-700">
+              <CheckCircle2 size={18} color="#64748b" strokeWidth={2.5} />
+              <Text className="text-slate-400 font-bold text-xs uppercase tracking-wider text-center flex-1" numberOfLines={1} ellipsizeMode="tail">
                 Giao hàng ({distText})
               </Text>
             </View>
@@ -244,73 +246,86 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
   };
 
   return (
-    <View className="absolute bottom-32 left-5 right-5">
-      <BlurView intensity={45} tint="light" className="rounded-[44px] border border-white/10 shadow-2xl overflow-hidden">
-        <View className="p-6 bg-slate-900/60">
-          {/* Mission Progress Indicator */}
-          <View className="absolute top-0 left-0 right-0 h-1.5 bg-white/5">
-            <View
-              className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.9)]"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </View>
-
-          <View className="flex-row items-center mb-8 pt-3">
-            <View className="shadow-2xl">
-              <LinearGradient
-                colors={currentOrder ? ['#10b981', '#059669'] : ['#334155', '#1e293b']}
-                style={{ width: 64, height: 64, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}
-              >
-                <MapPin size={32} color="#fff" strokeWidth={2.5} />
-              </LinearGradient>
-            </View>
-            <View className="flex-1 ml-5">
-              <Text className="text-indigo-400 text-[10px] font-black uppercase tracking-[2.5px] mb-1.5">
-                {currentOrder?.status === OrderStatus.PICKED_UP || currentOrder?.status === OrderStatus.DELIVERING ? 'Delivery Point' : 'Pickup Point'}
-              </Text>
-              <Text className="text-white text-2xl font-black tracking-tight" numberOfLines={1}>
-                {currentOrder
-                  ? (currentOrder.status === OrderStatus.PICKED_UP || currentOrder.status === OrderStatus.DELIVERING
-                    ? currentOrder.address
-                    : currentOrder.pickupAddress)
-                  : 'Mission Accomplished'}
-              </Text>
-              {currentOrder && (
-                <View className="flex-row items-center gap-2 mt-2">
-                  <View className="w-6 h-6 rounded-lg bg-white/5 items-center justify-center">
-                    <User size={12} color="#94a3b8" />
+    <View className="absolute bottom-32 left-4 right-4">
+      <BlurView 
+        intensity={95} 
+        tint="light" 
+        className="rounded-[24px] border border-slate-700/50 shadow-2xl overflow-hidden"
+        style={{ backgroundColor: 'rgba(255, 255, 255, 0.96)' }}
+      >
+        <View className="p-4">
+          <View className={`flex-row items-center pt-1.5 ${isCollapsed ? 'mb-0' : 'mb-5'}`}>
+            <TouchableOpacity 
+              onPress={() => setIsCollapsed(!isCollapsed)}
+              activeOpacity={0.85}
+              className="flex-row items-center flex-1 mr-2"
+            >
+              <View className="shadow-2xl">
+                <LinearGradient
+                  colors={currentOrder ? ['#10b981', '#059669'] : ['#334155', '#1e293b']}
+                  style={{ width: 48, height: 48, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }}
+                >
+                  <MapPin size={24} color="#fff" strokeWidth={2.5} />
+                </LinearGradient>
+              </View>
+              <View className="flex-1 min-w-0 ml-4">
+                <Text className="text-indigo-400 text-[9px] font-black uppercase tracking-[2px] mb-1">
+                  {currentOrder?.status === OrderStatus.PICKED_UP || currentOrder?.status === OrderStatus.DELIVERING ? 'Delivery Point' : 'Pickup Point'}
+                </Text>
+                <Text className="text-white text-lg font-black tracking-tight" numberOfLines={1} ellipsizeMode="tail">
+                  {currentOrder
+                    ? (currentOrder.status === OrderStatus.PICKED_UP || currentOrder.status === OrderStatus.DELIVERING
+                      ? currentOrder.address
+                      : currentOrder.pickupAddress)
+                    : 'Mission Accomplished'}
+                </Text>
+                {currentOrder && !isCollapsed && (
+                  <View className="flex-row items-center gap-1.5 mt-1.5">
+                    <View className="w-5 h-5 rounded-lg bg-white/5 items-center justify-center">
+                      <User size={10} color="#94a3b8" />
+                    </View>
+                    <Text className="text-slate-400 text-xs font-bold tracking-tight" numberOfLines={1} ellipsizeMode="tail">
+                      Đơn #{currentOrder.id.slice(-6).toUpperCase()}
+                    </Text>
+                    <View className="w-1 h-1 rounded-full bg-slate-700 mx-0.5" />
+                    <ShieldCheck size={12} color="#10b981" />
+                    <Text className="text-emerald-500 text-[9px] font-black uppercase">Xác thực</Text>
                   </View>
-                  <Text className="text-slate-400 text-sm font-bold tracking-tight">
-                    Đơn hàng #{currentOrder.id.slice(-6).toUpperCase()}
-                  </Text>
-                  <View className="w-1.5 h-1.5 rounded-full bg-slate-700 mx-1" />
-                  <ShieldCheck size={14} color="#10b981" />
-                  <Text className="text-emerald-500 text-[10px] font-black uppercase">Xác thực</Text>
-                </View>
-              )}
-            </View>
+                )}
+              </View>
+            </TouchableOpacity>
 
-            <View className="flex-row gap-3">
+            <View className="flex-row gap-1.5 items-center">
               <TouchableOpacity
-                className="bg-white/5 w-12 h-12 rounded-[18px] justify-center items-center border border-white/10 shadow-lg"
+                className="bg-white/5 w-10 h-10 rounded-[12px] justify-center items-center border border-white/10"
                 onPress={onNavigate}
                 activeOpacity={0.7}
               >
-                <Navigation size={22} color="#fff" strokeWidth={2} />
+                <Navigation size={18} color="#fff" strokeWidth={2} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="w-8 h-10 justify-center items-center"
+                onPress={() => setIsCollapsed(!isCollapsed)}
+                activeOpacity={0.7}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              >
+                {isCollapsed ? <ChevronUp size={18} color="#94a3b8" /> : <ChevronDown size={18} color="#94a3b8" />}
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Tactical Actions */}
-          <View className="flex-row gap-3 items-center">
-            <View className="flex-1 w-full">
-              {renderActionButton()}
-            </View>
+          {!isCollapsed && (
+            <View className="flex-row gap-2.5 items-center">
+              <View className="flex-1 w-full">
+                {renderActionButton()}
+              </View>
 
-            <View className="flex-1 w-full">
-              <SosButton tripId={activeTrip.id} />
+              <View className="flex-1 w-full">
+                <SosButton tripId={activeTrip.id} />
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </BlurView>
     </View>

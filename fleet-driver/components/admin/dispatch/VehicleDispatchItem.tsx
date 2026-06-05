@@ -26,41 +26,29 @@ export const VehicleDispatchItem: React.FC<VehicleDispatchItemProps> = ({
   const capacityPercent = Math.round((vehicle.currentLoadKg / vehicle.maxCapacityKg) * 100);
   const isOptimal = rank === 0;
 
-  // Premium design systems styling tokens
-  const containerStyle = {
-    backgroundColor: isSelected 
-      ? 'rgba(16, 185, 129, 0.1)' 
-      : isOptimal
-        ? 'rgba(30, 41, 59, 0.8)'
-        : 'rgba(30, 41, 59, 0.5)',
-    borderColor: isSelected 
-      ? 'rgba(16, 185, 129, 0.5)' 
-      : isOptimal
-        ? 'rgba(245, 158, 11, 0.3)'
-        : 'rgba(255, 255, 255, 0.05)',
-  };
+  // Premium design systems styling classes using Tailwind for proper theme mapping
+  const containerClass = isSelected 
+    ? 'bg-emerald-500/10 border-emerald-500/50' 
+    : isOptimal
+      ? 'bg-amber-500/10 border-amber-500/40'
+      : 'bg-slate-800/50 border-white/5';
 
-  const iconBgStyle = {
-    backgroundColor: isSelected 
-      ? '#10b981' 
-      : isOptimal 
-        ? 'rgba(245, 158, 11, 0.2)' 
-        : '#334155', // slate-700
-    borderColor: isOptimal ? 'rgba(245, 158, 11, 0.3)' : 'transparent',
-    borderWidth: isOptimal ? 1 : 0,
-  };
+  const iconBgClass = isSelected
+    ? 'bg-emerald-500'
+    : isOptimal
+      ? 'bg-amber-500/20'
+      : 'bg-slate-700';
 
   const iconColor = isSelected 
     ? '#fff' 
     : isOptimal 
-      ? '#f59e0b' 
+      ? '#d97706' 
       : '#94a3b8';
 
   return (
     <TouchableOpacity 
       onPress={onPress}
-      className="p-4 mb-3 rounded-2xl border"
-      style={containerStyle}
+      className={`p-4 mb-3 rounded-2xl border ${containerClass}`}
     >
       <View className="flex-row justify-between items-start mb-3">
         <View className="flex-row items-center flex-1 mr-2">
@@ -72,8 +60,7 @@ export const VehicleDispatchItem: React.FC<VehicleDispatchItemProps> = ({
             />
           ) : (
             <View 
-              className="w-10 h-10 rounded-xl justify-center items-center mr-3"
-              style={iconBgStyle}
+              className={`w-10 h-10 rounded-xl justify-center items-center mr-3 ${iconBgClass}`}
             >
               <Truck size={20} color={iconColor} />
             </View>

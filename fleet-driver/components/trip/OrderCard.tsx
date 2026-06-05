@@ -6,6 +6,7 @@ import * as Location from 'expo-location';
 import { Order, OrderStatus } from '@/types/trip';
 import { calculateDistance } from '@/utils/geo';
 import { useGeofencing } from '@/hooks/useGeofencing';
+import { LightboxModal } from '../admin/tracking/LightboxModal';
 
 interface OrderCardProps {
   order: Order;
@@ -30,6 +31,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const { checkProximity, getCurrentLocation, isLoading: isCheckingLocation } = useGeofencing();
 
   const isDelivered = order.status === OrderStatus.DELIVERED;
@@ -177,13 +179,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                       {ver.facePhotoUrl && (
                         <View className="flex-1">
                           <Text className="text-slate-500 text-[8px] font-black uppercase tracking-wider mb-1">Xác thực tài xế (Face ID)</Text>
-                          <View className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950">
+                          <TouchableOpacity 
+                            activeOpacity={0.9} 
+                            onPress={() => setLightboxUrl(ver.facePhotoUrl)}
+                            className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950"
+                          >
                             <Image 
                               source={{ uri: ver.facePhotoUrl }} 
                               className="w-full h-full"
                               resizeMode="cover"
                             />
-                          </View>
+                          </TouchableOpacity>
                         </View>
                       )}
 
@@ -191,13 +197,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                       {ver.cargoPhotoUrl && (
                         <View className="flex-1">
                           <Text className="text-slate-500 text-[8px] font-black uppercase tracking-wider mb-1">Ảnh thực tế hàng hóa</Text>
-                          <View className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950">
+                          <TouchableOpacity 
+                            activeOpacity={0.9} 
+                            onPress={() => setLightboxUrl(ver.cargoPhotoUrl)}
+                            className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950"
+                          >
                             <Image 
                               source={{ uri: ver.cargoPhotoUrl }} 
                               className="w-full h-full"
                               resizeMode="cover"
                             />
-                          </View>
+                          </TouchableOpacity>
                         </View>
                       )}
                     </View>
@@ -227,13 +237,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               </View>
               <View className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
                 <Text className="text-white text-xs font-black tracking-wide mb-2">Chữ ký xác nhận của người nhận</Text>
-                <View className="h-20 bg-slate-950/80 rounded-xl overflow-hidden items-center justify-center p-1 border border-white/10">
+                <TouchableOpacity 
+                  activeOpacity={0.9} 
+                  onPress={() => setLightboxUrl(order.signatureUrl || null)}
+                  className="h-20 bg-slate-950/80 rounded-xl overflow-hidden items-center justify-center p-1 border border-white/10"
+                >
                   <Image 
                     source={{ uri: order.signatureUrl }} 
                     className="w-full h-full"
                     resizeMode="contain"
                   />
-                </View>
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -359,6 +373,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
       {/* Render Proof Details Dynamically if expanded */}
       {expanded && renderProofDetails()}
+
+      {lightboxUrl && (
+        <LightboxModal imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </BlurView>
   );
 };

@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
 interface TripSectionHeaderProps {
   title: string;
 }
 
 export const TripSectionHeader: React.FC<TripSectionHeaderProps> = ({ title }) => {
+  const router = useRouter();
   return (
     <View className="px-8 pt-10 pb-6 flex-row items-center justify-between">
       <View className="flex-row items-center gap-3">
@@ -26,8 +28,8 @@ export const TripSectionHeader: React.FC<TripSectionHeaderProps> = ({ title }) =
         </Text>
       </View>
       {title === 'Trip History' && (
-        <TouchableOpacity activeOpacity={0.6}>
-          <Text className="text-indigo-400 text-[10px] font-black uppercase tracking-widest">History Log</Text>
+        <TouchableOpacity activeOpacity={0.6} onPress={() => router.push('/trip/history')}>
+          <Text className="text-indigo-400 text-[10px] font-black uppercase tracking-widest">Xem tất cả</Text>
         </TouchableOpacity>
       )}
     </View>

@@ -110,14 +110,20 @@ export default function AdminTrackingScreen() {
 
   const lastAnimateTimeRef = useRef<number>(0);
 
+  // Reset animate throttle when selected vehicle changes to allow instant focus
+  useEffect(() => {
+    lastAnimateTimeRef.current = 0;
+  }, [selectedVehicleId]);
+
   // Center on selected vehicle whenever its coordinates update (throttled to 1.5s, if following)
+  // Shift center latitude by -0.002 to move the vehicle up on screen, avoiding the bottom card
   useEffect(() => {
     if (selectedVehicle && isFollowing && mapRef.current) {
       const now = Date.now();
       if (now - lastAnimateTimeRef.current > 1500) {
         lastAnimateTimeRef.current = now;
         mapRef.current.animateToRegion({
-          latitude: selectedVehicle.latitude,
+          latitude: selectedVehicle.latitude - 0.002,
           longitude: selectedVehicle.longitude,
           latitudeDelta: 0.008,
           longitudeDelta: 0.008,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs, Redirect } from 'expo-router';
-import { Truck, Map, User, LayoutDashboard, MapPin, Package, Users } from 'lucide-react-native';
+import { Truck, Map, User, LayoutDashboard, MapPin, Package, Users, History } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { Platform, StyleSheet } from 'react-native';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -81,6 +81,16 @@ export default function TabLayout() {
           href: !isAdmin ? undefined : null,
           tabBarIcon: ({ color, focused }) => (
             <Map size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
+          href: !isAdmin ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <History size={focused ? 26 : 22} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />

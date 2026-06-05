@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Alert } from 'react-native';
+import { ScrollView, Alert, View, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useOrderStore, OrderStatus } from '../../../store/useOrderStore';
 import { useFleetStore, VehicleStatus, Vehicle } from '../../../store/useFleetStore';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Subcomponents
 import DispatchHeader from './components/DispatchHeader';
@@ -174,47 +175,94 @@ export default function DispatchCenterScreen() {
   const isLoading = ordersLoading || fleetLoading;
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-950" edges={['top']}>
-      <Stack.Screen 
-        options={{
-          headerShown: false,
-        }} 
+    <View className="flex-1 bg-slate-950">
+      {/* Decorative premium gradient background */}
+      <LinearGradient
+        colors={['#e6fcf0', '#f1f5f9', '#ffffff']}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.8, y: 0.8 }}
+      />
+      {/* Soft blurred decorative glowing mint/emerald circles */}
+      <View 
+        style={{
+          position: 'absolute',
+          top: -80,
+          right: -80,
+          width: 280,
+          height: 280,
+          borderRadius: 140,
+          backgroundColor: '#34d399',
+          opacity: 0.15,
+        }}
+      />
+      <View 
+        style={{
+          position: 'absolute',
+          top: 250,
+          left: -120,
+          width: 300,
+          height: 300,
+          borderRadius: 150,
+          backgroundColor: '#10b981',
+          opacity: 0.1,
+        }}
+      />
+      <View 
+        style={{
+          position: 'absolute',
+          bottom: 100,
+          right: -100,
+          width: 320,
+          height: 320,
+          borderRadius: 160,
+          backgroundColor: '#a7f3d0',
+          opacity: 0.2,
+        }}
       />
 
-      <DispatchHeader
-        onBack={() => router.back()}
-        onRefresh={loadData}
-        isLoading={isLoading}
-      />
-
-      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
-        <OrdersSection
-          pendingOrders={pendingOrders}
-          selectedOrderId={selectedOrderId}
-          onSelectOrder={setSelectedOrderId}
+      <SafeAreaView className="flex-1" edges={['top']}>
+        <Stack.Screen 
+          options={{
+            headerShown: false,
+          }} 
         />
 
-        <SmartDispatchBanner
-          selectedOrderId={selectedOrderId}
-          isSuggestLoading={isSuggestLoading}
-          suggestedCount={partitionedVehicles.suggested.length}
+        <DispatchHeader
+          onBack={() => router.back()}
+          onRefresh={loadData}
+          isLoading={isLoading}
         />
 
-        <VehiclesSection
-          availableVehiclesCount={availableVehicles.length}
-          suggestedVehicles={partitionedVehicles.suggested}
-          otherVehicles={partitionedVehicles.others}
+        <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+          <OrdersSection
+            pendingOrders={pendingOrders}
+            selectedOrderId={selectedOrderId}
+            onSelectOrder={setSelectedOrderId}
+          />
+
+          <SmartDispatchBanner
+            selectedOrderId={selectedOrderId}
+            isSuggestLoading={isSuggestLoading}
+            suggestedCount={partitionedVehicles.suggested.length}
+          />
+
+          <VehiclesSection
+            availableVehiclesCount={availableVehicles.length}
+            suggestedVehicles={partitionedVehicles.suggested}
+            otherVehicles={partitionedVehicles.others}
+            selectedVehicleId={selectedVehicleId}
+            onSelectVehicle={setSelectedVehicleId}
+          />
+        </ScrollView>
+
+        <ConfirmDispatchButton
+          selectedOrderId={selectedOrderId}
           selectedVehicleId={selectedVehicleId}
-          onSelectVehicle={setSelectedVehicleId}
+          isSubmitting={isSubmitting}
+          onConfirm={handleAssign}
         />
-      </ScrollView>
-
-      <ConfirmDispatchButton
-        selectedOrderId={selectedOrderId}
-        selectedVehicleId={selectedVehicleId}
-        isSubmitting={isSubmitting}
-        onConfirm={handleAssign}
-      />
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

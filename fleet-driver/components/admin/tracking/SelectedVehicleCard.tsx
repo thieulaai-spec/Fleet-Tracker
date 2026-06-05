@@ -78,51 +78,67 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
     <BlurView 
       intensity={95} 
       tint="light" 
-      className="absolute left-4 right-4 rounded-3xl overflow-hidden p-5 border border-slate-700 shadow-2xl shadow-black/5"
+      className="absolute left-4 right-4 rounded-3xl overflow-hidden p-4 border border-slate-700 shadow-2xl shadow-black/5"
       style={{ bottom: 112, backgroundColor: 'rgba(255, 255, 255, 0.96)' }}
     >
-      <View className="flex-row justify-between items-center mb-4">
-        <View className="flex-row items-center gap-2">
-          <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStatusColor(selectedVehicle.status) }} />
-          <Text className="text-white text-xl font-extrabold">{selectedVehicle.licensePlate}</Text>
-        </View>
-        <TouchableOpacity onPress={onClose}>
-          <Text className="text-slate-500 text-sm font-semibold">Close</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View className="gap-3 mb-4">
-        <View className="flex-row justify-between">
-          <View className="flex-row items-center gap-2 flex-1">
-            <User size={16} color="#475569" />
-            <Text className="text-slate-100 text-sm font-medium" numberOfLines={1}>{selectedVehicle.driverName}</Text>
-          </View>
-          <View className="flex-row items-center gap-2 flex-1">
-            <Navigation size={16} color="#475569" />
-            <Text className="text-slate-100 text-sm font-medium">{selectedVehicle.speed} km/h</Text>
-          </View>
+      {/* Top Flex Row containing large Image & Details side-by-side */}
+      <View className="flex-row gap-4 items-center mb-3">
+        {/* Large Vehicle Image */}
+        <View className="relative">
+          {selectedVehicle.imageUrl ? (
+            <Image 
+              source={{ uri: selectedVehicle.imageUrl }} 
+              className="w-20 h-20 rounded-2xl bg-slate-800 border border-slate-700" 
+              resizeMode="cover" 
+            />
+          ) : (
+            <View className="w-20 h-20 rounded-2xl bg-slate-800 border border-slate-700 items-center justify-center">
+              <Truck size={32} color="#059669" />
+            </View>
+          )}
         </View>
 
-        <View className="flex-row justify-between">
-          <View className="flex-row items-center gap-2 flex-1">
-            {selectedVehicle.imageUrl ? (
-              <Image source={{ uri: selectedVehicle.imageUrl }} className="w-5 h-5 rounded-md bg-slate-800 border border-slate-700" resizeMode="cover" />
-            ) : (
-              <Truck size={16} color="#475569" />
-            )}
-            <Text className="text-slate-100 text-sm font-medium">{selectedVehicle.status.replace('_', ' ').toUpperCase()}</Text>
+        {/* Text Info */}
+        <View className="flex-1 justify-between h-20 py-0.5">
+          <View className="flex-row justify-between items-center">
+            <View className="flex-row items-center gap-2">
+              <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStatusColor(selectedVehicle.status) }} />
+              <Text className="text-white text-lg font-extrabold">{selectedVehicle.licensePlate}</Text>
+            </View>
+            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Text className="text-slate-500 text-xs font-bold">Close</Text>
+            </TouchableOpacity>
           </View>
-          <View className="flex-row items-center gap-2 flex-1">
-            <Text className="text-slate-500 text-xs font-semibold">Updated: </Text>
-            <Text className="text-slate-100 text-sm font-semibold">Just now</Text>
+
+          <View className="flex-row items-center gap-1.5">
+            <User size={14} color="#64748b" />
+            <Text className="text-slate-100 text-sm font-semibold" numberOfLines={1}>
+              {selectedVehicle.driverName}
+            </Text>
+          </View>
+
+          <View className="flex-row items-center gap-3">
+            <View className="flex-row items-center gap-1">
+              <Navigation size={12} color="#64748b" />
+              <Text className="text-slate-200 text-xs font-semibold">{selectedVehicle.speed} km/h</Text>
+            </View>
+            <Text className="text-slate-400 text-[10px] font-bold">•</Text>
+            <Text className="text-indigo-600 text-xs font-extrabold uppercase">
+              {selectedVehicle.status.replace('_', ' ')}
+            </Text>
+          </View>
+
+          <View className="flex-row items-center gap-1">
+            <Text className="text-slate-500 text-[10px] font-semibold">Updated:</Text>
+            <Text className="text-slate-100 text-[10px] font-bold">Just now</Text>
           </View>
         </View>
       </View>
 
       {/* Render active trip destinations directly on card */}
       {activeTrip && activeTrip.tripOrders && activeTrip.tripOrders.length > 0 && (
-        <View className="mt-1 pt-3 border-t border-slate-700 gap-2 mb-4">
-          <View className="flex-row items-center gap-1.5 mb-1">
+        <View className="mt-0.5 pt-2 border-t border-slate-700 gap-1.5 mb-3">
+          <View className="flex-row items-center gap-1.5 mb-0.5">
             <MapPin size={12} color="#059669" />
             <Text className="text-indigo-700 text-[10px] font-black uppercase tracking-wider">Thông tin địa điểm chuyến đi</Text>
           </View>
@@ -130,16 +146,16 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
             const order = to.order;
             if (!order) return null;
             return (
-              <View key={order.id} className="bg-slate-800 rounded-xl p-3 border border-slate-700 gap-1.5">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-white text-xs font-bold font-mono">Đơn: #{order.id.substring(0, 8)}</Text>
-                  <Text className="text-emerald-700 text-[9px] font-black uppercase px-2 py-0.5 bg-emerald-500/10 rounded-full">{order.status}</Text>
+              <View key={order.id} className="bg-slate-800 rounded-xl p-2.5 border border-slate-700 gap-1">
+                <View className="flex-row justify-between items-center mb-0.5">
+                  <Text className="text-white text-[11px] font-bold font-mono">Đơn: #{order.id.substring(0, 8)}</Text>
+                  <Text className="text-emerald-700 text-[9px] font-black uppercase px-1.5 py-0.2 bg-emerald-500/10 rounded-full">{order.status}</Text>
                 </View>
-                <View className="gap-1">
-                  <Text className="text-slate-300 text-xs" numberOfLines={1} ellipsizeMode="tail">
+                <View className="gap-0.5">
+                  <Text className="text-slate-300 text-[11px]" numberOfLines={1} ellipsizeMode="tail">
                     📍 <Text className="font-bold text-indigo-700">Lấy:</Text> {order.pickupAddress}
                   </Text>
-                  <Text className="text-slate-300 text-xs" numberOfLines={1} ellipsizeMode="tail">
+                  <Text className="text-slate-300 text-[11px]" numberOfLines={1} ellipsizeMode="tail">
                     🏁 <Text className="font-bold text-emerald-700">Giao:</Text> {order.deliveryAddress}
                   </Text>
                 </View>
@@ -150,7 +166,7 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
       )}
 
       {/* Driver Actions (Details & Call) */}
-      <View className="flex-row gap-3 mb-3">
+      <View className="flex-row gap-3 mb-2.5">
         <TouchableOpacity
           onPress={() => {
             const driverId = selectedVehicle.driverId || resolvedDriver?.id;
@@ -160,11 +176,11 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
               Alert.alert('Thông báo', 'Không tìm thấy thông tin chi tiết tài xế.');
             }
           }}
-          className="flex-1 bg-indigo-600 py-3.5 rounded-2xl items-center flex-row justify-center gap-2"
+          className="flex-1 bg-indigo-600 py-2.5 rounded-2xl items-center flex-row justify-center gap-2"
           activeOpacity={0.7}
         >
-          <User size={16} color="#ffffff" />
-          <Text className="text-slate-950 font-black uppercase text-xs tracking-wider">Chi Tiết Tài Xế</Text>
+          <User size={14} color="#ffffff" />
+          <Text className="text-slate-950 font-black uppercase text-[11px] tracking-wider">Chi Tiết Tài Xế</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -178,11 +194,11 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
               Alert.alert('Thông báo', 'Không tìm thấy số điện thoại của tài xế.');
             }
           }}
-          className="flex-1 bg-slate-800 border border-slate-700 py-3.5 rounded-2xl items-center flex-row justify-center gap-2"
+          className="flex-1 bg-slate-800 border border-slate-700 py-2.5 rounded-2xl items-center flex-row justify-center gap-2"
           activeOpacity={0.7}
         >
-          <Phone size={16} color="#059669" />
-          <Text className="text-indigo-600 font-black uppercase text-xs tracking-wider">Gọi Điện</Text>
+          <Phone size={14} color="#059669" />
+          <Text className="text-indigo-600 font-black uppercase text-[11px] tracking-wider">Gọi Điện</Text>
         </TouchableOpacity>
       </View>
 
@@ -190,17 +206,17 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
         <TouchableOpacity
           onPress={() => onFetchDetails(selectedVehicle.tripId!)}
           disabled={isFetchingDetails}
-          className="bg-indigo-600 py-3.5 rounded-2xl items-center flex-row justify-center gap-2"
+          className="bg-indigo-600 py-2.5 rounded-2xl items-center flex-row justify-center gap-2"
         >
           {isFetchingDetails ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text className="text-slate-950 font-black uppercase text-xs tracking-wider">Xem Chi Tiết Minh Chứng</Text>
+            <Text className="text-slate-950 font-black uppercase text-[11px] tracking-wider">Xem Chi Tiết Minh Chứng</Text>
           )}
         </TouchableOpacity>
       ) : (
-        <View className="bg-slate-800 py-3.5 rounded-2xl items-center border border-slate-700">
-          <Text className="text-slate-500 text-xs font-semibold">Không Có Chuyến Đi Đang Chạy</Text>
+        <View className="bg-slate-800 py-2.5 rounded-2xl items-center border border-slate-700">
+          <Text className="text-slate-500 text-[11px] font-semibold">Không Có Chuyến Đi Đang Chạy</Text>
         </View>
       )}
     </BlurView>

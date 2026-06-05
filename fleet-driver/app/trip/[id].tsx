@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Linking, Platform, RefreshControl, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Linking, Platform, RefreshControl, Image, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MapPin, Calendar, Clock, ChevronLeft, Package, Truck, CheckCircle2, AlertTriangle, Navigation, Camera, Fuel, Route, Fingerprint, FileText, UserCheck, Check } from 'lucide-react-native';
 import { useTripStore, TripStatus, OrderStatus } from '../../store/useTripStore';
@@ -158,25 +158,27 @@ export default function TripDetails() {
 
   return (
     <View className="flex-1 bg-slate-950">
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       <Stack.Screen options={{ 
         headerShown: true, 
         title: isCompletedTrip ? 'LỊCH SỬ CHUYẾN ĐI' : 'CHI TIẾT CHUYẾN ĐI',
-        headerStyle: { backgroundColor: '#0f172a' },
-        headerTitleStyle: { color: '#fff', fontWeight: '900', fontSize: 16 },
-        headerTintColor: '#fff',
+        headerStyle: { backgroundColor: '#ffffff' },
+        headerTitleStyle: { color: '#0f172a', fontWeight: '900', fontSize: 16 },
+        headerTintColor: '#0f172a',
         headerLeft: () => (
-          <TouchableOpacity onPress={() => router.back()} className="ml-2 p-2 bg-white/5 rounded-full">
-            <ChevronLeft color="#fff" size={20} />
+          <TouchableOpacity onPress={() => router.back()} className="ml-2 p-2 bg-slate-800 rounded-full">
+            <ChevronLeft color="#0f172a" size={20} />
           </TouchableOpacity>
         )
       }} />
 
-      <LinearGradient colors={["#0f172a", "#1e293b"]} className="flex-1">
-        {/* Background Glow */}
-        <View className="absolute top-[-50px] right-[-50px] w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[80px]" />
+      <View className="flex-1">
+        {/* Background Decorative Elements */}
+        <View className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px]" />
+        <View className="absolute bottom-[-150px] left-[-150px] w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px]" />
         
         <ScrollView 
-          contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: 20, paddingTop: 32, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl 
@@ -384,7 +386,7 @@ export default function TripDetails() {
             </View>
           )}
         </ScrollView>
-      </LinearGradient>
+      </View>
     </View>
   );
 }

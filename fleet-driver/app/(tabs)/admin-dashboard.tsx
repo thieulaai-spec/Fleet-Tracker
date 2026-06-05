@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput, StyleSheet } from 'react-native';
 import { LayoutDashboard, Truck, Package, AlertTriangle, TrendingUp, ChevronRight, Clock, X, Search } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -7,6 +7,7 @@ import { StatCard } from '../../components/admin/dashboard/StatCard';
 import { useDashboardStore } from '../../store/useDashboardStore';
 import { socketService } from '../../lib/socket';
 import Toast from 'react-native-toast-message';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function AdminDashboardScreen() {
   const { stats, orders, alerts, trips, isLoading, fetchStats, clockOffset } = useDashboardStore();
@@ -323,67 +324,113 @@ export default function AdminDashboardScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-950">
-      <ScrollView 
-        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
-        refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={fetchStats} tintColor="#6366f1" />
-        }
-      >
-        <View className="flex-row items-center mb-6 gap-3">
-          <LayoutDashboard size={32} color="#6366f1" />
-          <Text className="text-3xl font-bold text-slate-50">Admin Dashboard</Text>
-        </View>
+    <View className="flex-1 bg-slate-950">
+      {/* Decorative premium gradient background */}
+      <LinearGradient
+        colors={['#e6fcf0', '#f1f5f9', '#ffffff']}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.8, y: 0.8 }}
+      />
+      {/* Soft blurred decorative glowing mint/emerald circles */}
+      <View 
+        style={{
+          position: 'absolute',
+          top: -80,
+          right: -80,
+          width: 280,
+          height: 280,
+          borderRadius: 140,
+          backgroundColor: '#34d399',
+          opacity: 0.15,
+        }}
+      />
+      <View 
+        style={{
+          position: 'absolute',
+          top: 250,
+          left: -120,
+          width: 300,
+          height: 300,
+          borderRadius: 150,
+          backgroundColor: '#10b981',
+          opacity: 0.1,
+        }}
+      />
+      <View 
+        style={{
+          position: 'absolute',
+          bottom: 100,
+          right: -100,
+          width: 320,
+          height: 320,
+          borderRadius: 160,
+          backgroundColor: '#a7f3d0',
+          opacity: 0.2,
+        }}
+      />
 
-        <View className="flex-row flex-wrap justify-between mb-6">
-          <StatCard 
-            title="Active Vehicles" 
-            value={stats.activeVehicles} 
-            icon={Truck} 
-            color="#6366f1" 
-          />
-          <StatCard 
-            title="Pending Orders" 
-            value={stats.pendingOrders} 
-            icon={Package} 
-            color="#f59e0b" 
-          />
-          <StatCard 
-            title="Total Trips" 
-            value={stats.totalTrips} 
-            icon={TrendingUp} 
-            color="#10b981" 
-          />
-          <StatCard 
-            title="Active Alerts" 
-            value={stats.alertCount} 
-            icon={AlertTriangle} 
-            color="#ef4444" 
-          />
-        </View>
+      <SafeAreaView className="flex-1" edges={['top']}>
+        <ScrollView 
+          contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+          refreshControl={
+            <RefreshControl refreshing={isLoading} onRefresh={fetchStats} tintColor="#059669" />
+          }
+        >
+          <View className="flex-row items-center mb-6 gap-3">
+            <LayoutDashboard size={32} color="#059669" />
+            <Text className="text-3xl font-bold text-slate-50">Admin Dashboard</Text>
+          </View>
 
-        <View className="mb-4 flex-row justify-between items-center">
-          <Text className="text-lg font-bold text-slate-50 tracking-wider">Recent Activity</Text>
-          <TouchableOpacity onPress={() => setIsModalOpen(true)}>
-            <Text className="text-indigo-400 font-bold text-xs">View All</Text>
-          </TouchableOpacity>
-        </View>
+          <View className="flex-row flex-wrap justify-between mb-6">
+            <StatCard 
+              title="Active Vehicles" 
+              value={stats.activeVehicles} 
+              icon={Truck} 
+              color="#059669" 
+            />
+            <StatCard 
+              title="Pending Orders" 
+              value={stats.pendingOrders} 
+              icon={Package} 
+              color="#f59e0b" 
+            />
+            <StatCard 
+              title="Total Trips" 
+              value={stats.totalTrips} 
+              icon={TrendingUp} 
+              color="#10b981" 
+            />
+            <StatCard 
+              title="Active Alerts" 
+              value={stats.alertCount} 
+              icon={AlertTriangle} 
+              color="#ef4444" 
+            />
+          </View>
 
-      {isLoading ? (
-        <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
-          <ActivityIndicator color="#6366f1" />
-        </View>
-      ) : dashboardActivities.length === 0 ? (
-        <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
-          <Text className="text-slate-400 text-sm text-center mb-2 font-medium">No recent activities found.</Text>
-          <Text className="text-slate-500 text-xs text-center">Operational timelines will populate here once events trigger.</Text>
-        </View>
-      ) : (
-        <View className="bg-slate-900/60 rounded-[32px] p-5 border border-white/5 gap-y-4">
-          {dashboardActivities.map((activity, idx, arr) => renderActivityItem(activity, idx, arr))}
-        </View>
-      )}
-    </ScrollView>
+          <View className="mb-4 flex-row justify-between items-center">
+            <Text className="text-lg font-bold text-slate-50 tracking-wider">Recent Activity</Text>
+            <TouchableOpacity onPress={() => setIsModalOpen(true)}>
+              <Text className="text-indigo-400 font-bold text-xs">View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {isLoading ? (
+            <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
+              <ActivityIndicator color="#059669" />
+            </View>
+          ) : dashboardActivities.length === 0 ? (
+            <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
+              <Text className="text-slate-400 text-sm text-center mb-2 font-medium">No recent activities found.</Text>
+              <Text className="text-slate-500 text-xs text-center">Operational timelines will populate here once events trigger.</Text>
+            </View>
+          ) : (
+            <View className="bg-slate-900/60 rounded-[32px] p-5 border border-white/5 gap-y-4">
+              {dashboardActivities.map((activity, idx, arr) => renderActivityItem(activity, idx, arr))}
+            </View>
+          )}
+        </ScrollView>
 
     {/* Solutions 1 & 2: "View All" Overlay with full interactive Filtering and Search on Mobile */}
     {isModalOpen && (
@@ -449,6 +496,7 @@ export default function AdminDashboardScreen() {
         </SafeAreaView>
       </View>
     )}
-  </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

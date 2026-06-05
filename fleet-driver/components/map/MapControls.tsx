@@ -14,7 +14,7 @@ interface MapControlsProps {
 
 export function MapControls({ onCenter, onToggleType, onZoomToDestination, mapType, isFollowing, isNavMode }: MapControlsProps) {
   return (
-    <View className="absolute right-6 top-0 bottom-0 justify-center gap-4" style={{ zIndex: 9000 }}>
+    <View pointerEvents="box-none" className="absolute right-6 top-0 bottom-0 justify-center gap-4" style={{ zIndex: 9000 }}>
       <TouchableOpacity onPress={onToggleType} activeOpacity={0.7}>
         <BlurView intensity={80} tint="light" className="w-14 h-14 rounded-2xl items-center justify-center border border-white/10 overflow-hidden shadow-2xl">
           <Layers size={24} color={mapType === 'standard' ? '#64748b' : '#10b981'} />

@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  TouchableOpacity
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTripStore } from '../../store/useTripStore';
@@ -232,17 +233,16 @@ export default function TripsScreen() {
         isLoading={isLoading}
       />
     );
-  }, [isLoading, router]);
+  }, [isLoading, router, tripHistory.length]);
 
   const sections = [
     ...(activeTrip ? [{ title: 'Active Trip', data: [activeTrip] }] : []),
     ...(pendingTrips.length > 0 ? [{ title: 'Pending Trips', data: pendingTrips }] : []),
-    ...(tripHistory.length > 0 ? [{ title: 'Trip History', data: tripHistory.slice(0, 5) }] : []),
   ];
 
   return (
     <View className="flex-1 bg-slate-950">
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       
       {/* Background Decorative Elements */}
       <View className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px]" />

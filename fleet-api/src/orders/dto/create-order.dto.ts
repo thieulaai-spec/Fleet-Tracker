@@ -6,7 +6,10 @@ import {
   IsPositive,
   IsString,
   Min,
+  Matches,
+  IsEnum,
 } from 'class-validator';
+import { OrderCategory, OrderPriority } from '../../entities/order.entity';
 
 export class CreateOrderDto {
   @ApiProperty({ example: '123 Pickup St, City A' })
@@ -49,4 +52,32 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiProperty({ example: 'John Doe' })
+  @IsString()
+  @IsNotEmpty()
+  recipientName: string;
+
+  @ApiProperty({ example: '0987654321' })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^(0|84|\+84)\d{9}$/, {
+    message: 'Phone number must be a valid Vietnamese number starting with 0 or 84, followed by 9 digits',
+  })
+  recipientPhone: string;
+
+  @ApiProperty({ example: 'other', enum: OrderCategory })
+  @IsEnum(OrderCategory)
+  @IsNotEmpty()
+  category: OrderCategory;
+
+  @ApiProperty({ example: 'medium', enum: OrderPriority })
+  @IsEnum(OrderPriority)
+  @IsNotEmpty()
+  priority: OrderPriority;
+
+  @ApiProperty({ example: '2026-06-06T15:00:00.000Z' })
+  @IsString()
+  @IsNotEmpty()
+  deliveryDeadline: string;
 }

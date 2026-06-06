@@ -17,6 +17,20 @@ export enum OrderStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum OrderCategory {
+  RAW_MATERIAL = 'raw_material',
+  FINISHED_GOODS = 'finished_goods',
+  COMPONENT = 'component',
+  EQUIPMENT = 'equipment',
+  OTHER = 'other',
+}
+
+export enum OrderPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+}
+
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn('uuid')
@@ -81,6 +95,29 @@ export class Order {
     nullable: true,
   })
   deliveryActualLocation: any;
+
+  @Column({ name: 'recipient_name', type: 'varchar', nullable: true })
+  recipientName: string;
+
+  @Column({ name: 'recipient_phone', type: 'varchar', nullable: true })
+  recipientPhone: string;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: 'other',
+  })
+  category: OrderCategory;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'medium',
+  })
+  priority: OrderPriority;
+
+  @Column({ name: 'delivery_deadline', type: 'timestamptz', nullable: true })
+  deliveryDeadline: Date;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

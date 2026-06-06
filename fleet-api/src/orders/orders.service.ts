@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { TripOrder } from '../entities/trip-order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -18,6 +19,7 @@ export class OrdersService {
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -49,6 +51,7 @@ export class OrdersService {
         type: 'Point',
         coordinates: [deliveryLng, deliveryLat],
       },
+      deliveryDeadline: createOrderDto.deliveryDeadline ? new Date(createOrderDto.deliveryDeadline) : undefined,
     });
 
     return this.ordersRepository.save(order);
@@ -129,7 +132,7 @@ export class OrdersService {
       throw new BadRequestException('Can only update orders in PENDING status');
     }
 
-    const { pickupLat, pickupLng, deliveryLat, deliveryLng, ...orderData } =
+    const { pickupLat, pickupLng, deliveryLat, deliveryLng, deliveryDeadline, ...orderData } =
       updateOrderDto;
 
     if (pickupLat !== undefined && pickupLng !== undefined) {
@@ -144,6 +147,10 @@ export class OrdersService {
         type: 'Point',
         coordinates: [deliveryLng, deliveryLat],
       };
+    }
+
+    if (deliveryDeadline !== undefined) {
+      order.deliveryDeadline = deliveryDeadline ? new Date(deliveryDeadline) : null;
     }
 
     Object.assign(order, orderData);
@@ -192,7 +199,12 @@ export class OrdersService {
       }
     }
 
-    return this.ordersRepository.save(order);
+    const savedOrder = await this.ordersRepository.save(order);
+    this.eventEmitter.emit('order.status_changed', {
+      id: savedOrder.id,
+      status: savedOrder.status,
+    });
+    return savedOrder;
   }
 
   async remove(id: string): Promise<void> {

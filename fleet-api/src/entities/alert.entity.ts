@@ -15,6 +15,7 @@ export enum AlertType {
   ROUTE_DEVIATION = 'route_deviation',
   ABNORMAL_STOP = 'abnormal_stop',
   INCIDENT = 'incident',
+  DELIVERY_OVERDUE = 'delivery_overdue',
 }
 
 export enum AlertSeverity {

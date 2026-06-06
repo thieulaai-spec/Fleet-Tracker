@@ -27,7 +27,7 @@ import {
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFleetStore, Driver, Vehicle, DriverStatus, VehicleStatus, VehicleType } from '../../store/useFleetStore';
@@ -59,6 +59,7 @@ const normalizePlate = (plate: string) => {
 
 export default function AdminFleetScreen() {
   const router = useRouter();
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
   const { 
     drivers, 
     vehicles, 
@@ -70,6 +71,12 @@ export default function AdminFleetScreen() {
 
   const [activeTab, setActiveTab] = useState<'drivers' | 'vehicles'>('drivers');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (tab === 'vehicles' || tab === 'drivers') {
+      setActiveTab(tab);
+    }
+  }, [tab]);
 
   const handleClearAllFingerprints = () => {
     Alert.alert(

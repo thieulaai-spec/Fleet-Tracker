@@ -15,6 +15,7 @@ import { ProfileStats } from '../../components/profile/ProfileStats';
 import { AccountInfo } from '../../components/profile/AccountInfo';
 import { SettingsSection } from '../../components/profile/SettingsSection';
 import { PasswordModal } from '../../components/profile/PasswordModal';
+import { DriverKpiModal } from '../../components/profile/DriverKpiModal';
 
 export default function ProfileScreen() {
   const {
@@ -36,6 +37,8 @@ export default function ProfileScreen() {
     handleUpdateAvatar,
   } = useProfileFlow();
 
+  const [activeKpiDetail, setActiveKpiDetail] = React.useState<'trips' | 'completion' | 'violations' | 'score' | null>(null);
+
   return (
     <View className="flex-1 bg-slate-950">
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
@@ -56,12 +59,10 @@ export default function ProfileScreen() {
         />
 
         {user?.role !== 'admin' && (
-          <ProfileStats kpi={kpi} />
+          <ProfileStats kpi={kpi} onCardPress={(type) => setActiveKpiDetail(type)} />
         )}
 
         <AccountInfo user={user} activeTrip={activeTrip} />
-
-
 
         <SettingsSection 
           isOnline={isOnline}
@@ -98,7 +99,14 @@ export default function ProfileScreen() {
         onClose={() => setShowPasswordModal(false)}
         onSubmit={handleChangePassword}
       />
+
+      <DriverKpiModal
+        isOpen={activeKpiDetail !== null}
+        onClose={() => setActiveKpiDetail(null)}
+        activeKpiDetail={activeKpiDetail}
+        tripHistory={tripHistory}
+        kpi={kpi}
+      />
     </View>
   );
 }
-

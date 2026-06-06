@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { User, Navigation, Truck, MapPin, Phone } from 'lucide-react-native';
+import { User, Navigation, Truck, MapPin, Phone, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { authFetch } from '../../../lib/authFetch';
 import { getStatusColor } from './trackingUtils';
@@ -30,6 +30,7 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
   onFetchDetails,
 }) => {
   const [resolvedDriver, setResolvedDriver] = React.useState<{ id?: string; phone?: string } | null>(null);
+  const [isExpanded, setIsExpanded] = React.useState(true);
 
   React.useEffect(() => {
     if (!selectedVehicle) return;
@@ -138,11 +139,22 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
       {/* Render active trip destinations directly on card */}
       {activeTrip && activeTrip.tripOrders && activeTrip.tripOrders.length > 0 && (
         <View className="mt-0.5 pt-2 border-t border-slate-700 gap-1.5 mb-3">
-          <View className="flex-row items-center gap-1.5 mb-0.5">
-            <MapPin size={12} color="#059669" />
-            <Text className="text-indigo-700 text-[10px] font-black uppercase tracking-wider">Thông tin địa điểm chuyến đi</Text>
-          </View>
-          {activeTrip.tripOrders.map((to: any) => {
+          <TouchableOpacity 
+            className="flex-row items-center justify-between mb-0.5"
+            onPress={() => setIsExpanded(!isExpanded)}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center gap-1.5">
+              <MapPin size={12} color="#059669" />
+              <Text className="text-indigo-700 text-[10px] font-black uppercase tracking-wider">Thông tin địa điểm chuyến đi</Text>
+            </View>
+            {isExpanded ? (
+              <ChevronUp size={14} color="#047857" />
+            ) : (
+              <ChevronDown size={14} color="#047857" />
+            )}
+          </TouchableOpacity>
+          {isExpanded && activeTrip.tripOrders.map((to: any) => {
             const order = to.order;
             if (!order) return null;
             return (

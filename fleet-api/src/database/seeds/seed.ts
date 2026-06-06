@@ -2,7 +2,7 @@ import { DataSource } from 'typeorm';
 import { User, UserRole } from '../../entities/user.entity';
 import { Driver, DriverStatus } from '../../entities/driver.entity';
 import { Vehicle, VehicleType, VehicleStatus } from '../../entities/vehicle.entity';
-import { Order, OrderStatus } from '../../entities/order.entity';
+import { Order, OrderStatus, OrderCategory, OrderPriority } from '../../entities/order.entity';
 import { Trip, TripStatus } from '../../entities/trip.entity';
 import { TripOrder } from '../../entities/trip-order.entity';
 import { GpsLocation } from '../../entities/gps-location.entity';
@@ -164,16 +164,16 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     console.log('Seeding realistic orders...');
     const ordersData: Order[] = [];
     const ordersInfo = [
-      { weight: 1200, desc: 'Lô hàng may mặc xuất khẩu - Hoàn Kiếm', pickup: 'Chợ Đồng Xuân, Hoàn Kiếm, Hà Nội', pLng: 105.8492, pLat: 21.0382, deliv: 'Ga Hà Nội, Đống Đa, Hà Nội', dLng: 105.8405, dLat: 21.0253, status: OrderStatus.DELIVERED },
-      { weight: 800, desc: 'Thiết bị điện tử gia dụng - Cầu Giấy', pickup: 'Trần Duy Hưng, Cầu Giấy, Hà Nội', pLng: 105.7960, pLat: 21.0090, deliv: 'Khu công nghiệp Bắc Thăng Long, Đông Anh, Hà Nội', dLng: 105.7830, dLat: 21.1150, status: OrderStatus.DELIVERED },
-      { weight: 2400, desc: 'Thực phẩm đông lạnh nhập khẩu - Nội Bài', pickup: 'Cảng Hàng Không Nội Bài, Sóc Sơn, Hà Nội', pLng: 105.8056, pLat: 21.2187, deliv: 'Siêu thị Big C Thăng Long, Cầu Giấy, Hà Nội', dLng: 105.7942, dLat: 21.0068, status: OrderStatus.DELIVERED },
-      { weight: 1500, desc: 'Vật liệu xây dựng & phụ gia - Hà Đông', pickup: 'Khu đô thị Văn Quán, Hà Đông, Hà Nội', pLng: 105.7830, pLat: 20.9780, deliv: 'Khu đô thị Times City, Hai Bà Trưng, Hà Nội', dLng: 105.8690, dLat: 21.0060, status: OrderStatus.DELIVERED },
-      { weight: 950, desc: 'Nông sản & Trái cây miền Bắc - Long Biên', pickup: 'Chợ đầu mối Long Biên, Ba Đình, Hà Nội', pLng: 105.8499, pLat: 21.0450, deliv: 'Chợ Hôm, Hai Bà Trưng, Hà Nội', dLng: 105.8495, dLat: 21.0182, status: OrderStatus.DELIVERED },
-      { weight: 3100, desc: 'Hóa mỹ phẩm & Chai lọ thủy tinh - Bắc Ninh', pickup: 'KCN Tiên Sơn, Tiên Du, Bắc Ninh', pLng: 106.0150, pLat: 21.0900, deliv: 'Kho tổng Đức Giang, Long Biên, Hà Nội', dLng: 105.8950, dLat: 21.0550, status: OrderStatus.DELIVERED },
-      { weight: 1900, desc: 'Dược phẩm & Vật tư y tế - Đống Đa', pickup: 'Bệnh viện Bạch Mai, Đống Đa, Hà Nội', pLng: 105.8418, pLat: 21.0015, deliv: 'Trung tâm Y tế Sóc Sơn, Hà Nội', dLng: 105.8300, dLat: 21.2580, status: OrderStatus.DELIVERING },
-      { weight: 700, desc: 'Phụ tùng ô tô & Xe máy chuyên dụng - Gia Lâm', pickup: 'KCN Sài Đồng B, Long Biên, Hà Nội', pLng: 105.9050, pLat: 21.0250, deliv: 'Đường Nguyễn Trãi, Thanh Xuân, Hà Nội', dLng: 105.8100, dLat: 20.9980, status: OrderStatus.ASSIGNED },
-      { weight: 1350, desc: 'Bao bì giấy & Hộp carton - Thanh Trì', pickup: 'KCN Ngọc Hồi, Thanh Trì, Hà Nội', pLng: 105.8400, pLat: 20.9320, deliv: 'Đường Giải Phóng, Hai Bà Trưng, Hà Nội', dLng: 105.8420, dLat: 20.9850, status: OrderStatus.ASSIGNED },
-      { weight: 2800, desc: 'Thức ăn chăn nuôi dạng hạt - Hưng Yên', pickup: 'KCN Phố Nối A, Yên Mỹ, Hưng Yên', pLng: 106.0300, pLat: 20.9600, deliv: 'Trang trại chăn nuôi Đông Anh, Hà Nội', dLng: 105.8400, dLat: 21.1500, status: OrderStatus.ASSIGNED },
+      { weight: 1200, desc: 'Lô hàng may mặc xuất khẩu - Hoàn Kiếm', pickup: 'Chợ Đồng Xuân, Hoàn Kiếm, Hà Nội', pLng: 105.8492, pLat: 21.0382, deliv: 'Ga Hà Nội, Đống Đa, Hà Nội', dLng: 105.8405, dLat: 21.0253, status: OrderStatus.PENDING, category: OrderCategory.FINISHED_GOODS, priority: OrderPriority.HIGH, name: 'Nguyễn Thị Hoa', phone: '0987654321', deadline: new Date(Date.now() + 2 * 3600000) },
+      { weight: 800, desc: 'Thiết bị điện tử gia dụng - Cầu Giấy', pickup: 'Trần Duy Hưng, Cầu Giấy, Hà Nội', pLng: 105.7960, pLat: 21.0090, deliv: 'Khu công nghiệp Bắc Thăng Long, Đông Anh, Hà Nội', dLng: 105.7830, dLat: 21.1150, status: OrderStatus.PENDING, category: OrderCategory.EQUIPMENT, priority: OrderPriority.MEDIUM, name: 'Phạm Minh Đức', phone: '0912345678', deadline: new Date(Date.now() + 4 * 3600000) },
+      { weight: 2400, desc: 'Thực phẩm đông lạnh nhập khẩu - Nội Bài', pickup: 'Cảng Hàng Không Nội Bài, Sóc Sơn, Hà Nội', pLng: 105.8056, pLat: 21.2187, deliv: 'Siêu thị Big C Thăng Long, Cầu Giấy, Hà Nội', dLng: 105.7942, dLat: 21.0068, status: OrderStatus.PENDING, category: OrderCategory.OTHER, priority: OrderPriority.HIGH, name: 'Trần Văn Cường', phone: '0901234567', deadline: new Date(Date.now() + 1 * 3600000) },
+      { weight: 1500, desc: 'Vật liệu xây dựng & phụ gia - Hà Đông', pickup: 'Khu đô thị Văn Quán, Hà Đông, Hà Nội', pLng: 105.7830, pLat: 20.9780, deliv: 'Khu đô thị Times City, Hai Bà Trưng, Hà Nội', dLng: 105.8690, dLat: 21.0060, status: OrderStatus.DELIVERED, category: OrderCategory.RAW_MATERIAL, priority: OrderPriority.MEDIUM, name: 'Lê Hoàng Anh', phone: '0934567890', deadline: new Date(Date.now() - 2 * 3600000) },
+      { weight: 950, desc: 'Nông sản & Trái cây miền Bắc - Long Biên', pickup: 'Chợ đầu mối Long Biên, Ba Đình, Hà Nội', pLng: 105.8499, pLat: 21.0450, deliv: 'Chợ Hôm, Hai Bà Trưng, Hà Nội', dLng: 105.8495, dLat: 21.0182, status: OrderStatus.DELIVERED, category: OrderCategory.OTHER, priority: OrderPriority.LOW, name: 'Vũ Thị Lan', phone: '0977889900', deadline: new Date(Date.now() - 1 * 3600000) },
+      { weight: 3100, desc: 'Hóa mỹ phẩm & Chai lọ thủy tinh - Bắc Ninh', pickup: 'KCN Tiên Sơn, Tiên Du, Bắc Ninh', pLng: 106.0150, pLat: 21.0900, deliv: 'Kho tổng Đức Giang, Long Biên, Hà Nội', dLng: 105.8950, dLat: 21.0550, status: OrderStatus.DELIVERED, category: OrderCategory.RAW_MATERIAL, priority: OrderPriority.HIGH, name: 'Nguyễn Tiến Dũng', phone: '0966778899', deadline: new Date(Date.now() - 3 * 3600000) },
+      { weight: 1900, desc: 'Dược phẩm & Vật tư y tế - Đống Đa', pickup: 'Bệnh viện Bạch Mai, Đống Đa, Hà Nội', pLng: 105.8418, pLat: 21.0015, deliv: 'Trung tâm Y tế Sóc Sơn, Hà Nội', dLng: 105.8300, dLat: 21.2580, status: OrderStatus.DELIVERING, category: OrderCategory.OTHER, priority: OrderPriority.HIGH, name: 'Hoàng Văn Nam', phone: '0988990011', deadline: new Date(Date.now() + 5 * 3600000) },
+      { weight: 700, desc: 'Phụ tùng ô tô & Xe máy chuyên dụng - Gia Lâm', pickup: 'KCN Sài Đồng B, Long Biên, Hà Nội', pLng: 105.9050, pLat: 21.0250, deliv: 'Đường Nguyễn Trãi, Thanh Xuân, Hà Nội', dLng: 105.8100, dLat: 20.9980, status: OrderStatus.ASSIGNED, category: OrderCategory.COMPONENT, priority: OrderPriority.MEDIUM, name: 'Đặng Quốc Huy', phone: '0955667788', deadline: new Date(Date.now() + 3 * 3600000) },
+      { weight: 1350, desc: 'Bao bì giấy & Hộp carton - Thanh Trì', pickup: 'KCN Ngọc Hồi, Thanh Trì, Hà Nội', pLng: 105.8400, pLat: 20.9320, deliv: 'Đường Giải Phóng, Hai Bà Trưng, Hà Nội', dLng: 105.8420, dLat: 20.9850, status: OrderStatus.ASSIGNED, category: OrderCategory.OTHER, priority: OrderPriority.LOW, name: 'Lê Minh Tâm', phone: '0944556677', deadline: new Date(Date.now() + 6 * 3600000) },
+      { weight: 2800, desc: 'Thức ăn chăn nuôi dạng hạt - Hưng Yên', pickup: 'KCN Phố Nối A, Yên Mỹ, Hưng Yên', pLng: 106.0300, pLat: 20.9600, deliv: 'Trang trại chăn nuôi Đông Anh, Hà Nội', dLng: 105.8400, dLat: 21.1500, status: OrderStatus.ASSIGNED, category: OrderCategory.RAW_MATERIAL, priority: OrderPriority.MEDIUM, name: 'Phạm Minh Tuấn', phone: '0933445566', deadline: new Date(Date.now() + 8 * 3600000) },
     ];
 
     for (const info of ordersInfo) {
@@ -186,6 +186,11 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
           deliveryAddress: info.deliv,
           deliveryLocation: { type: 'Point', coordinates: [info.dLng, info.dLat] },
           status: info.status,
+          category: info.category,
+          priority: info.priority,
+          recipientName: info.name,
+          recipientPhone: info.phone,
+          deliveryDeadline: info.deadline,
           photoUrl: `https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop`,
           signatureUrl: `https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=600&h=400&fit=crop`,
         })
@@ -197,14 +202,38 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     // Trips and verifications
     console.log('Seeding trips & journey verifications...');
     
-    // Trip 1 (Nguyễn Văn Hùng - Isuzu medium plate '29C-432.10') - status: PENDING
+    // 1. trip1 (PENDING) - Driver 4 (Phạm Hoàng Nam), Vehicle 4 (Hyundai Mighty)
     const trip1 = await tripRepository.save(
+      tripRepository.create({
+        vehicle: vehiclesData[3],
+        driver: driversData[3],
+        status: TripStatus.PENDING,
+        totalDistanceKm: 15.2,
+        estimatedFuelCost: 120000,
+        plannedRoute: {
+          type: 'LineString',
+          coordinates: [
+            [105.9050, 21.0250],
+            [105.8600, 21.0100],
+            [105.8100, 20.9980],
+          ]
+        }
+      })
+    );
+    // Link Orders 8, 9, 10 to trip1
+    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[7].id, sequence: 1 }));
+    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[8].id, sequence: 2 }));
+    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[9].id, sequence: 3 }));
+
+    // 2. trip2 (IN_PROGRESS) - Driver 1 (Nguyễn Văn Hùng), Vehicle 1 (Isuzu plate '29C-432.10')
+    const trip2 = await tripRepository.save(
       tripRepository.create({
         vehicle: vehiclesData[0],
         driver: driversData[0],
-        status: TripStatus.PENDING,
-        totalDistanceKm: 18.5,
-        estimatedFuelCost: 150000,
+        status: TripStatus.IN_PROGRESS,
+        totalDistanceKm: 22.1,
+        estimatedFuelCost: 180000,
+        startedAt: new Date(Date.now() - 30 * 60 * 1000),
         plannedRoute: {
           type: 'LineString',
           coordinates: [
@@ -216,16 +245,37 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
         }
       })
     );
+    // Link Order 7 to trip2
+    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip2.id, orderId: ordersData[6].id, sequence: 1 }));
 
-    // Bind Order 7 to Trip 1 (Only 1 order per trip)
-    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[6].id, sequence: 1 }));
-
-    // Nguyễn Văn Hùng AVAILABLE and vehicle AVAILABLE
-    driversData[0].status = DriverStatus.AVAILABLE;
+    // Update Nguyễn Văn Hùng status to ON_TRIP
+    driversData[0].status = DriverStatus.ON_TRIP;
     await driverRepository.save(driversData[0]);
 
-    vehiclesData[0].status = VehicleStatus.AVAILABLE;
-    await vehicleRepository.save(vehiclesData[0]);
+    // 3. trip3 (COMPLETED) - Driver 2 (Trần Thanh Hải), Vehicle 2 (Hino 500)
+    const trip3 = await tripRepository.save(
+      tripRepository.create({
+        vehicle: vehiclesData[1],
+        driver: driversData[1],
+        status: TripStatus.COMPLETED,
+        totalDistanceKm: 35.8,
+        estimatedFuelCost: 280000,
+        startedAt: new Date(Date.now() - 4 * 3600000),
+        completedAt: new Date(Date.now() - 1 * 3600000),
+        plannedRoute: {
+          type: 'LineString',
+          coordinates: [
+            [105.7830, 20.9780],
+            [105.8200, 20.9900],
+            [105.8690, 21.0060],
+          ]
+        }
+      })
+    );
+    // Link Orders 4, 5, 6 to trip3
+    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip3.id, orderId: ordersData[3].id, sequence: 1 }));
+    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip3.id, orderId: ordersData[4].id, sequence: 2 }));
+    await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip3.id, orderId: ordersData[5].id, sequence: 3 }));
 
     // 4. Generate 30-day historical completed trips for rich reports & analytics
     console.log('Generating 30-day historical completed trips for reports...');
@@ -276,6 +326,11 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
             deliveryAddress: `Điểm giao hàng ${vehicle.plateNumber}`,
             deliveryLocation: { type: 'Point', coordinates: [105.8525 + (dayOffset % 3) * 0.01, 21.0285 + (t % 2) * 0.01] },
             status: OrderStatus.DELIVERED,
+            category: OrderCategory.FINISHED_GOODS,
+            priority: OrderPriority.MEDIUM,
+            recipientName: 'Khách hàng nhận',
+            recipientPhone: '0912345678',
+            deliveryDeadline: completedAt || startedAt,
             createdAt: startedAt,
           })
         );
@@ -343,6 +398,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     console.log('Seeding unresolved active alerts...');
     await alertRepository.save(
       alertRepository.create({
+        tripId: trip2.id,
         vehicle: vehiclesData[0],
         driver: driversData[0],
         type: AlertType.INCIDENT,
@@ -390,7 +446,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
       const pt = gpsPoints[idx];
       await gpsRepository.save(
         gpsRepository.create({
-          trip: trip1,
+          trip: trip2,
           vehicle: vehiclesData[0],
           location: { type: 'Point', coordinates: [pt.lng, pt.lat] },
           speedKmh: pt.speed,

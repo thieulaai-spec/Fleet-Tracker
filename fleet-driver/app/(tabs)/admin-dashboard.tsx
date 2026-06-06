@@ -1,278 +1,37 @@
-import React, { useEffect } from 'react';
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput, StyleSheet } from 'react-native';
-import { LayoutDashboard, Truck, Package, AlertTriangle, TrendingUp, ChevronRight, Clock, X, Search } from 'lucide-react-native';
+import React from 'react';
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import { LayoutDashboard, Truck, Package, AlertTriangle, TrendingUp, Clock } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { StatCard } from '../../components/admin/dashboard/StatCard';
-import { useDashboardStore } from '../../store/useDashboardStore';
-import { socketService } from '../../lib/socket';
-import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAdminDashboard } from '../../hooks/admin/useAdminDashboard';
+import { ActivityLogsModal } from '../../components/admin/dashboard/ActivityLogsModal';
+import { KpiDetailModal } from '../../components/admin/dashboard/KpiDetailModal';
 
 export default function AdminDashboardScreen() {
-  const { stats, orders, alerts, trips, isLoading, fetchStats, clockOffset } = useDashboardStore();
-  const router = useRouter();
-  
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<'all' | 'order' | 'trip' | 'alert'>('all');
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [localActivities, setLocalActivities] = React.useState<any[]>([]);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-
-  const timeAgo = (dateStr: string) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '';
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffSecs < 60) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
-  };
-
-  // Safe date parser (using stable server clock offset calculated from response headers)
-  const safeDate = (dStr: any) => {
-    if (!dStr) return null;
-    const d = new Date(dStr);
-    if (isNaN(d.getTime())) return null;
-
-    const now = new Date();
-    
-    // Apply server clock offset from the store
-    const adjustedDate = new Date(d.getTime() - clockOffset);
-
-    // Cap to now to avoid minor clock variations showing as in the future
-    return adjustedDate > now ? now : adjustedDate;
-  };
-
-  const allActivities = React.useMemo(() => {
-    const items: any[] = [];
-
-    // 1. Orders (collapse to single latest activity)
-    if (Array.isArray(orders)) {
-      orders.forEach((order: any) => {
-        if (!order.status || order.status === 'pending') {
-          const createdDate = safeDate(order.createdAt);
-          if (createdDate) {
-            items.push({
-              id: `order-status-${order.id}-pending`,
-              type: 'order',
-              title: 'Order Created',
-              description: `ORD-${order.id.substring(0, 4)} created to ${order.deliveryAddress}`,
-              timestamp: createdDate,
-              status: 'pending',
-            });
-          }
-        } else {
-          const updatedDate = safeDate(order.updatedAt) || safeDate(order.createdAt);
-          if (updatedDate) {
-            let actionWord = 'updated';
-            if (order.status === 'assigned') actionWord = 'assigned to driver';
-            else if (order.status === 'picked_up') actionWord = 'picked up cargo';
-            else if (order.status === 'delivering') actionWord = 'departed for delivery';
-            else if (order.status === 'delivered') actionWord = 'successfully delivered';
-            else if (order.status === 'failed') actionWord = 'failed delivery';
-            else if (order.status === 'cancelled') actionWord = 'cancelled';
-
-            items.push({
-              id: `order-status-${order.id}-${order.status}`,
-              type: 'order',
-              title: `Order ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`,
-              description: `ORD-${order.id.substring(0, 4)} ${actionWord}`,
-              timestamp: updatedDate,
-              status: order.status,
-            });
-          }
-        }
-      });
-    }
-
-    // 2. Alerts
-    if (Array.isArray(alerts)) {
-      alerts.forEach((alert: any) => {
-        // Only include abnormal stops and SOS incidents
-        const isSOS = alert.type === 'SOS' || alert.type === 'incident' || alert.severity === 'critical';
-        if (alert.type !== 'abnormal_stop' && !isSOS) return;
-
-        const createdDate = safeDate(alert.createdAt);
-        if (createdDate) {
-          items.push({
-            id: `alert-${alert.id}`,
-            type: 'alert',
-            title: alert.type?.replace('_', ' ')?.toUpperCase() || 'ALERT',
-            description: `${alert.message} (${alert.vehicle?.plateNumber || 'Unknown Vehicle'})`,
-            timestamp: createdDate,
-            severity: alert.severity,
-          });
-        }
-      });
-    }
-
-    // 3. Trips (collapse to single latest activity)
-    if (Array.isArray(trips)) {
-      trips.forEach((trip: any) => {
-        const createdDate = safeDate(trip.createdAt);
-        const updatedDate = safeDate(trip.updatedAt) || createdDate;
-        const startDate = safeDate(trip.startedAt);
-        const endDate = safeDate(trip.completedAt);
-
-        if (trip.status === 'pending' && createdDate) {
-          items.push({
-            id: `trip-status-${trip.id}-pending`,
-            type: 'trip',
-            title: 'Trip Dispatched',
-            description: `New trip assigned to ${trip.driver?.fullName || 'Driver'} on vehicle ${trip.vehicle?.plateNumber || ''}`,
-            timestamp: createdDate,
-            status: 'pending',
-          });
-        } else if (trip.status === 'accepted' && updatedDate) {
-          items.push({
-            id: `trip-status-${trip.id}-accepted`,
-            type: 'trip',
-            title: 'Trip Accepted',
-            description: `Driver ${trip.driver?.fullName || 'Driver'} accepted the assigned trip.`,
-            timestamp: updatedDate,
-            status: 'accepted',
-          });
-        } else if (trip.status === 'cancelled' && updatedDate) {
-          items.push({
-            id: `trip-status-${trip.id}-cancelled`,
-            type: 'trip',
-            title: 'Trip Cancelled',
-            description: `Trip for vehicle ${trip.vehicle?.plateNumber || ''} has been cancelled.`,
-            timestamp: updatedDate,
-            status: 'cancelled',
-          });
-        } else if (trip.status === 'in_progress' && (startDate || updatedDate)) {
-          items.push({
-            id: `trip-status-${trip.id}-in_progress`,
-            type: 'trip',
-            title: 'Trip Started',
-            description: `Driver ${trip.driver?.fullName || 'Driver'} started trip on vehicle ${trip.vehicle?.plateNumber || ''}`,
-            timestamp: startDate || updatedDate!,
-            status: 'in_progress',
-          });
-        } else if (trip.status === 'completed' && (endDate || updatedDate)) {
-          items.push({
-            id: `trip-status-${trip.id}-completed`,
-            type: 'trip',
-            title: 'Trip Completed',
-            description: `Driver ${trip.driver?.fullName || 'Driver'} completed trip. Distance: ${trip.totalDistanceKm || 0} km`,
-            timestamp: endDate || updatedDate!,
-            status: 'completed',
-          });
-        }
-      });
-    }
-
-    // Sort all
-    return items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  }, [orders, alerts, trips]);
-
-  // Keep local activities in sync with store updates
-  useEffect(() => {
-    setLocalActivities(allActivities);
-  }, [allActivities]);
-
-  // Solution 3: Bind live mobile socketService events to prepend new activities instantly in real-time
-  useEffect(() => {
-    socketService.connect();
-
-    // 1. Operational Alerts
-    const handleNewAlert = (payload: any) => {
-      const isSOS = payload.type === 'SOS' || payload.type === 'incident' || payload.severity === 'CRITICAL' || payload.severity === 'critical';
-      // Only notify/log abnormal stops and SOS incidents
-      if (payload.type !== 'abnormal_stop' && !isSOS) return;
-
-      if (isSOS) {
-        Toast.show({
-          type: 'error',
-          text1: '🚨 SOS EMERGENCY',
-          text2: `${payload.message || 'Driver triggered SOS!'} (${payload.vehicle?.plateNumber || 'Unknown Vehicle'})`,
-          visibilityTime: 15000,
-        });
-      }
-
-      const newAlertItem = {
-        id: `live-alert-${payload.id || Date.now()}`,
-        type: 'alert',
-        title: (payload.type || 'ALERT').replace('_', ' ').toUpperCase(),
-        description: `${payload.message || ''} (${payload.vehicle?.plateNumber || 'Unknown Vehicle'})`,
-        timestamp: new Date(),
-        severity: payload.severity,
-      };
-      setLocalActivities(prev => [newAlertItem, ...prev]);
-    };
-
-    // 2. Trip Updates
-    const handleTripStatusChanged = (payload: any) => {
-      const statusText = payload.status === 'in_progress' ? 'started' : payload.status;
-      const newTripItem = {
-        id: `live-trip-${payload.id}-${payload.status}-${Date.now()}`,
-        type: 'trip',
-        title: `Trip ${payload.status.charAt(0).toUpperCase() + payload.status.slice(1)}`,
-        description: payload.status === 'accepted'
-          ? `Driver ${payload.driverName || 'Driver'} accepted the assigned trip.`
-          : payload.status === 'in_progress'
-          ? `Driver ${payload.driverName || 'Driver'} started trip on vehicle ${payload.vehicleId || ''}.`
-          : payload.status === 'completed'
-          ? `Driver ${payload.driverName || 'Driver'} completed trip.`
-          : `Trip is now ${statusText} for vehicle ${payload.vehicleId || ''}.`,
-        timestamp: new Date(),
-        status: payload.status,
-      };
-      setLocalActivities(prev => [newTripItem, ...prev]);
-    };
-
-    // 3. Order Milestone verification
-    const handleOrderVerified = (payload: any) => {
-      const newOrderItem = {
-        id: `live-order-${payload.orderId}-${Date.now()}`,
-        type: 'order',
-        title: 'Milestone Verified',
-        description: `ORD-${payload.orderId.substring(0, 4)} verification success!`,
-        timestamp: new Date(),
-        status: 'verified',
-      };
-      setLocalActivities(prev => [newOrderItem, ...prev]);
-    };
-
-    socketService.on('alert:new', handleNewAlert);
-    socketService.on('trip:status-changed', handleTripStatusChanged);
-    socketService.on('order:verified', handleOrderVerified);
-
-    return () => {
-      socketService.off('alert:new', handleNewAlert);
-      socketService.off('trip:status-changed', handleTripStatusChanged);
-      socketService.off('order:verified', handleOrderVerified);
-    };
-  }, []);
-
-  // Dashboard top 6 view
-  const dashboardActivities = React.useMemo(() => {
-    return localActivities.slice(0, 6);
-  }, [localActivities]);
-
-  // Filtered view for history modal
-  const filteredActivities = React.useMemo(() => {
-    return localActivities.filter((activity: any) => {
-      const matchesTab = activeTab === 'all' || activity.type === activeTab;
-      const matchesQuery = !searchQuery || 
-        activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        activity.description.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesTab && matchesQuery;
-    });
-  }, [localActivities, activeTab, searchQuery]);
+  const {
+    stats,
+    vehicles,
+    orders,
+    alerts,
+    trips,
+    isLoading,
+    fetchStats,
+    isModalOpen,
+    setIsModalOpen,
+    activeTab,
+    setActiveTab,
+    searchQuery,
+    setSearchQuery,
+    activeKpiDetail,
+    setActiveKpiDetail,
+    detailSearchQuery,
+    setDetailSearchQuery,
+    dashboardActivities,
+    filteredActivities,
+    timeAgo,
+    router,
+  } = useAdminDashboard();
 
   const renderActivityItem = (activity: any, idx: number, array: any[]) => (
     <View key={activity.id} className="flex-row items-start mb-4">
@@ -388,24 +147,38 @@ export default function AdminDashboardScreen() {
               value={stats.activeVehicles} 
               icon={Truck} 
               color="#059669" 
+              onPress={() => {
+                router.push({ pathname: '/(tabs)/admin-fleet', params: { tab: 'vehicles' } } as any);
+              }}
             />
             <StatCard 
               title="Pending Orders" 
               value={stats.pendingOrders} 
               icon={Package} 
               color="#f59e0b" 
+              onPress={() => {
+                router.push({ pathname: '/(tabs)/admin-orders', params: { status: 'pending' } } as any);
+              }}
             />
             <StatCard 
               title="Total Trips" 
               value={stats.totalTrips} 
               icon={TrendingUp} 
               color="#10b981" 
+              onPress={() => {
+                router.push('/(tabs)/admin-orders' as any);
+              }}
             />
             <StatCard 
               title="Active Alerts" 
               value={stats.alertCount} 
               icon={AlertTriangle} 
               color="#ef4444" 
+              onPress={() => {
+                setActiveTab('alert');
+                setSearchQuery('');
+                setIsModalOpen(true);
+              }}
             />
           </View>
 
@@ -423,7 +196,7 @@ export default function AdminDashboardScreen() {
           ) : dashboardActivities.length === 0 ? (
             <View className="bg-slate-800 rounded-3xl p-8 items-center justify-center border border-white/10">
               <Text className="text-slate-400 text-sm text-center mb-2 font-medium">No recent activities found.</Text>
-              <Text className="text-slate-500 text-xs text-center">Operational timelines will populate here once events trigger.</Text>
+              <Text className="text-slate-505 text-xs text-center">Operational timelines will populate here once events trigger.</Text>
             </View>
           ) : (
             <View className="bg-slate-900/60 rounded-[32px] p-5 border border-white/5 gap-y-4">
@@ -432,70 +205,31 @@ export default function AdminDashboardScreen() {
           )}
         </ScrollView>
 
-    {/* Solutions 1 & 2: "View All" Overlay with full interactive Filtering and Search on Mobile */}
-    {isModalOpen && (
-      <View className="absolute inset-0 bg-slate-950 z-50 p-5">
-        <SafeAreaView className="flex-1">
-          {/* Header */}
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-slate-50">Operational Logs</Text>
-            <TouchableOpacity 
-              onPress={() => setIsModalOpen(false)}
-              className="w-10 h-10 rounded-full bg-slate-800 justify-center items-center"
-            >
-              <X size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
+        {/* Activity Logs Modal */}
+        <ActivityLogsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          filteredActivities={filteredActivities}
+          renderActivityItem={renderActivityItem}
+        />
 
-          {/* Filtering Tabs */}
-          <View className="flex-row justify-between mb-4 gap-1">
-            {(['all', 'order', 'trip', 'alert'] as const).map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setActiveTab(tab)}
-                className={`flex-1 py-2 px-1 rounded-xl items-center border ${
-                  activeTab === tab 
-                    ? 'bg-indigo-600 border-indigo-500' 
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <Text className={`text-[10px] font-bold uppercase tracking-wider ${
-                  activeTab === tab ? 'text-slate-50' : 'text-slate-400'
-                }`}>
-                  {tab === 'all' ? 'All' : `${tab}s`}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Search Box */}
-          <View className="flex-row items-center bg-slate-800 px-4 py-3 rounded-2xl border border-slate-700 mb-6">
-            <Search size={16} color="#94a3b8" />
-            <TextInput
-              placeholder="Search history logs..."
-              placeholderTextColor="#64748b"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              className="flex-1 text-slate-200 text-sm ml-2 outline-none"
-            />
-          </View>
-
-          {/* Scrollable Timeline */}
-          <ScrollView 
-            className="flex-1"
-            contentContainerStyle={{ paddingBottom: 40 }}
-          >
-            {filteredActivities.length === 0 ? (
-              <View className="bg-slate-900/40 py-12 rounded-3xl items-center border border-dashed border-slate-800">
-                <Text className="text-slate-400 text-sm font-medium">No matching logs found.</Text>
-              </View>
-            ) : (
-              filteredActivities.map((activity, idx, arr) => renderActivityItem(activity, idx, arr))
-            )}
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    )}
+        {/* KPI Detail Modal */}
+        <KpiDetailModal
+          activeKpiDetail={activeKpiDetail}
+          onClose={() => setActiveKpiDetail(null)}
+          stats={stats}
+          vehicles={vehicles}
+          orders={orders}
+          trips={trips}
+          alerts={alerts}
+          detailSearchQuery={detailSearchQuery}
+          setDetailSearchQuery={setDetailSearchQuery}
+          timeAgo={timeAgo}
+        />
       </SafeAreaView>
     </View>
   );

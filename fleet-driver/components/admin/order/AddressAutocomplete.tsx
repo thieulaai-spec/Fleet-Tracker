@@ -101,7 +101,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   return (
     <View className="z-10 w-full">
-      <View className={`flex-row items-center bg-slate-900 rounded-2xl h-[52px] px-3 border border-white/5 ${error ? 'border-red-500' : ''}`}>
+      <View className={`flex-row items-center bg-slate-800 rounded-2xl h-[52px] px-3 border border-slate-700/50 ${error ? 'border-red-500' : ''}`}>
         <Search size={18} color="#64748b" style={{ marginRight: 10 }} />
         <TextInput
           className="flex-1 color-slate-50 text-base h-full"
@@ -112,7 +112,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           onFocus={() => input.length >= 3 && setShowSuggestions(true)}
         />
         {loading ? (
-          <ActivityIndicator size="small" color="#6366f1" className="p-1" />
+          <ActivityIndicator size="small" color="#10b981" className="p-1" />
         ) : input.length > 0 ? (
           <TouchableOpacity onPress={clearInput} className="p-1">
             <X size={18} color="#64748b" />
@@ -122,7 +122,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
       {showSuggestions && suggestions.length > 0 && (
         <View 
-          className="absolute top-14 left-0 right-0 bg-slate-800 rounded-2xl border border-white/10 max-h-[250px] z-50"
+          className="absolute top-14 left-0 right-0 bg-slate-900 rounded-2xl border border-slate-700 max-h-[250px] z-50"
           style={{
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 10 },
@@ -138,10 +138,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             {suggestions.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                className="flex-row p-3.5 border-b border-white/5 items-center"
+                className="flex-row p-3.5 border-b border-slate-700/50 items-center"
                 onPress={() => handleSelect(item)}
               >
-                <MapPin size={16} color="#6366f1" style={{ marginRight: 12 }} />
+                <MapPin size={16} color="#10b981" style={{ marginRight: 12 }} />
                 <View className="flex-1">
                   <Text className="color-slate-50 text-[15px] font-semibold" numberOfLines={1}>
                     {item.text}

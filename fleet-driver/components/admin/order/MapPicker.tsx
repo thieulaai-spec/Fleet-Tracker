@@ -283,7 +283,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   };
 
   return (
-    <View className="absolute inset-0 bg-[#0f172a]">
+    <View className="absolute inset-0 bg-slate-950">
       <MapComponent
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
@@ -311,13 +311,13 @@ export const MapPicker: React.FC<MapPickerProps> = ({
       </View>
 
       <View className="flex-1 justify-between" pointerEvents="box-none">
-        <BlurView intensity={80} tint="light" className="p-5 pt-[60px] border-b border-white/10 z-50 overflow-visible">
+        <BlurView intensity={80} tint="light" className="p-5 pt-[60px] border-b border-slate-700/50 z-50 overflow-visible">
           <View className="items-center mb-3">
             <Text className="text-base font-black text-slate-50 text-center uppercase tracking-widest">{title}</Text>
             <Text className="text-xs text-slate-400 text-center mt-0.5">Search location or move map to set point</Text>
           </View>
           
-          <View className="flex-row items-center bg-[#0f172a] rounded-xl h-12 px-3 border border-white/10">
+          <View className="flex-row items-center bg-slate-800 rounded-xl h-12 px-3 border border-slate-700/50">
             <Search size={18} color="#94a3b8" className="mr-2" />
             <TextInput
               className="flex-1 text-slate-50 text-sm h-full"
@@ -338,15 +338,15 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         </BlurView>
 
         {showSuggestions && suggestions.length > 0 && (
-          <View className="absolute top-[148px] left-5 right-5 bg-slate-800 rounded-xl border border-white/15 max-h-[200px] shadow-2xl z-50">
+          <View className="absolute top-[148px] left-5 right-5 bg-slate-900 rounded-xl border border-slate-700 max-h-[200px] shadow-2xl z-50">
             <ScrollView keyboardShouldPersistTaps="handled" className="rounded-xl">
               {suggestions.map((item, index) => (
                 <TouchableOpacity
                   key={`${item.id || 'suggestion'}-${index}`}
-                  className="flex-row p-3 border-b border-white/5 items-center"
+                  className="flex-row p-3 border-b border-slate-700/50 items-center"
                   onPress={() => handleSuggestionSelect(item)}
                 >
-                  <MapPin size={16} color="#6366f1" className="mr-2.5" />
+                  <MapPin size={16} color="#10b981" className="mr-2.5" />
                   <View className="flex-1">
                     <Text className="text-slate-50 text-sm font-semibold" numberOfLines={1}>
                       {item.text}
@@ -363,8 +363,8 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
         <View className="p-5 pb-10 gap-3 z-10" pointerEvents="box-none">
           {selectedAddress ? (
-            <View className="flex-row items-center bg-slate-800 rounded-2xl p-3.5 gap-2.5 border border-white/10 shadow-lg mb-1">
-              <MapPin size={16} color="#6366f1" />
+            <View className="flex-row items-center bg-slate-900 rounded-2xl p-3.5 gap-2.5 border border-slate-700 shadow-lg mb-1">
+              <MapPin size={16} color="#10b981" />
               <Text className="flex-1 text-slate-50 text-xs font-semibold leading-relaxed" numberOfLines={2}>
                 {selectedAddress}
               </Text>
@@ -372,22 +372,22 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           ) : null}
 
           <TouchableOpacity 
-            className="self-end bg-slate-800 w-12 h-12 rounded-full justify-center items-center border border-white/10 shadow-lg mb-1" 
+            className="self-end bg-slate-900 w-12 h-12 rounded-full justify-center items-center border border-slate-700 shadow-lg mb-1" 
             onPress={handleCenter}
           >
-            <Target size={24} color="#6366f1" />
+            <Target size={24} color="#10b981" />
           </TouchableOpacity>
 
           <View className="flex-row gap-2.5">
             <TouchableOpacity className="flex-1 h-[52px] rounded-2xl bg-slate-700 flex-row items-center justify-center gap-1.5" onPress={onCancel}>
-              <X size={20} color="#f8fafc" />
+              <X size={20} color="#0f172a" />
               <Text className="text-white text-[15px] font-bold">Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              className="flex-[2] h-[52px] rounded-2xl bg-[#6366f1] flex-row items-center justify-center gap-1.5" 
+              className="flex-[2] h-[52px] rounded-2xl bg-indigo-500 flex-row items-center justify-center gap-1.5" 
               onPress={() => onSelect(selectedLocation, selectedAddress)}
             >
-              <Check size={20} color="#fff" />
+              <Check size={20} color="#0f172a" />
               <Text className="text-white text-[15px] font-bold">Confirm</Text>
             </TouchableOpacity>
           </View>

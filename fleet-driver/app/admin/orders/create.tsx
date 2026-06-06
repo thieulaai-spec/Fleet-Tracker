@@ -37,7 +37,7 @@ export default function CreateOrderScreen() {
           className="w-10 h-10 rounded-xl bg-slate-800 justify-center items-center"
           onPress={() => router.back()}
         >
-          <ChevronLeft size={24} color="#f8fafc" />
+          <ChevronLeft size={24} color="#0f172a" />
         </TouchableOpacity>
         <Text className="text-xl font-extrabold text-slate-50 tracking-[0.5px]">New Order</Text>
         <View className="w-10" />

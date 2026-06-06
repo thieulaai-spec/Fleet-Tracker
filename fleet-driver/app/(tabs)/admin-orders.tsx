@@ -25,7 +25,7 @@ import {
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useOrderStore, OrderStatus, Order } from '../../store/useOrderStore';
 
@@ -49,6 +49,7 @@ const FILTER_STATUSES = [
 
 export default function AdminOrdersScreen() {
   const router = useRouter();
+  const { status } = useLocalSearchParams<{ status?: string }>();
   const { orders, loading, fetchOrders } = useOrderStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | 'all'>('all');
@@ -56,6 +57,12 @@ export default function AdminOrdersScreen() {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    if (status) {
+      setSelectedStatus(status as OrderStatus | 'all');
+    }
+  }, [status]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {

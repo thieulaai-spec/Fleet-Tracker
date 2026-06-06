@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Dimensions } from 'react-native';
+import { View, Text, Dimensions, TouchableOpacity } from 'react-native';
 import { LucideIcon } from 'lucide-react-native';
 
 interface StatCardProps {
@@ -9,6 +9,7 @@ interface StatCardProps {
   color: string;
   trend?: string;
   trendColor?: string;
+  onPress?: () => void;
 }
 
 const { width } = Dimensions.get('window');
@@ -20,10 +21,13 @@ export const StatCard: React.FC<StatCardProps> = ({
   icon: Icon, 
   color, 
   trend,
-  trendColor = '#10b981'
+  trendColor = '#10b981',
+  onPress
 }) => {
+  const Container = onPress ? TouchableOpacity : View;
   return (
-    <View 
+    <Container 
+      onPress={onPress}
       className="bg-slate-800 rounded-2xl p-4 mb-4 border border-white/5" 
       style={{ width: cardWidth }}
     >
@@ -38,7 +42,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       {trend && (
         <Text className="text-[11px] mt-2 font-bold" style={{ color: trendColor }}>{trend}</Text>
       )}
-    </View>
+    </Container>
   );
 };
 

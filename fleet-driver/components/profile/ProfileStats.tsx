@@ -10,33 +10,38 @@ interface ProfileStatsProps {
     totalViolations: number;
     kpiScore: number;
   } | null;
+  onCardPress?: (type: 'trips' | 'completion' | 'violations' | 'score') => void;
 }
 
-export const ProfileStats: React.FC<ProfileStatsProps> = ({ kpi }) => {
+export const ProfileStats: React.FC<ProfileStatsProps> = ({ kpi, onCardPress }) => {
   const stats = [
     { 
       label: 'Total Trips', 
       value: kpi?.totalTrips ?? 0, 
       icon: Navigation, 
-      color: '#6366f1' // indigo 
+      color: '#6366f1', // indigo 
+      type: 'trips' as const
     },
     { 
       label: 'Completion Rate', 
       value: kpi?.completionRate != null ? `${Number(kpi.completionRate).toFixed(0)}%` : '0%', 
       icon: CheckCircle, 
-      color: '#10b981' // emerald 
+      color: '#10b981', // emerald 
+      type: 'completion' as const
     },
     { 
       label: 'Safety Violations', 
       value: kpi?.totalViolations ?? 0, 
       icon: AlertTriangle, 
-      color: '#ef4444' // red
+      color: '#ef4444', // red
+      type: 'violations' as const
     },
     { 
       label: 'Performance Score', 
       value: kpi?.kpiScore != null ? Number(kpi.kpiScore).toFixed(1) : '0.0', 
       icon: TrendingUp, 
-      color: '#fbbf24' // amber
+      color: '#fbbf24', // amber
+      type: 'score' as const
     },
   ];
 
@@ -49,6 +54,7 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ kpi }) => {
           value={stat.value}
           icon={stat.icon}
           color={stat.color}
+          onPress={() => onCardPress?.(stat.type)}
         />
       ))}
     </View>

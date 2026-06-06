@@ -26,6 +26,11 @@ export interface Order {
   };
   weightKg: number;
   description?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  category?: 'raw_material' | 'finished_goods' | 'component' | 'equipment' | 'other';
+  priority?: 'low' | 'medium' | 'high';
+  deliveryDeadline?: string;
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;
@@ -97,6 +102,11 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         deliveryAddress: orderData.deliveryAddress,
         weightKg: orderData.weightKg,
         description: orderData.description,
+        recipientName: orderData.recipientName,
+        recipientPhone: orderData.recipientPhone,
+        deliveryDeadline: orderData.deliveryDeadline,
+        category: orderData.category,
+        priority: orderData.priority,
       };
 
       if (orderData.pickupLocation?.coordinates) {

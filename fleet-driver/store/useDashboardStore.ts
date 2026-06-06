@@ -10,6 +10,7 @@ interface DashboardStats {
 
 interface DashboardState {
   stats: DashboardStats;
+  vehicles: any[];
   orders: any[];
   alerts: any[];
   trips: any[];
@@ -28,6 +29,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     totalTrips: 0,
     alertCount: 0,
   },
+  vehicles: [],
   orders: [],
   alerts: [],
   trips: [],
@@ -96,6 +98,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
           totalTrips,
           alertCount,
         },
+        vehicles: vehiclesData,
         orders: ordersData,
         alerts: alertsData,
         trips: tripsData,
@@ -113,6 +116,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
           totalTrips: 0,
           alertCount: 0,
         },
+        vehicles: [],
         orders: [],
         alerts: [],
         trips: [],

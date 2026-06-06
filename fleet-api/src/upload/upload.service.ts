@@ -51,4 +51,24 @@ export class UploadService {
 
     return publicData.publicUrl;
   }
+
+  async deleteFileByUrl(url: string): Promise<void> {
+    if (!url) return;
+    try {
+      const marker = `/${this.bucketName}/`;
+      const index = url.indexOf(marker);
+      if (index === -1) return;
+      const filePath = url.substring(index + marker.length);
+
+      const { error } = await this.supabase.storage
+        .from(this.bucketName)
+        .remove([filePath]);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (e) {
+      console.error(`Failed to delete file from Supabase storage: ${url}`, e);
+    }
+  }
 }

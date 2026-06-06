@@ -1,13 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { OrdersService } from './orders.service';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UploadService } from '../upload/upload.service';
+import { KpiService } from '../reports/kpi.service';
 
 describe('OrdersService', () => {
   let service: OrdersService;
   let repository: Repository<Order>;
+  let uploadService: UploadService;
+  let kpiService: KpiService;
 
   const mockOrder = {
     id: 'order-1',
@@ -37,6 +42,57 @@ describe('OrdersService', () => {
     }),
   };
 
+  const deleteMock = jest.fn();
+  const countMock = jest.fn().mockResolvedValue(0);
+
+  const mockOrderVerificationRepository = {
+    find: jest.fn().mockResolvedValue([
+      { facePhotoUrl: 'face.jpg', cargoPhotoUrl: 'cargo.jpg' }
+    ]),
+  };
+
+  const mockTripOrderRepository = {
+    findOne: jest.fn().mockResolvedValue(null),
+  };
+
+  const mockDataSource = {
+    getRepository: jest.fn().mockImplementation((entity) => {
+      if (entity.name === 'OrderVerification') {
+        return mockOrderVerificationRepository;
+      }
+      if (entity.name === 'TripOrder') {
+        return mockTripOrderRepository;
+      }
+      return {
+        find: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue(null),
+        count: jest.fn().mockResolvedValue(0),
+      };
+    }),
+    transaction: jest.fn().mockImplementation((cb) =>
+      cb({
+        getRepository: jest.fn().mockImplementation(() => ({
+          delete: deleteMock,
+          count: countMock,
+          findOne: jest.fn().mockResolvedValue(null),
+        })),
+      }),
+    ),
+  };
+
+  const mockEventEmitter = {
+    emit: jest.fn(),
+  };
+
+  const mockUploadService = {
+    deleteFileByUrl: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const mockKpiService = {
+    syncTotalTrips: jest.fn().mockResolvedValue(undefined),
+    syncViolations: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -45,11 +101,29 @@ describe('OrdersService', () => {
           provide: getRepositoryToken(Order),
           useValue: mockRepository,
         },
+        {
+          provide: DataSource,
+          useValue: mockDataSource,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
+        },
+        {
+          provide: UploadService,
+          useValue: mockUploadService,
+        },
+        {
+          provide: KpiService,
+          useValue: mockKpiService,
+        },
       ],
     }).compile();
 
     service = module.get<OrdersService>(OrdersService);
     repository = module.get<Repository<Order>>(getRepositoryToken(Order));
+    uploadService = module.get<UploadService>(UploadService);
+    kpiService = module.get<KpiService>(KpiService);
   });
 
   afterEach(() => {
@@ -183,20 +257,26 @@ describe('OrdersService', () => {
   });
 
   describe('remove', () => {
-    it('should remove order if in PENDING status', async () => {
-      mockRepository.findOne.mockResolvedValue(mockOrder);
-      await service.remove('order-1');
-      expect(repository.remove).toHaveBeenCalledWith(mockOrder);
-    });
-
-    it('should throw BadRequestException if not in PENDING status', async () => {
-      mockRepository.findOne.mockResolvedValue({
+    it('should remove order successfully regardless of status', async () => {
+      const mockAssignedOrder = {
         ...mockOrder,
-        status: OrderStatus.PICKED_UP,
-      });
-      await expect(service.remove('order-1')).rejects.toThrow(
-        BadRequestException,
-      );
+        status: OrderStatus.DELIVERED,
+        photoUrl: 'delivered.jpg',
+        assignedTrip: {
+          id: 'trip-1',
+          driver: { id: 'driver-1' },
+        },
+      } as any;
+
+      mockRepository.findOne.mockResolvedValue(mockAssignedOrder);
+      await service.remove('order-1');
+
+      expect(deleteMock).toHaveBeenCalledWith('order-1');
+      expect(uploadService.deleteFileByUrl).toHaveBeenCalledWith('delivered.jpg');
+      expect(uploadService.deleteFileByUrl).toHaveBeenCalledWith('face.jpg');
+      expect(uploadService.deleteFileByUrl).toHaveBeenCalledWith('cargo.jpg');
+      expect(kpiService.syncTotalTrips).toHaveBeenCalledWith('driver-1');
+      expect(kpiService.syncViolations).toHaveBeenCalledWith('driver-1');
     });
   });
 });

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Like } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { TripOrder } from '../entities/trip-order.entity';
@@ -12,6 +12,11 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
+import { UploadService } from '../upload/upload.service';
+import { KpiService } from '../reports/kpi.service';
+import { Alert } from '../entities/alert.entity';
+import { Trip } from '../entities/trip.entity';
+import { OrderVerification } from '../entities/order-verification.entity';
 
 @Injectable()
 export class OrdersService {
@@ -20,6 +25,8 @@ export class OrdersService {
     private readonly ordersRepository: Repository<Order>,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
+    private readonly uploadService: UploadService,
+    private readonly kpiService: KpiService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -210,11 +217,58 @@ export class OrdersService {
   async remove(id: string): Promise<void> {
     const order = await this.findOne(id);
 
-    if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException('Can only delete orders in PENDING status');
+    // Retrieve order verifications to get photo URLs before deletion cascades them away
+    const verifications = await this.dataSource.getRepository(OrderVerification).find({
+      where: { orderId: id },
+    });
+
+    const urlsToDelete: string[] = [];
+    if (order.photoUrl) urlsToDelete.push(order.photoUrl);
+    if (order.signatureUrl) urlsToDelete.push(order.signatureUrl);
+    for (const ver of verifications) {
+      if (ver.facePhotoUrl) urlsToDelete.push(ver.facePhotoUrl);
+      if (ver.cargoPhotoUrl) urlsToDelete.push(ver.cargoPhotoUrl);
     }
 
-    await this.ordersRepository.remove(order);
+    const driverId = order.assignedTrip?.driver?.id || null;
+    const tripId = order.assignedTrip?.id || null;
+
+    // Execute database modifications inside a transaction
+    await this.dataSource.transaction(async (manager) => {
+      // 1. Delete order-specific alerts (e.g., delivery_overdue containing short order id)
+      const orderShortId = id.substring(0, 8).toUpperCase();
+      await manager.getRepository(Alert).delete({
+        message: Like(`%#${orderShortId}%`),
+      });
+
+      // 2. Delete the order (PostgreSQL onDelete: CASCADE will remove trip_orders and order_verifications)
+      await manager.getRepository(Order).delete(id);
+
+      // 3. If trip becomes empty, delete the trip
+      if (tripId) {
+        const remainingTripOrders = await manager.getRepository(TripOrder).count({
+          where: { tripId },
+        });
+        if (remainingTripOrders === 0) {
+          await manager.getRepository(Trip).delete(tripId);
+        }
+      }
+    });
+
+    // Sync Driver KPIs after database state changes
+    if (driverId) {
+      try {
+        await this.kpiService.syncTotalTrips(driverId);
+        await this.kpiService.syncViolations(driverId);
+      } catch (kpiError) {
+        console.error(`Failed to sync KPI for driver ${driverId} after order deletion:`, kpiError);
+      }
+    }
+
+    // Clean up Supabase storage files
+    for (const url of urlsToDelete) {
+      await this.uploadService.deleteFileByUrl(url);
+    }
   }
 
   async findPending() {

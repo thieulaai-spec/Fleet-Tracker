@@ -54,18 +54,50 @@ export function TripCard({ item, section, onPress, onAccept, onReject, isLoading
           </View>
 
           <View className="gap-3">
-            <View className="flex-row items-center">
-              <MapPin size={14} color="#6366f1" />
-              <Text className="text-slate-300 text-sm ml-2 font-medium" numberOfLines={1}>
-                {pickupAddress}
-              </Text>
-            </View>
-            <View className="flex-row items-center">
-              <MapPin size={14} color="#f43f5e" />
-              <Text className="text-slate-300 text-sm ml-2 font-medium" numberOfLines={1}>
-                {deliveryAddress}
-              </Text>
-            </View>
+            {trip.orders && trip.orders.length > 1 ? (
+              <View className="bg-slate-950/20 border border-white/5 rounded-2xl p-3.5 mt-1">
+                <View className="flex-row justify-between items-center mb-2.5 pb-2 border-b border-white/5">
+                  <Text className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">
+                    Danh sách đơn ghép ({trip.orders.length} đơn)
+                  </Text>
+                </View>
+                <View className="gap-2">
+                  {trip.orders.map((o, idx) => {
+                    const isDone = o.status === 'delivered';
+                    const isPicking = o.status === 'assigned' || o.status === 'pending';
+                    const targetAddress = isPicking ? o.pickupAddress : o.address;
+                    return (
+                      <View key={o.id} className="flex-row items-center justify-between">
+                        <View className="flex-row items-center gap-2 flex-1 mr-2">
+                          <View className={`w-1.5 h-1.5 rounded-full ${isDone ? 'bg-emerald-500' : isPicking ? 'bg-blue-400' : 'bg-amber-400'}`} />
+                          <Text className={`text-xs font-semibold ${isDone ? 'text-slate-500 line-through' : 'text-slate-300'}`} numberOfLines={1}>
+                            #{o.id.slice(-6).toUpperCase()} • {isPicking ? `Lấy: ${targetAddress.split(',')[0]}` : `Giao: ${targetAddress.split(',')[0]}`}
+                          </Text>
+                        </View>
+                        <Text className={`text-[9px] font-black uppercase ${isDone ? 'text-emerald-500' : isPicking ? 'text-blue-400' : 'text-amber-500'}`}>
+                          {isDone ? 'Đã giao' : isPicking ? 'Lấy hàng' : 'Đang giao'}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : (
+              <>
+                <View className="flex-row items-center">
+                  <MapPin size={14} color="#6366f1" />
+                  <Text className="text-slate-300 text-sm ml-2 font-medium" numberOfLines={1}>
+                    {pickupAddress}
+                  </Text>
+                </View>
+                <View className="flex-row items-center">
+                  <MapPin size={14} color="#f43f5e" />
+                  <Text className="text-slate-300 text-sm ml-2 font-medium" numberOfLines={1}>
+                    {deliveryAddress}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
 
           {section.title === 'Pending Trips' ? (

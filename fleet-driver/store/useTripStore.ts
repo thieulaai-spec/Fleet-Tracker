@@ -29,13 +29,13 @@ const transformTripData = (t: any): Trip | null => {
       
       return {
         id: to.order.id,
-        customerName: to.order.customerName || 'Unknown Customer',
+        customerName: to.order.recipientName || to.order.customerName || 'Unknown Customer',
         address: to.order.deliveryAddress || to.order.address || 'No address',
         pickupAddress: to.order.pickupAddress || 'Origin Hub',
         status: to.order.status || 'pending',
         pickupLocation: parsePoint(to.order.pickupLocation),
         deliveryLocation: parsePoint(to.order.deliveryLocation),
-        customerPhone: to.order.customerPhone,
+        customerPhone: to.order.recipientPhone || to.order.customerPhone,
         photoUrl: to.order.photoUrl,
         signatureUrl: to.order.signatureUrl,
       };

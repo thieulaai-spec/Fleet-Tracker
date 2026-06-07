@@ -5,7 +5,7 @@ import { DispatchService } from './dispatch.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
-import { Trip } from '../entities/trip.entity';
+import { Trip, TripStatus } from '../entities/trip.entity';
 import { DriverStatus } from '../entities/driver.entity';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { OptimizationService } from '../optimization/optimization.service';
@@ -192,7 +192,7 @@ describe('DispatchService', () => {
       };
       const mockActiveTrip = {
         id: 'active-trip-id',
-        status: 'in_progress',
+        status: TripStatus.PENDING,
       };
       const mockTripOrders = [
         { id: 'to1', sequence: 1 },

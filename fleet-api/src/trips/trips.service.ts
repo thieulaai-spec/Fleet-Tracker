@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { Trip, TripStatus } from '../entities/trip.entity';
 import { TripOrder } from '../entities/trip-order.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
@@ -14,6 +14,7 @@ import { Driver, DriverStatus } from '../entities/driver.entity';
 import { Alert, AlertType, AlertSeverity } from '../entities/alert.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ReportIncidentDto, FindTripsQueryDto } from './dto/trip.dto';
+import { OptimizationService } from '../optimization/optimization.service';
 
 @Injectable()
 export class TripsService {
@@ -24,6 +25,7 @@ export class TripsService {
     private alertRepository: Repository<Alert>,
     private dataSource: DataSource,
     private eventEmitter: EventEmitter2,
+    private optimizationService: OptimizationService,
   ) {}
 
   async findMyTrips(userId: string, role?: string) {
@@ -130,6 +132,87 @@ export class TripsService {
 
       if (status === TripStatus.ACCEPTED) {
         if (driverId) {
+          // Check if there is already an active running trip for this driver
+          const runningTrip = await queryRunner.manager.findOne(Trip, {
+            where: {
+              driverId,
+              status: In([TripStatus.ACCEPTED, TripStatus.IN_PROGRESS]),
+            },
+            lock: { mode: 'pessimistic_write' },
+          });
+
+          if (runningTrip) {
+            // Merge this accepted trip's orders into the runningTrip!
+            const pendingTripOrders = await queryRunner.manager.find(TripOrder, {
+              where: { tripId: trip.id },
+              relations: ['order'],
+            });
+
+            const runningTripOrders = await queryRunner.manager.find(TripOrder, {
+              where: { tripId: runningTrip.id },
+            });
+
+            const maxSequence = runningTripOrders.reduce(
+              (max, to) => Math.max(max, to.sequence),
+              0,
+            );
+
+            // Re-assign the TripOrder records to target the runningTrip
+            for (let i = 0; i < pendingTripOrders.length; i++) {
+              const pendingTO = pendingTripOrders[i];
+              pendingTO.tripId = runningTrip.id;
+              pendingTO.sequence = maxSequence + i + 1;
+              await queryRunner.manager.save(TripOrder, pendingTO);
+
+              if (pendingTO.order) {
+                pendingTO.order.status = OrderStatus.ASSIGNED;
+                await queryRunner.manager.save(Order, pendingTO.order);
+              }
+            }
+
+            // Remove the pending trip
+            await queryRunner.manager.delete(Trip, { id: trip.id });
+
+            // Commit transaction
+            await queryRunner.commitTransaction();
+
+            // Asynchronously optimize route for the runningTrip
+            try {
+              await this.optimizationService.optimizeTripRoute(runningTrip.id);
+            } catch (optErr) {
+              console.error('Failed to optimize trip route after merge:', optErr);
+            }
+
+            // Emit event for deleted pending trip
+            this.eventEmitter.emit('trip.status_changed', {
+              id: trip.id,
+              status: TripStatus.CANCELLED,
+              vehicleId: trip.vehicleId,
+              driverId: trip.driverId,
+            });
+
+            // Get running trip driver user full name for notification
+            let driverName = 'Driver';
+            const driverWithUser = await this.tripRepository.manager.findOne(Driver, {
+              where: { id: runningTrip.driverId! },
+              relations: ['user'],
+            });
+            if (driverWithUser && driverWithUser.user) {
+              driverName = driverWithUser.user.fullName;
+            }
+
+            // Emit status changed for the runningTrip to trigger driver app sync
+            this.eventEmitter.emit('trip.status_changed', {
+              id: runningTrip.id,
+              status: runningTrip.status,
+              vehicleId: runningTrip.vehicleId,
+              driverId: runningTrip.driverId,
+              driverName,
+            });
+
+            return runningTrip;
+          }
+
           const driver = await queryRunner.manager.findOne(Driver, {
             where: { id: driverId },
           });

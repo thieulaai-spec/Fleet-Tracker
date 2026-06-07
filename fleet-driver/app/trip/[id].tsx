@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Lin
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MapPin, Calendar, Clock, ChevronLeft, Package, Truck, CheckCircle2, AlertTriangle, Navigation, Camera, Fuel, Route, Fingerprint, FileText, UserCheck, Check } from 'lucide-react-native';
 import { useTripStore, TripStatus, OrderStatus } from '../../store/useTripStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import Toast from 'react-native-toast-message';
 import { SosButton } from '../../components/ui/SosButton';
 import { BlurView } from 'expo-blur';
@@ -15,7 +16,17 @@ import { TripSummaryCard } from '../../components/trip/TripSummaryCard';
 export default function TripDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { fetchTripDetails, updateTripStatus, updateOrderStatus, activeTrip, pendingTrips, tripHistory, isLoading: isStoreLoading } = useTripStore();
+  const { 
+    fetchTripDetails, 
+    updateTripStatus, 
+    updateOrderStatus, 
+    activeTrip, 
+    pendingTrips, 
+    tripHistory, 
+    acceptTrip, 
+    rejectTrip, 
+    isLoading: isStoreLoading 
+  } = useTripStore();
   
   const [trip, setTrip] = useState<any>(null);
   const [verifications, setVerifications] = useState<any[]>([]);
@@ -94,6 +105,88 @@ export default function TripDetails() {
     } catch (err) {
       throw err;
     }
+  };
+
+  const handleAcceptTrip = () => {
+    if (!trip) return;
+
+    Alert.alert(
+      'Chấp nhận chuyến đi',
+      'Bạn có chắc chắn muốn chấp nhận chuyến đi này?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { 
+          text: 'Chấp nhận', 
+          onPress: async () => {
+            try {
+              const hasFingerprint = !!useAuthStore.getState().user?.driver?.fingerprintId;
+              await acceptTrip(trip.id);
+              
+              if (!hasFingerprint) {
+                Alert.alert(
+                  'Đăng ký vân tay lần đầu 👤',
+                  'Tài xế mới! Hệ thống phát hiện bạn chưa đăng ký vân tay. Vui lòng đặt ngón tay lên cảm biến AS608 trên xe để hoàn tất đăng ký vân tay trước khi tiến hành lấy hàng.',
+                  [
+                    { 
+                      text: 'Đã hiểu', 
+                      onPress: () => {
+                        router.push('/(tabs)/map');
+                      } 
+                    }
+                  ]
+                );
+              } else {
+                Toast.show({
+                  type: 'success',
+                  text1: 'Đã nhận chuyến 🎉',
+                  text2: 'Chuyến đi đã được chấp nhận thành công.'
+                });
+                router.push('/(tabs)/map');
+              }
+            } catch (err: any) {
+              Toast.show({
+                type: 'error',
+                text1: 'Nhận chuyến thất bại',
+                text2: err.message
+              });
+            }
+          } 
+        },
+      ]
+    );
+  };
+
+  const handleRejectTrip = () => {
+    if (!trip) return;
+
+    Alert.alert(
+      'Từ chối chuyến đi',
+      'Bạn có chắc chắn muốn từ chối chuyến đi này? Chuyến đi sẽ được chuyển lại phòng điều phối.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { 
+          text: 'Từ chối', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await rejectTrip(trip.id);
+              Toast.show({
+                type: 'info',
+                text1: 'Đã từ chối',
+                text2: 'Chuyến đi đã được trả lại.'
+              });
+              router.replace('/(tabs)');
+            } catch (err: any) {
+              Toast.show({
+                type: 'error',
+                text1: 'Từ chối thất bại',
+                text2: err.message
+              });
+            }
+          } 
+        },
+      ]
+    );
   };
 
   const openNavigation = (latitude: number, longitude: number) => {
@@ -330,6 +423,42 @@ export default function TripDetails() {
             totalDistanceKm={trip.totalDistanceKm} 
             estimatedFuelCost={trip.estimatedFuelCost}
           />
+
+          {/* Action Buttons for Pending Trip */}
+          {trip.status === TripStatus.PENDING && (
+            <View className="mt-10 gap-4">
+              <TouchableOpacity 
+                activeOpacity={0.9}
+                onPress={handleAcceptTrip}
+                disabled={isStoreLoading}
+              >
+                <LinearGradient
+                  colors={["#6366f1", "#4f46e5"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="h-20 rounded-[32px] flex-row items-center justify-center gap-4 shadow-xl shadow-indigo-500/40"
+                >
+                  {isStoreLoading ? <ActivityIndicator color="#fff" /> : (
+                    <>
+                      <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+                        <Check size={20} color="#fff" />
+                      </View>
+                      <Text className="text-white text-xl font-black italic tracking-widest">CHẤP NHẬN CHUYẾN ĐI</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                activeOpacity={0.9}
+                onPress={handleRejectTrip}
+                disabled={isStoreLoading}
+                className="h-16 rounded-[28px] border border-rose-500/30 bg-rose-500/5 flex-row items-center justify-center gap-3"
+              >
+                <Text className="text-rose-400 font-black text-sm uppercase tracking-wider">Từ chối chuyến đi</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Action Buttons (Only for non-completed active trip) */}
           {!isCompletedTrip && activeTrip?.id === id && (

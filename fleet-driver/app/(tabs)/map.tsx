@@ -47,8 +47,10 @@ export default function ActiveTripMap() {
     setSelectedOrderId,
   } = useMapFlow();
 
+  const pendingTrips = useTripStore(state => state.pendingTrips);
+
   if (!activeTrip) {
-    return <NoActiveTrip onRefresh={fetchTrips} />;
+    return <NoActiveTrip onRefresh={fetchTrips} pendingTrips={pendingTrips} />;
   }
 
   return (

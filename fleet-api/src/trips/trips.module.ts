@@ -9,9 +9,12 @@ import { Vehicle } from '../entities/vehicle.entity';
 import { Driver } from '../entities/driver.entity';
 import { Alert } from '../entities/alert.entity';
 
+import { OptimizationModule } from '../optimization/optimization.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Trip, TripOrder, Order, Vehicle, Driver, Alert]),
+    OptimizationModule,
   ],
   controllers: [TripsController],
   providers: [TripsService],

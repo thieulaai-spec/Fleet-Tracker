@@ -156,16 +156,12 @@ export class DispatchService {
 
       let activeTrip: Trip | null = null;
       if (vehicle.status === VehicleStatus.DELIVERING) {
-        // Find existing active trip
+        // Find existing active pending trip
         activeTrip = await queryRunner.manager.findOne(Trip, {
           where: {
             vehicleId: vehicle.id,
             driverId: vehicle.driverId,
-            status: In([
-              TripStatus.PENDING,
-              TripStatus.ACCEPTED,
-              TripStatus.IN_PROGRESS,
-            ]),
+            status: TripStatus.PENDING,
           },
           lock: { mode: 'pessimistic_write' },
         });
@@ -345,16 +341,12 @@ export class DispatchService {
 
       let activeTrip: Trip | null = null;
       if (vehicle.status === VehicleStatus.DELIVERING) {
-        // Find existing active trip
+        // Find existing active pending trip
         activeTrip = await queryRunner.manager.findOne(Trip, {
           where: {
             vehicleId: vehicle.id,
             driverId: vehicle.driverId,
-            status: In([
-              TripStatus.PENDING,
-              TripStatus.ACCEPTED,
-              TripStatus.IN_PROGRESS,
-            ]),
+            status: TripStatus.PENDING,
           },
           lock: { mode: 'pessimistic_write' },
         });

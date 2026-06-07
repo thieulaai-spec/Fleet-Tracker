@@ -225,6 +225,10 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[7].id, sequence: 1 }));
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[8].id, sequence: 2 }));
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip1.id, orderId: ordersData[9].id, sequence: 3 }));
+    
+    // Update Hyundai Mighty (vehicle 4) currentLoadKg
+    vehiclesData[3].currentLoadKg = Number(ordersData[7].weightKg) + Number(ordersData[8].weightKg) + Number(ordersData[9].weightKg);
+    await vehicleRepository.save(vehiclesData[3]);
 
     // 2. trip2 (IN_PROGRESS) - Driver 1 (Nguyễn Văn Hùng), Vehicle 1 (Isuzu plate '29C-432.10')
     const trip2 = await tripRepository.save(
@@ -248,6 +252,10 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     );
     // Link Order 7 to trip2
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip2.id, orderId: ordersData[6].id, sequence: 1 }));
+
+    // Update Isuzu (vehicle 1) currentLoadKg
+    vehiclesData[0].currentLoadKg = Number(ordersData[6].weightKg);
+    await vehicleRepository.save(vehiclesData[0]);
 
     // Update Nguyễn Văn Hùng status to ON_TRIP
     driversData[0].status = DriverStatus.ON_TRIP;

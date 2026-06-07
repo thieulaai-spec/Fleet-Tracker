@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { LogOut } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 
 import { useProfileFlow } from '../../hooks/profile/useProfileFlow';
 import { ProfileHeader } from '../../components/profile/ProfileHeader';
@@ -30,6 +31,7 @@ export default function ProfileScreen() {
     passwords,
     stats,
     kpi,
+    alerts,
     setShowPasswordModal,
     toggleStatus,
     handleChangePassword,
@@ -59,7 +61,16 @@ export default function ProfileScreen() {
         />
 
         {user?.role !== 'admin' && (
-          <ProfileStats kpi={kpi} onCardPress={(type) => setActiveKpiDetail(type)} />
+          <ProfileStats 
+            kpi={kpi} 
+            onCardPress={(type) => {
+              if (type === 'trips') {
+                router.push('/(tabs)/history');
+              } else {
+                setActiveKpiDetail(type);
+              }
+            }} 
+          />
         )}
 
         <AccountInfo user={user} activeTrip={activeTrip} />
@@ -106,6 +117,7 @@ export default function ProfileScreen() {
         activeKpiDetail={activeKpiDetail}
         tripHistory={tripHistory}
         kpi={kpi}
+        alerts={alerts}
       />
     </View>
   );

@@ -237,3 +237,83 @@ Yêu cầu mã định danh `apiKey` trong header để xác thực thiết bị
 5. Lưu vào lịch sử `gps_locations`.
 
 ---
+
+## 🗺️ Trips Management
+
+### GET `/trips/my`
+Lấy danh sách các chuyến đi của tài xế đang đăng nhập.
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "trip-uuid-1",
+      "status": "accepted",
+      "startedAt": null,
+      "endedAt": null,
+      "vehicle": { "id": "...", "plateNumber": "..." },
+      "orders": [...]
+    }
+  ]
+}
+```
+
+---
+
+### GET `/trips/:id`
+Lấy thông tin chi tiết một chuyến đi cụ thể.
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "trip-uuid-1",
+    "status": "accepted",
+    "plannedRoute": { "type": "LineString", "coordinates": [...] },
+    "orders": [...]
+  }
+}
+```
+
+---
+
+### PATCH `/trips/:id/status`
+Cập nhật trạng thái chuyến đi.
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Request Body:**
+```json
+{
+  "status": "accepted"
+}
+```
+
+**Mecanism khi chấp nhận đơn ghép:**
+Khi tài xế đang có chuyến đi hoạt động (`ACCEPTED`/`IN_PROGRESS`) và chấp nhận một chuyến đi `PENDING` mới gán:
+1. Hệ thống tự động gộp (merge) toàn bộ đơn hàng của chuyến đi `PENDING` vào chuyến đi đang hoạt động.
+2. Gọi Mapbox Optimization API để tối ưu lại lộ trình mới.
+3. Xoá chuyến đi `PENDING` vừa được gộp.
+4. Phát đi sự kiện WebSocket `trip:status_changed` với trạng thái custom là `merged` để thông báo cho Admin Dashboard (tránh bắn trạng thái `cancelled` gây toast thông báo lỗi sai lệch trên app tài xế).
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "active-trip-uuid",
+    "status": "accepted",
+    "orders": [...]
+  }
+}
+```
+
+---
+

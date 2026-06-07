@@ -7,6 +7,8 @@ import {
   Put,
   UseGuards,
   Query,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AlertsService } from './alerts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -23,8 +25,14 @@ export class AlertsController {
   constructor(private readonly alertsService: AlertsService) {}
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.DISPATCHER)
-  async findAll(@Query() query: AlertQueryDto) {
+  @Roles(UserRole.ADMIN, UserRole.DISPATCHER, UserRole.DRIVER)
+  async findAll(@Query() query: AlertQueryDto, @Request() req) {
+    if (req.user.role === UserRole.DRIVER) {
+      if (!req.user.driver?.id) {
+        throw new ForbiddenException('You do not have a driver profile');
+      }
+      query.driverId = req.user.driver.id;
+    }
     return this.alertsService.findAll(query);
   }
 

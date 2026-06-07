@@ -1,16 +1,23 @@
-## [2026-06-07] - Active Trip Assignment, Route Re-Optimization & Driver Task Selection
+## [2026-06-07] - Active Trip Assignment, Merge Upon Acceptance, Route Re-Optimization & Driver Task Selection
 
 ### Added
-- **Active Trip Order Assignment**:
-  - Implemented backend support to allow dispatchers (Admin) to assign new orders to vehicles/drivers that are already on a trip (`DELIVERING` status) if they have sufficient remaining capacity.
-  - Automatically merges new orders into the driver's active trip (`PENDING`, `ACCEPTED`, or `IN_PROGRESS`) and appends them with incremental sequences.
-  - Automatically invokes Mapbox Directions API route re-optimization on the backend to update the trip's planned path (`plannedRoute` and `totalDistanceKm`) dynamically upon assignment.
+- **Merge-Upon-Acceptance for Active Drivers**:
+  - Implemented a flow where when an Admin assigns a new order to an active driver (who is already in `ACCEPTED` or `IN_PROGRESS` state on their active trip), a new separate `PENDING` trip is created instead of automatically merging it.
+  - The driver is prompted via a "NEW MISSION PENDING" state on the mobile Map tab, or via the Trip Details page, and must explicitly choose to Accept or Reject the new assignment.
+  - Upon acceptance, the pending trip's orders are dynamically merged into the active running trip, optimized using Mapbox Directions API, and the temporary pending trip is deleted.
 - **Driver App Task Selector**:
   - Implemented a touchable order selector widget (`Đơn #XXXXXX 🔄`) inside the `MissionPanel` on the driver's map view.
   - When tapped, displays a native system prompt letting the driver choose any of the remaining undelivered orders in the trip as their active navigation target.
   - Dynamically recalculates the current destination and proximity triggers based on the driver's manual target choice.
+- **Consolidated Trip Route UI**:
+  - Upgraded `TripCard` to display detailed multi-order lists dynamically based on active order statuses.
+  - Ensured action buttons (Accept/Reject) on Trip Details screen (`[id].tsx`) are correctly rendered for `PENDING` trips regardless of active trip status.
 
 ### Fixed
+- **False-alarm Cancellation Toast**:
+  - Fixed a misleading "Trip Cancelled" red toast on the driver app when accepting a new order by introducing a custom `'merged'` status socket notification instead of emitting a standard `TripStatus.CANCELLED` event when removing the temporary pending trip.
+- **Dispatching Exception on Delivery**:
+  - Allowed creating new pending trips when a vehicle status is `DELIVERING` but there are no active pending trips yet.
 - **TypeScript Compiler Errors**:
   - Resolved type declaration issues and unassigned variable warnings for `activeTrip` inside `DispatchService` by explicitly configuring its type as `Trip | null` and initializing it as `null`.
 

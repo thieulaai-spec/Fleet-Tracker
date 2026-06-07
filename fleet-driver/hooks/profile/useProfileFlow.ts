@@ -23,6 +23,7 @@ export const useProfileFlow = () => {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const [kpi, setKpi] = useState<any>(null);
+  const [alertsList, setAlertsList] = useState<any[]>([]);
 
   // Fetch current status on mount
   useEffect(() => {
@@ -66,7 +67,20 @@ export const useProfileFlow = () => {
         console.error('Failed to fetch KPI:', error);
       }
     };
+    const fetchAlerts = async () => {
+      if (!user?.driver?.id) return;
+      try {
+        const response = await authFetch(`/alerts?driverId=${user.driver.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setAlertsList(data?.data ?? data ?? []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch alerts:', error);
+      }
+    };
     fetchKpi();
+    fetchAlerts();
   }, [user?.driver?.id, isOnline]);
 
   const toggleStatus = useCallback(async () => {
@@ -366,6 +380,7 @@ export const useProfileFlow = () => {
       avgSpeed: `${avgSpeed}`,
     },
     kpi,
+    alerts: alertsList,
     setShowPasswordModal,
     toggleStatus,
     handleChangePassword,

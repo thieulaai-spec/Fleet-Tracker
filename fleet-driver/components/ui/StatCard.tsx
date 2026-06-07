@@ -31,19 +31,20 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, co
 
   if (onPress) {
     return (
-      <TouchableOpacity 
-        onPress={onPress}
+      <BlurView 
+        intensity={Platform.OS === 'ios' ? 40 : 100}
+        tint="light"
         className="w-[48%] rounded-xl overflow-hidden border border-slate-700/50"
         style={{ backgroundColor: 'rgba(255, 255, 255, 0.85)' }}
       >
-        <BlurView 
-          intensity={Platform.OS === 'ios' ? 40 : 100}
-          tint="light"
+        <TouchableOpacity 
+          onPress={onPress}
           className="w-full"
+          activeOpacity={0.7}
         >
           {content}
-        </BlurView>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </BlurView>
     );
   }
 

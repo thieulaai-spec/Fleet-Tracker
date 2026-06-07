@@ -8,6 +8,7 @@ import Toast from 'react-native-toast-message';
 import { SosButton } from '../../components/ui/SosButton';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TripBadge } from '../../components/trip/TripBadge';
 import { OrderCard } from '../../components/trip/OrderCard';
@@ -223,18 +224,18 @@ export default function TripDetails() {
 
   if (localLoading && !trip) {
     return (
-      <View className="flex-1 bg-slate-950 justify-center items-center">
-        <Stack.Screen options={{ title: 'Loading...', headerShown: true }} />
+      <SafeAreaView className="flex-1 bg-slate-950 justify-center items-center" edges={['top']}>
+        <Stack.Screen options={{ headerShown: false }} />
         <ActivityIndicator size="large" color="#6366f1" />
         <Text className="text-slate-400 mt-4 font-bold text-sm tracking-widest uppercase">Đang tải dữ liệu chuyến đi...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (!trip) {
     return (
-      <View className="flex-1 bg-slate-950 justify-center items-center px-10">
-        <Stack.Screen options={{ title: 'Trip Not Found', headerShown: true }} />
+      <SafeAreaView className="flex-1 bg-slate-950 justify-center items-center px-10" edges={['top']}>
+        <Stack.Screen options={{ headerShown: false }} />
         <AlertTriangle size={64} color="#ef4444" />
         <Text className="text-red-500 text-center mt-5 text-lg font-medium">Chuyến đi không tìm thấy hoặc đã bị xóa.</Text>
         <TouchableOpacity 
@@ -243,27 +244,29 @@ export default function TripDetails() {
         >
           <Text className="text-white font-bold">Quay lại</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   const isCompletedTrip = trip.status === TripStatus.COMPLETED || trip.status === TripStatus.CANCELLED;
 
   return (
-    <View className="flex-1 bg-slate-950">
-      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
-      <Stack.Screen options={{ 
-        headerShown: true, 
-        title: isCompletedTrip ? 'LỊCH SỬ CHUYẾN ĐI' : 'CHI TIẾT CHUYẾN ĐI',
-        headerStyle: { backgroundColor: '#ffffff' },
-        headerTitleStyle: { color: '#0f172a', fontWeight: '900', fontSize: 16 },
-        headerTintColor: '#0f172a',
-        headerLeft: () => (
-          <TouchableOpacity onPress={() => router.back()} className="ml-2 p-2 bg-slate-800 rounded-full">
-            <ChevronLeft color="#0f172a" size={20} />
-          </TouchableOpacity>
-        )
-      }} />
+    <SafeAreaView className="flex-1 bg-slate-950" edges={['top']}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      {/* Custom Premium Header */}
+      <View className="flex-row items-center px-4 py-3 gap-4 border-b border-white/5 bg-slate-950">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
+        >
+          <ChevronLeft color="#fff" size={24} />
+        </TouchableOpacity>
+        <Text className="flex-1 text-base font-black text-white uppercase tracking-wider">
+          {isCompletedTrip ? 'LỊCH SỬ CHUYẾN ĐI' : 'CHI TIẾT CHUYẾN ĐI'}
+        </Text>
+      </View>
 
       <View className="flex-1">
         {/* Background Decorative Elements */}
@@ -516,6 +519,6 @@ export default function TripDetails() {
           )}
         </ScrollView>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }

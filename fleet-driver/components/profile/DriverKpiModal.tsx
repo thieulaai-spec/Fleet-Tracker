@@ -9,6 +9,7 @@ interface DriverKpiModalProps {
   activeKpiDetail: 'trips' | 'completion' | 'violations' | 'score' | null;
   tripHistory: any[];
   kpi: any;
+  alerts?: any[];
 }
 
 export const DriverKpiModal: React.FC<DriverKpiModalProps> = ({
@@ -17,6 +18,7 @@ export const DriverKpiModal: React.FC<DriverKpiModalProps> = ({
   activeKpiDetail,
   tripHistory,
   kpi,
+  alerts = [],
 }) => {
   if (!isOpen || !activeKpiDetail) return null;
 
@@ -154,6 +156,7 @@ export const DriverKpiModal: React.FC<DriverKpiModalProps> = ({
                 const speed = kpi?.speedViolations ?? 0;
                 const route = kpi?.routeViolations ?? 0;
                 const total = kpi?.totalViolations ?? 0;
+                const alertsList = alerts || [];
 
                 return (
                   <View className="py-4">
@@ -181,6 +184,45 @@ export const DriverKpiModal: React.FC<DriverKpiModalProps> = ({
                         <Text className="text-red-500 text-lg font-black">{route}</Text>
                       </View>
                     </View>
+
+                    {/* Specific Alerts List */}
+                    <Text className="text-white text-base font-black italic mb-4 uppercase tracking-tight">Chi tiết vi phạm</Text>
+                    {alertsList.length === 0 ? (
+                      <View className="bg-slate-950 p-5 rounded-2xl border border-white/5 items-center justify-center mb-6">
+                        <Text className="text-slate-500 text-xs font-bold">Không có bản ghi vi phạm nào</Text>
+                      </View>
+                    ) : (
+                      <View className="gap-3 mb-6">
+                        {alertsList.map((alertItem: any, idx: number) => {
+                          const typeLabels: Record<string, string> = {
+                            speed_violation: 'Vượt quá tốc độ',
+                            route_deviation: 'Lệch lộ trình',
+                            abnormal_stop: 'Dừng đỗ bất thường',
+                            incident: 'Sự cố khẩn cấp'
+                          };
+                          const typeLabel = typeLabels[alertItem.type] || alertItem.type;
+                          return (
+                            <View key={alertItem.id || idx} className="bg-slate-950 p-4 rounded-2xl border border-white/5 flex-row justify-between items-center">
+                              <View className="flex-1 mr-3">
+                                <View className="flex-row items-center gap-1.5">
+                                  <View className={`w-1.5 h-1.5 rounded-full ${alertItem.severity === 'HIGH' ? 'bg-red-500' : alertItem.severity === 'MEDIUM' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                                  <Text className="text-white font-bold text-sm">{typeLabel}</Text>
+                                </View>
+                                <Text className="text-slate-400 text-xs mt-1">{alertItem.message}</Text>
+                                <Text className="text-slate-505 text-[10px] mt-1 font-mono">
+                                  {new Date(alertItem.createdAt).toLocaleString('vi-VN')}
+                                </Text>
+                              </View>
+                              <View className={`px-2 py-0.5 rounded-lg ${alertItem.isResolved ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'}`}>
+                                <Text className={`text-[9px] font-black uppercase ${alertItem.isResolved ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                  {alertItem.isResolved ? 'Đã xử lý' : 'Chưa xử lý'}
+                                </Text>
+                              </View>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
 
                     <Text className="text-slate-400 text-sm text-center leading-5 px-4">
                       Mỗi lỗi vi phạm sẽ trực tiếp ảnh hưởng đến Điểm đánh giá (KPI Score) của bạn. Hãy lái xe an toàn và bám sát lộ trình được hoạch định.

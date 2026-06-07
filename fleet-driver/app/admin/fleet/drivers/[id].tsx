@@ -31,6 +31,7 @@ import { DriverContact } from "../../../../components/admin/fleet/DriverContact"
 import { DriverLicense } from "../../../../components/admin/fleet/DriverLicense";
 import { DriverKpi } from "../../../../components/admin/fleet/DriverKpi";
 import { DriverJourneyTimeline } from "../../../../components/admin/fleet/DriverJourneyTimeline";
+import { DriverKpiModal } from "../../../../components/profile/DriverKpiModal";
 
 const STATUS_CONFIG = {
   [DriverStatus.AVAILABLE]: { label: "Available", color: "#10b981" },
@@ -52,6 +53,9 @@ export default function DriverDetailScreen() {
   const [verifications, setVerifications] = useState<any[]>([]);
   const [verificationsLoading, setVerificationsLoading] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [tripHistory, setTripHistory] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [activeKpiDetail, setActiveKpiDetail] = useState<'trips' | 'completion' | 'violations' | 'score' | null>(null);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -95,8 +99,36 @@ export default function DriverDetailScreen() {
         }
       }
     };
+    const fetchTripHistory = async () => {
+      if (id && id !== "create") {
+        try {
+          const { token } = useAuthStore.getState();
+          const response = await axios.get(`${API_URL}/trips?driverId=${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setTripHistory(response.data.data || response.data || []);
+        } catch (error) {
+          console.error("Failed to fetch driver trip history:", error);
+        }
+      }
+    };
+    const fetchAlerts = async () => {
+      if (id && id !== "create") {
+        try {
+          const { token } = useAuthStore.getState();
+          const response = await axios.get(`${API_URL}/alerts?driverId=${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setAlerts(response.data.data || response.data || []);
+        } catch (error) {
+          console.error("Failed to fetch driver alerts:", error);
+        }
+      }
+    };
     fetchKpi();
     fetchVerifications();
+    fetchTripHistory();
+    fetchAlerts();
   }, [id]);
 
   const handleDelete = () => {
@@ -313,7 +345,11 @@ export default function DriverDetailScreen() {
 
               <DriverContact driver={driver} />
               <DriverLicense driver={driver} />
-              <DriverKpi kpi={kpi} kpiLoading={kpiLoading} />
+              <DriverKpi 
+                kpi={kpi} 
+                kpiLoading={kpiLoading} 
+                onCardPress={(type) => setActiveKpiDetail(type)} 
+              />
             </View>
           )}
 
@@ -345,6 +381,15 @@ export default function DriverDetailScreen() {
           />
         </View>
       )}
+
+      <DriverKpiModal
+        isOpen={activeKpiDetail !== null}
+        onClose={() => setActiveKpiDetail(null)}
+        activeKpiDetail={activeKpiDetail}
+        tripHistory={tripHistory}
+        kpi={kpi}
+        alerts={alerts}
+      />
     </SafeAreaView>
   );
 }

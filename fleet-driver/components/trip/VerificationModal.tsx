@@ -60,7 +60,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   
   // Mock proof data
   const [facePhoto, setFacePhoto] = useState<string>('');
-  const [cargoPhoto, setCargoPhoto] = useState<string>('');
+  const [cargoPhotos, setCargoPhotos] = useState<string[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -76,7 +76,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       setFingerprintProgress(0);
       setIsScanning(false);
       setFacePhoto('');
-      setCargoPhoto('');
+      setCargoPhotos([]);
       progressAnim.setValue(0);
       setHasHardwareVerified(false);
 
@@ -310,18 +310,13 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           throw new Error('Server không trả về URL ảnh');
         }
 
-        setCargoPhoto(url);
+        setCargoPhotos(prev => [...prev, url]);
         
         Toast.show({
           type: 'success',
           text1: 'Tải Lên Thành Công',
           text2: 'Đã lưu ảnh chụp hàng hóa thực tế.'
         });
-
-        // Automatically advance to Step 3 (Review step)
-        setTimeout(() => {
-          setCurrentStep(3);
-        }, 500);
       }
     } catch (err: any) {
       console.log('[captureCargoPhoto] error:', err);
@@ -333,6 +328,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     } finally {
       setIsUploadingPhoto(false);
     }
+  };
+
+  const handleNextCargoStep = () => {
+    setCurrentStep(3);
   };
 
   const handleSkipCargoPhoto = () => {
@@ -354,17 +353,19 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         console.log('Location fetch failed:', e);
       }
 
+      const cargoPhotoStr = cargoPhotos.join(',');
+
       if (hasHardwareVerified) {
         // If hardware biometrics were verified, update only the cargo photo URL via PATCH
         const updateCargoPhoto = useTripStore.getState().updateCargoPhoto;
-        await updateCargoPhoto(orderId, step, cargoPhoto);
+        await updateCargoPhoto(orderId, step, cargoPhotoStr);
       } else {
         // Standard phone verification flow
         await onSubmit({
           step,
           fingerprintStatus: true,
           facePhotoUrl: facePhoto,
-          cargoPhotoUrl: cargoPhoto || undefined,
+          cargoPhotoUrl: cargoPhotoStr || undefined,
           ...coords,
         });
       }
@@ -512,8 +513,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                       </View>
                     ) : (
                       <CargoCaptureStep
-                        cargoPhoto={cargoPhoto}
+                        cargoPhotos={cargoPhotos}
                         onCapture={captureCargoPhoto}
+                        onRemove={(index) => setCargoPhotos(prev => prev.filter((_, i) => i !== index))}
+                        onNext={handleNextCargoStep}
                         onSkip={handleSkipCargoPhoto}
                       />
                     )
@@ -524,7 +527,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                     <SubmitProofStep
                       step={step}
                       facePhoto={facePhoto}
-                      cargoPhoto={cargoPhoto}
+                      cargoPhotos={cargoPhotos}
                       isSubmitting={isSubmitting}
                       onSubmit={handleSubmitProof}
                     />

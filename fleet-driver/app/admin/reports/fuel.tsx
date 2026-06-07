@@ -67,9 +67,9 @@ export default function FuelReportScreen() {
         <View className="flex-row items-center">
           <TouchableOpacity 
             onPress={() => router.back()}
-            className="w-10 h-10 rounded-full bg-slate-900 justify-center items-center mr-4"
+            className="w-10 h-10 rounded-full bg-slate-800 justify-center items-center mr-4 border border-slate-700"
           >
-            <ArrowLeft size={20} color="#f8fafc" />
+            <ArrowLeft size={20} color="#0f172a" />
           </TouchableOpacity>
           <View>
             <Text className="text-xl font-bold text-slate-50">Fuel Consumption</Text>

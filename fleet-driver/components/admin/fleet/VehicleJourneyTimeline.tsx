@@ -111,17 +111,22 @@ export const VehicleJourneyTimeline: React.FC<VehicleJourneyTimelineProps> = ({
                             </TouchableOpacity>
                           </View>
                         )}
-                        {v.cargoPhotoUrl && (
-                          <View className="items-center gap-1">
-                            <Text className="text-[8px] text-slate-500 uppercase font-black tracking-wider">Hàng hóa (M.App)</Text>
-                            <TouchableOpacity 
-                              onPress={() => onImagePress(v.cargoPhotoUrl)}
-                              className="w-16 h-16 rounded-xl border border-white/10 overflow-hidden bg-slate-950"
-                            >
-                              <Image source={{ uri: v.cargoPhotoUrl }} className="w-full h-full" resizeMode="cover" />
-                            </TouchableOpacity>
-                          </View>
-                        )}
+                        {(() => {
+                          const cargoPhotos = v.cargoPhotoUrl ? v.cargoPhotoUrl.split(',').filter(Boolean) : [];
+                          return cargoPhotos.map((photoUrl: string, pIdx: number) => (
+                            <View key={pIdx} className="items-center gap-1">
+                              <Text className="text-[8px] text-slate-500 uppercase font-black tracking-wider">
+                                {cargoPhotos.length > 1 ? `Hàng hóa #${pIdx + 1}` : 'Hàng hóa (M.App)'}
+                              </Text>
+                              <TouchableOpacity 
+                                onPress={() => onImagePress(photoUrl)}
+                                className="w-16 h-16 rounded-xl border border-white/10 overflow-hidden bg-slate-950"
+                              >
+                                <Image source={{ uri: photoUrl }} className="w-full h-full" resizeMode="cover" />
+                              </TouchableOpacity>
+                            </View>
+                          ));
+                        })()}
                       </View>
                     </View>
                   </View>

@@ -145,14 +145,22 @@ export default function TripHistoryTab() {
                 <TouchableOpacity
                   key={f.id}
                   onPress={() => setActiveFilter(f.id as FilterType)}
-                  className={`px-4 py-2.5 rounded-full border ${
-                    isActive 
-                      ? 'bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-600/30' 
-                      : 'bg-slate-900/60 border-white/5'
-                  }`}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 9999,
+                    borderWidth: 1,
+                    backgroundColor: isActive ? '#059669' : 'rgba(248, 250, 252, 0.6)',
+                    borderColor: isActive ? '#10b981' : 'rgba(15, 23, 42, 0.05)',
+                    shadowColor: isActive ? '#10b981' : 'transparent',
+                    shadowOffset: isActive ? { width: 0, height: 4 } : { width: 0, height: 0 },
+                    shadowOpacity: isActive ? 0.3 : 0,
+                    shadowRadius: isActive ? 6 : 0,
+                    elevation: isActive ? 4 : 0,
+                  }}
                   activeOpacity={0.7}
                 >
-                  <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-slate-400'}`}>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: isActive ? '#0f172a' : '#475569' }}>
                     {f.label}
                   </Text>
                 </TouchableOpacity>
@@ -166,26 +174,46 @@ export default function TripHistoryTab() {
           <View className="px-6 mb-4 flex-row gap-3">
             <TouchableOpacity
               onPress={() => setShowPicker('start')}
-              className="flex-1 bg-slate-900/40 border border-white/5 p-3 rounded-2xl flex-row items-center justify-between"
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(248, 250, 252, 0.4)',
+                borderColor: 'rgba(15, 23, 42, 0.05)',
+                borderWidth: 1,
+                padding: 12,
+                borderRadius: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
               activeOpacity={0.7}
             >
               <View>
-                <Text className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Từ ngày</Text>
-                <Text className="text-white text-xs font-bold mt-0.5">{startDate.toLocaleDateString('vi-VN')}</Text>
+                <Text style={{ fontSize: 8, fontWeight: '900', textTransform: 'uppercase', color: '#64748b', letterSpacing: 0.8 }}>Từ ngày</Text>
+                <Text style={{ color: '#0f172a', fontSize: 12, fontWeight: 'bold', marginTop: 2 }}>{startDate.toLocaleDateString('vi-VN')}</Text>
               </View>
-              <Calendar size={14} color="#6366f1" />
+              <Calendar size={14} color="#10b981" />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => setShowPicker('end')}
-              className="flex-1 bg-slate-900/40 border border-white/5 p-3 rounded-2xl flex-row items-center justify-between"
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(248, 250, 252, 0.4)',
+                borderColor: 'rgba(15, 23, 42, 0.05)',
+                borderWidth: 1,
+                padding: 12,
+                borderRadius: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
               activeOpacity={0.7}
             >
               <View>
-                <Text className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Đến ngày</Text>
-                <Text className="text-white text-xs font-bold mt-0.5">{endDate.toLocaleDateString('vi-VN')}</Text>
+                <Text style={{ fontSize: 8, fontWeight: '900', textTransform: 'uppercase', color: '#64748b', letterSpacing: 0.8 }}>Đến ngày</Text>
+                <Text style={{ color: '#0f172a', fontSize: 12, fontWeight: 'bold', marginTop: 2 }}>{endDate.toLocaleDateString('vi-VN')}</Text>
               </View>
-              <Calendar size={14} color="#6366f1" />
+              <Calendar size={14} color="#10b981" />
             </TouchableOpacity>
           </View>
         )}

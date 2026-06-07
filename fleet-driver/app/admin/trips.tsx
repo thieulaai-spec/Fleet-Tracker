@@ -22,6 +22,9 @@ type FilterType = 'all' | 'today' | '7days' | '30days' | 'custom';
 export default function AdminTripsScreen() {
   const router = useRouter();
   
+  // Defer rendering to avoid NativeWind CssInterop race condition
+  const [mounted, setMounted] = useState(false);
+
   const [trips, setTrips] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,10 +33,14 @@ export default function AdminTripsScreen() {
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState<'start' | 'end' | null>(null);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const fetchAllTrips = async (filters?: { startDate?: string; endDate?: string }) => {
     setIsLoading(true);
     try {
-      let url = '/trips/my'; // Admin accesses all trips via '/trips/my' endpoint
+      let url = '/trips/my';
       const queryParts: string[] = [];
       if (filters?.startDate) {
         queryParts.push(`startDate=${encodeURIComponent(filters.startDate)}`);
@@ -60,9 +67,10 @@ export default function AdminTripsScreen() {
   };
 
   useEffect(() => {
+    if (!mounted) return;
+
     let startStr: string | undefined;
     let endStr: string | undefined;
-
     const today = new Date();
     
     if (activeFilter === 'today') {
@@ -83,13 +91,12 @@ export default function AdminTripsScreen() {
     }
 
     fetchAllTrips({ startDate: startStr, endDate: endStr });
-  }, [activeFilter, startDate, endDate]);
+  }, [mounted, activeFilter, startDate, endDate]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     let startStr: string | undefined;
     let endStr: string | undefined;
-
     const today = new Date();
     
     if (activeFilter === 'today') {
@@ -168,6 +175,16 @@ export default function AdminTripsScreen() {
     );
   };
 
+  // First render: show a plain loading screen without className (avoids CssInterop race condition)
+  if (!mounted) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#020617' }}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <Stack.Screen options={{ headerShown: false }} />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-slate-950" edges={['top']}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
@@ -177,10 +194,10 @@ export default function AdminTripsScreen() {
       <View className="px-6 py-4 flex-row items-center">
         <TouchableOpacity 
           onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-slate-900 justify-center items-center mr-4 border border-white/5"
+          className="w-10 h-10 rounded-full bg-slate-800 justify-center items-center mr-4 border border-slate-700"
           activeOpacity={0.7}
         >
-          <ArrowLeft size={20} color="#f8fafc" />
+          <ArrowLeft size={20} color="#0f172a" />
         </TouchableOpacity>
         <View>
           <Text className="text-xl font-bold text-slate-50">Lịch sử chuyến đi</Text>
@@ -207,14 +224,13 @@ export default function AdminTripsScreen() {
               <TouchableOpacity
                 key={f.id}
                 onPress={() => setActiveFilter(f.id as FilterType)}
-                className={`px-4 py-2.5 rounded-full border ${
-                  isActive 
-                    ? 'bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-600/30' 
-                    : 'bg-slate-900/60 border-white/5'
-                }`}
+                className={isActive 
+                  ? "px-4 py-2.5 rounded-full border bg-indigo-600 border-indigo-500" 
+                  : "px-4 py-2.5 rounded-full border bg-slate-900/60 border-white/5"
+                }
                 activeOpacity={0.7}
               >
-                <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-slate-400'}`}>
+                <Text className={isActive ? "text-xs font-bold text-white" : "text-xs font-bold text-slate-400"}>
                   {f.label}
                 </Text>
               </TouchableOpacity>
@@ -235,7 +251,7 @@ export default function AdminTripsScreen() {
               <Text className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Từ ngày</Text>
               <Text className="text-white text-xs font-bold mt-0.5">{startDate.toLocaleDateString('vi-VN')}</Text>
             </View>
-            <Calendar size={14} color="#6366f1" />
+            <Calendar size={14} color="#10b981" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -247,7 +263,7 @@ export default function AdminTripsScreen() {
               <Text className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Đến ngày</Text>
               <Text className="text-white text-xs font-bold mt-0.5">{endDate.toLocaleDateString('vi-VN')}</Text>
             </View>
-            <Calendar size={14} color="#6366f1" />
+            <Calendar size={14} color="#10b981" />
           </TouchableOpacity>
         </View>
       )}
@@ -298,7 +314,7 @@ export default function AdminTripsScreen() {
           }
           ListEmptyComponent={
             <View className="items-center justify-center mt-20 px-12">
-              <View className="w-24 h-24 bg-slate-900/40 rounded-[36px] justify-center items-center mb-6 border border-white/5 shadow-2xl">
+              <View className="w-24 h-24 bg-slate-900/40 rounded-[36px] justify-center items-center mb-6 border border-white/5">
                 <History size={36} color="#475569" />
               </View>
               <Text className="text-white text-2xl font-black text-center tracking-tight mb-2">Trống</Text>

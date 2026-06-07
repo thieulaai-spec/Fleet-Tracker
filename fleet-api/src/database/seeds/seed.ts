@@ -193,7 +193,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
           deliveryDeadline: info.deadline,
           createdAt: info.createdAt,
           photoUrl: `https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop`,
-          signatureUrl: `https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=600&h=400&fit=crop`,
+          signatureUrl: undefined,
         })
       );
       ordersData.push(order);
@@ -320,6 +320,43 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip3.id, orderId: ordersData[4].id, sequence: 2 }));
     await tripOrderRepository.save(tripOrderRepository.create({ tripId: trip3.id, orderId: ordersData[5].id, sequence: 3 }));
 
+    // Seed verifications for completed trip3 orders (ordersData[3], [4], [5])
+    const trip3Orders = [ordersData[3], ordersData[4], ordersData[5]];
+    for (const order of trip3Orders) {
+      // ACCEPT
+      await verificationRepository.save(
+        verificationRepository.create({
+          orderId: order.id,
+          step: VerificationStep.ACCEPT,
+          fingerprintStatus: true,
+          facePhotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop',
+          location: order.pickupLocation,
+        })
+      );
+      // PICKUP
+      await verificationRepository.save(
+        verificationRepository.create({
+          orderId: order.id,
+          step: VerificationStep.PICKUP,
+          fingerprintStatus: true,
+          facePhotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop',
+          cargoPhotoUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=400&fit=crop,https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&h=400&fit=crop',
+          location: order.pickupLocation,
+        })
+      );
+      // DELIVERY
+      await verificationRepository.save(
+        verificationRepository.create({
+          orderId: order.id,
+          step: VerificationStep.DELIVERY,
+          fingerprintStatus: true,
+          facePhotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop',
+          cargoPhotoUrl: 'https://images.unsplash.com/photo-1598257006458-087169a1f08d?w=400&h=400&fit=crop',
+          location: order.deliveryLocation,
+        })
+      );
+    }
+
     // 4. Generate 30-day historical completed trips for rich reports & analytics
     console.log('Generating 30-day historical completed trips for reports...');
     const nowMs = Date.now();
@@ -422,8 +459,17 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
               step: VerificationStep.ACCEPT,
               fingerprintStatus: true,
               facePhotoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop',
-              cargoPhotoUrl: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&h=400&fit=crop',
-              location: { type: 'Point', coordinates: [105.8492, 21.0382] },
+              location: order.pickupLocation,
+            })
+          );
+          await verificationRepository.save(
+            verificationRepository.create({
+              orderId: order.id,
+              step: VerificationStep.PICKUP,
+              fingerprintStatus: true,
+              facePhotoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop',
+              cargoPhotoUrl: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&h=400&fit=crop,https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=400&fit=crop',
+              location: order.pickupLocation,
             })
           );
           await verificationRepository.save(
@@ -433,7 +479,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
               fingerprintStatus: true,
               facePhotoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop',
               cargoPhotoUrl: 'https://images.unsplash.com/photo-1598257006458-087169a1f08d?w=400&h=400&fit=crop',
-              location: { type: 'Point', coordinates: [105.8405, 21.0253] },
+              location: order.deliveryLocation,
             })
           );
         }

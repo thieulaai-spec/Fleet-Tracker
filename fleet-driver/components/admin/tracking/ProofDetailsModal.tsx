@@ -173,17 +173,22 @@ export const ProofDetailsModal: React.FC<ProofDetailsModalProps> = ({
                                           </TouchableOpacity>
                                         </View>
                                       )}
-                                      {v.cargoPhotoUrl && (
-                                        <View className="items-center">
-                                          <Text className="text-slate-500 text-[7px] font-bold uppercase mb-1">Ảnh hàng hóa (Điện thoại)</Text>
-                                          <TouchableOpacity
-                                            onPress={() => onSelectImage(v.cargoPhotoUrl)}
-                                            className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden bg-black"
-                                          >
-                                            <Image source={{ uri: v.cargoPhotoUrl }} className="w-full h-full object-cover" />
-                                          </TouchableOpacity>
-                                        </View>
-                                      )}
+                                      {(() => {
+                                        const cargoPhotos = v.cargoPhotoUrl ? v.cargoPhotoUrl.split(',').filter(Boolean) : [];
+                                        return cargoPhotos.map((photoUrl: string, pIdx: number) => (
+                                          <View key={pIdx} className="items-center">
+                                            <Text className="text-slate-500 text-[7px] font-bold uppercase mb-1">
+                                              {cargoPhotos.length > 1 ? `Ảnh hàng hóa #${pIdx + 1}` : 'Ảnh hàng hóa'}
+                                            </Text>
+                                            <TouchableOpacity
+                                              onPress={() => onSelectImage(photoUrl)}
+                                              className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden bg-black"
+                                            >
+                                              <Image source={{ uri: photoUrl }} className="w-full h-full object-cover" />
+                                            </TouchableOpacity>
+                                          </View>
+                                        ));
+                                      })()}
                                     </View>
                                   </View>
                                 </View>

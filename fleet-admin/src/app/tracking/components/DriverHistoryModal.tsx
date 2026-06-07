@@ -143,17 +143,22 @@ export function DriverHistoryModal({
                                 </div>
                               </div>
                             )}
-                            {v.cargoPhotoUrl && (
-                              <div className="flex flex-col gap-1 items-center">
-                                <span className="text-[8px] text-text-dim uppercase font-bold tracking-wider">Ảnh hàng hóa (M.App)</span>
-                                <div
-                                  onClick={() => setLightboxImage(v.cargoPhotoUrl)}
-                                  className="w-20 h-20 rounded-xl border border-white/10 overflow-hidden cursor-pointer hover:border-primary transition-colors bg-black"
-                                >
-                                  <img src={v.cargoPhotoUrl} alt="Cargo Proof" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                            {(() => {
+                              const cargoPhotos = v.cargoPhotoUrl ? v.cargoPhotoUrl.split(',').filter(Boolean) : [];
+                              return cargoPhotos.map((photoUrl: string, pIdx: number) => (
+                                <div key={pIdx} className="flex flex-col gap-1 items-center">
+                                  <span className="text-[8px] text-text-dim uppercase font-bold tracking-wider">
+                                    {cargoPhotos.length > 1 ? `Ảnh hàng hóa #${pIdx + 1}` : 'Ảnh hàng hóa'}
+                                  </span>
+                                  <div
+                                    onClick={() => setLightboxImage(photoUrl)}
+                                    className="w-20 h-20 rounded-xl border border-white/10 overflow-hidden cursor-pointer hover:border-primary transition-colors bg-black"
+                                  >
+                                    <img src={photoUrl} alt={`Cargo proof ${pIdx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              ));
+                            })()}
                           </div>
                         </div>
                       </div>

@@ -227,17 +227,22 @@ export function VehicleDetail({ vehicle, onClose }: VehicleDetailProps) {
                             </TouchableOpacity>
                           </div>
                         )}
-                        {v.cargoPhotoUrl && (
-                          <div className="flex flex-col gap-1 items-center">
-                            <span className="text-[8px] text-text-dim uppercase font-bold">Hàng hóa (M.App)</span>
-                            <TouchableOpacity
-                              onClick={() => setLightboxImage(v.cargoPhotoUrl)}
-                              className="w-16 h-16 rounded-xl border border-white/10 overflow-hidden cursor-pointer hover:border-primary transition-colors"
-                            >
-                              <img src={v.cargoPhotoUrl} alt="Cargo proof" className="w-full h-full object-cover" />
-                            </TouchableOpacity>
-                          </div>
-                        )}
+                        {(() => {
+                          const cargoPhotos = v.cargoPhotoUrl ? v.cargoPhotoUrl.split(',').filter(Boolean) : [];
+                          return cargoPhotos.map((photoUrl: string, pIdx: number) => (
+                            <div key={pIdx} className="flex flex-col gap-1 items-center">
+                              <span className="text-[8px] text-text-dim uppercase font-bold">
+                                {cargoPhotos.length > 1 ? `Hàng hóa #${pIdx + 1}` : 'Hàng hóa (M.App)'}
+                              </span>
+                              <TouchableOpacity
+                                onClick={() => setLightboxImage(photoUrl)}
+                                className="w-16 h-16 rounded-xl border border-white/10 overflow-hidden cursor-pointer hover:border-primary transition-colors"
+                              >
+                                <img src={photoUrl} alt={`Cargo proof ${pIdx + 1}`} className="w-full h-full object-cover" />
+                              </TouchableOpacity>
+                            </div>
+                          ));
+                        })()}
                       </div>
                     </div>
                   </div>

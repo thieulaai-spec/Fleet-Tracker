@@ -86,7 +86,7 @@ export const OrderDetailInfo: React.FC<OrderDetailInfoProps> = ({ order, verific
               <View className="w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/30 items-center justify-center">
                 <Check size={10} color="#818cf8" />
               </View>
-              {((verifications && verifications.length > 0) || order.signatureUrl) && (
+              {verifications && verifications.length > 0 && (
                 <View className="w-px flex-1 bg-white/10 my-1" />
               )}
             </View>
@@ -105,7 +105,7 @@ export const OrderDetailInfo: React.FC<OrderDetailInfoProps> = ({ order, verific
 
           {/* Dynamic Verification Steps */}
           {verifications && verifications.map((ver, idx) => {
-            const isLast = idx === verifications.length - 1 && !order.signatureUrl;
+            const isLast = idx === verifications.length - 1;
             const isPickupStep = ver.step === 'pickup';
             const isDeliveryStep = ver.step === 'delivery';
             const isAcceptStep = ver.step === 'accept';
@@ -116,6 +116,8 @@ export const OrderDetailInfo: React.FC<OrderDetailInfoProps> = ({ order, verific
             else if (isPickupStep) stepTitle = 'Lấy hàng thành công';
             else if (isDeliveryStep) stepTitle = 'Giao hàng thành công';
             else if (isCheckpointStep) stepTitle = 'Mốc lộ trình';
+
+            const cargoPhotos = ver.cargoPhotoUrl ? ver.cargoPhotoUrl.split(',').filter(Boolean) : [];
 
             return (
               <View key={ver.id || idx} className="flex-row gap-4">
@@ -145,7 +147,7 @@ export const OrderDetailInfo: React.FC<OrderDetailInfoProps> = ({ order, verific
                   )}
 
                   {/* Photos Row */}
-                  {(ver.facePhotoUrl || ver.cargoPhotoUrl) && (
+                  {(ver.facePhotoUrl || cargoPhotos.length > 0) && (
                     <View className="flex-row gap-2 mt-1">
                       {ver.facePhotoUrl && (
                         <View className="flex-1">
@@ -160,15 +162,22 @@ export const OrderDetailInfo: React.FC<OrderDetailInfoProps> = ({ order, verific
                         </View>
                       )}
 
-                      {ver.cargoPhotoUrl && (
+                      {cargoPhotos.length > 0 && (
                         <View className="flex-1">
                           <Text className="text-slate-500 text-[8px] font-bold uppercase mb-1">Ảnh hàng hóa</Text>
-                          <View className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950">
-                            <Image 
-                              source={{ uri: ver.cargoPhotoUrl }} 
-                              className="w-full h-full"
-                              resizeMode="cover"
-                            />
+                          <View className="flex-row flex-wrap gap-1">
+                            {cargoPhotos.map((photoUrl: string, pIdx: number) => (
+                              <View 
+                                key={pIdx}
+                                className={cargoPhotos.length === 1 ? "w-full aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950" : "w-[48%] aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950"}
+                              >
+                                <Image 
+                                  source={{ uri: photoUrl }} 
+                                  className="w-full h-full"
+                                  resizeMode="cover"
+                                />
+                              </View>
+                            ))}
                           </View>
                         </View>
                       )}
@@ -188,27 +197,6 @@ export const OrderDetailInfo: React.FC<OrderDetailInfoProps> = ({ order, verific
               </View>
             );
           })}
-
-          {/* Customer Signature block */}
-          {order.signatureUrl && (
-            <View className="flex-row gap-4">
-              <View className="items-center">
-                <View className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 items-center justify-center">
-                  <UserCheck size={10} color="#10b981" />
-                </View>
-              </View>
-              <View className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                <Text className="text-white text-xs font-bold mb-2">Chữ ký người nhận</Text>
-                <View className="h-16 bg-slate-950/80 rounded-xl overflow-hidden items-center justify-center p-1 border border-white/10">
-                  <Image 
-                    source={{ uri: order.signatureUrl }} 
-                    className="w-full h-full"
-                    resizeMode="contain"
-                  />
-                </View>
-              </View>
-            </View>
-          )}
         </View>
       </View>
     </View>

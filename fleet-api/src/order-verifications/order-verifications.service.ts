@@ -109,14 +109,14 @@ export class OrderVerificationsService {
 
       if (step === VerificationStep.PICKUP) {
         if (cargoPhotoUrl) {
-          order.photoUrl = cargoPhotoUrl;
+          order.photoUrl = cargoPhotoUrl.split(',')[0];
         }
         if (locationObj) {
           order.pickupActualLocation = locationObj;
         }
       } else if (step === VerificationStep.DELIVERY) {
         if (cargoPhotoUrl) {
-          order.photoUrl = cargoPhotoUrl;
+          order.photoUrl = cargoPhotoUrl.split(',')[0];
         }
         if (locationObj) {
           order.deliveryActualLocation = locationObj;
@@ -147,7 +147,7 @@ export class OrderVerificationsService {
     // Also update order photoUrl
     const order = await this.orderRepository.findOne({ where: { id: orderId } });
     if (order) {
-      order.photoUrl = cargoPhotoUrl;
+      order.photoUrl = cargoPhotoUrl.split(',')[0];
       await this.orderRepository.save(order);
     }
 

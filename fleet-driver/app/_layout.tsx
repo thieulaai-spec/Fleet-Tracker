@@ -194,7 +194,7 @@ function RootLayoutNav() {
 
   useEffect(() => {
     const rootSegment = segments[0];
-    const inAuthGroup = rootSegment === '(tabs)';
+    const inAuthGroup = rootSegment !== 'login';
     
     // Use a single stable check for redirection to avoid loops
     if (!isAuthenticated && inAuthGroup) {
@@ -213,6 +213,8 @@ function RootLayoutNav() {
         <Stack>
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="admin" options={{ headerShown: false }} />
+          <Stack.Screen name="trip" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
         <Toast config={toastConfig} topOffset={56} />

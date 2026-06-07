@@ -115,7 +115,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       visibleVers = orderVers.filter(v => v.step === 'accept');
     }
 
-    if (visibleVers.length === 0 && !order.signatureUrl) {
+    if (visibleVers.length === 0) {
       return (
         <View className="mt-4 pt-4 border-t border-white/5">
           <Text className="text-slate-500 text-xs italic text-center">Chưa có minh chứng xác thực nào được ghi nhận.</Text>
@@ -142,6 +142,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             else if (isPickupStep) stepTitle = 'Lấy hàng thành công (Đã đến lấy)';
             else if (isDeliveryStep) stepTitle = 'Bàn giao hàng thành công (Đã giao)';
             else if (isCheckpointStep) stepTitle = 'Mốc lộ trình';
+
+            const cargoPhotos = ver.cargoPhotoUrl ? ver.cargoPhotoUrl.split(',').filter(Boolean) : [];
 
             return (
               <View key={ver.id || idx} className="flex-row gap-3">
@@ -173,7 +175,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                   )}
 
                   {/* Photos Row */}
-                  {(ver.facePhotoUrl || ver.cargoPhotoUrl) && (
+                  {(ver.facePhotoUrl || cargoPhotos.length > 0) && (
                     <View className="flex-row gap-3 mt-1.5">
                       {/* Face Photo */}
                       {ver.facePhotoUrl && (
@@ -193,21 +195,26 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                         </View>
                       )}
 
-                      {/* Cargo Photo */}
-                      {ver.cargoPhotoUrl && (
+                      {/* Cargo Photos */}
+                      {cargoPhotos.length > 0 && (
                         <View className="flex-1">
                           <Text className="text-slate-500 text-[8px] font-black uppercase tracking-wider mb-1">Ảnh thực tế hàng hóa</Text>
-                          <TouchableOpacity 
-                            activeOpacity={0.9} 
-                            onPress={() => setLightboxUrl(ver.cargoPhotoUrl)}
-                            className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950"
-                          >
-                            <Image 
-                              source={{ uri: ver.cargoPhotoUrl }} 
-                              className="w-full h-full"
-                              resizeMode="cover"
-                            />
-                          </TouchableOpacity>
+                          <View className="flex-row flex-wrap gap-1.5">
+                            {cargoPhotos.map((photoUrl: string, pIdx: number) => (
+                              <TouchableOpacity 
+                                key={pIdx}
+                                activeOpacity={0.9} 
+                                onPress={() => setLightboxUrl(photoUrl)}
+                                className={cargoPhotos.length === 1 ? "w-full aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950" : "w-[47%] aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950"}
+                              >
+                                <Image 
+                                  source={{ uri: photoUrl }} 
+                                  className="w-full h-full"
+                                  resizeMode="cover"
+                                />
+                              </TouchableOpacity>
+                            ))}
+                          </View>
                         </View>
                       )}
                     </View>
@@ -226,31 +233,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               </View>
             );
           })}
-
-          {/* Customer Signature (Only for DELIVERED status) */}
-          {order.status === OrderStatus.DELIVERED && order.signatureUrl && (
-            <View className="flex-row gap-3">
-              <View className="items-center">
-                <View className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 items-center justify-center">
-                  <UserCheck size={10} color="#10b981" />
-                </View>
-              </View>
-              <View className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                <Text className="text-white text-xs font-black tracking-wide mb-2">Chữ ký xác nhận của người nhận</Text>
-                <TouchableOpacity 
-                  activeOpacity={0.9} 
-                  onPress={() => setLightboxUrl(order.signatureUrl || null)}
-                  className="h-20 bg-slate-950/80 rounded-xl overflow-hidden items-center justify-center p-1 border border-white/10"
-                >
-                  <Image 
-                    source={{ uri: order.signatureUrl }} 
-                    className="w-full h-full"
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
         </View>
       </View>
     );

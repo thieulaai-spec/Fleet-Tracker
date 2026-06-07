@@ -166,11 +166,6 @@ export class DispatchService {
           lock: { mode: 'pessimistic_write' },
         });
 
-        if (!activeTrip) {
-          throw new BadRequestException(
-            'Vehicle is marked as delivering but has no active trip',
-          );
-        }
       }
 
       let savedTrip: Trip;
@@ -351,11 +346,6 @@ export class DispatchService {
           lock: { mode: 'pessimistic_write' },
         });
 
-        if (!activeTrip) {
-          throw new BadRequestException(
-            'Vehicle is marked as delivering but has no active trip',
-          );
-        }
       }
 
       let savedTrip: Trip;

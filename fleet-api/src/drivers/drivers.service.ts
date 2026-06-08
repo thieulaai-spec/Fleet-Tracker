@@ -174,6 +174,8 @@ export class DriversService {
         totalViolations: 0,
         speedViolations: 0,
         routeViolations: 0,
+        abnormalStops: 0,
+        incidents: 0,
         kpiScore: 100,
         updatedAt: new Date(),
       };

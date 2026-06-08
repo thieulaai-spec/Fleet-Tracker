@@ -38,6 +38,12 @@ export class DriverKpi {
   @Column({ name: 'route_violations', default: 0 })
   routeViolations: number;
 
+  @Column({ name: 'abnormal_stops', default: 0 })
+  abnormalStops: number;
+
+  @Column({ name: 'incidents', default: 0 })
+  incidents: number;
+
   @Column({ name: 'kpi_score', type: 'decimal', default: 100 })
   kpiScore: number;
 

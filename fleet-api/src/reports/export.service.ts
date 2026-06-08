@@ -19,9 +19,11 @@ export class ExportService {
         { col: 5, key: 'completionRate', width: 22 },
         { col: 6, key: 'speedViolations', width: 18 },
         { col: 7, key: 'routeViolations', width: 18 },
-        { col: 8, key: 'totalViolations', width: 20 },
-        { col: 9, key: 'kpiScore', width: 15 },
-        { col: 10, key: 'updatedAt', width: 25 },
+        { col: 8, key: 'abnormalStops', width: 20 },
+        { col: 9, key: 'incidents', width: 18 },
+        { col: 10, key: 'totalViolations', width: 20 },
+        { col: 11, key: 'kpiScore', width: 15 },
+        { col: 12, key: 'updatedAt', width: 25 },
       ];
 
       colConfigs.forEach((cfg) => {
@@ -31,7 +33,7 @@ export class ExportService {
       });
 
       // Title at Row 2
-      worksheet.mergeCells('A2:J2');
+      worksheet.mergeCells('A2:L2');
       const titleCell = worksheet.getCell('A2');
       titleCell.value = 'BẢNG XẾP HẠNG KPI TÀI XẾ';
       titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1E3A8A' } };
@@ -39,7 +41,7 @@ export class ExportService {
       worksheet.getRow(2).height = 30;
 
       // Subtitle at Row 3
-      worksheet.mergeCells('A3:J3');
+      worksheet.mergeCells('A3:L3');
       const dateCell = worksheet.getCell('A3');
       const nowStr = new Date().toLocaleDateString('vi-VN', {
         day: '2-digit',
@@ -63,19 +65,22 @@ export class ExportService {
         'Tỷ lệ hoàn thành',
         'Vi phạm tốc độ',
         'Vi phạm lộ trình',
+        'Dừng bất thường',
+        'Sự cố / SOS',
         'Tổng số vi phạm',
         'Điểm KPI',
         'Ngày cập nhật',
       ];
       headerRow.height = 26;
       headerRow.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-      headerRow.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FF1E3A8A' }, // Navy Blue
-      };
-
-      headerRow.eachCell((cell) => {
+      // Style only columns 1 to 12 for the header row to avoid coloring the entire Excel row
+      for (let col = 1; col <= 12; col++) {
+        const cell = headerRow.getCell(col);
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF1E3A8A' }, // Navy Blue
+        };
         cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
         cell.border = {
           top: { style: 'thin', color: { argb: 'FF9CA3AF' } },
@@ -83,7 +88,7 @@ export class ExportService {
           bottom: { style: 'medium', color: { argb: 'FF1E3A8A' } },
           right: { style: 'thin', color: { argb: 'FF9CA3AF' } },
         };
-      });
+      }
 
       // Data starting at Row 6
       data.forEach((item) => {
@@ -95,6 +100,8 @@ export class ExportService {
           completionRate: (Number(item.completionRate) || 0) / 100, // stored as decimal for % formatting
           speedViolations: Number(item.speedViolations) || 0,
           routeViolations: Number(item.routeViolations) || 0,
+          abnormalStops: Number(item.abnormalStops) || 0,
+          incidents: Number(item.incidents) || 0,
           totalViolations: Number(item.totalViolations) || 0,
           kpiScore: Number(item.kpiScore) || 0,
           updatedAt: item.updatedAt ? new Date(item.updatedAt) : 'N/A',
@@ -115,6 +122,10 @@ export class ExportService {
         row.getCell('speedViolations').numFmt = '#,##0';
         row.getCell('routeViolations').alignment = { vertical: 'middle', horizontal: 'right' };
         row.getCell('routeViolations').numFmt = '#,##0';
+        row.getCell('abnormalStops').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('abnormalStops').numFmt = '#,##0';
+        row.getCell('incidents').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('incidents').numFmt = '#,##0';
         row.getCell('totalViolations').alignment = { vertical: 'middle', horizontal: 'right' };
         row.getCell('totalViolations').numFmt = '#,##0';
         row.getCell('kpiScore').alignment = { vertical: 'middle', horizontal: 'right' };
@@ -150,48 +161,60 @@ export class ExportService {
       labelCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
       const totalTripsCell = worksheet.getCell(`C${summaryRowIndex}`);
-      totalTripsCell.value = { formula: `=SUM(C6:C${lastDataRow})` };
+      totalTripsCell.value = { formula: `SUM(C6:C${lastDataRow})` };
       totalTripsCell.numFmt = '#,##0';
       totalTripsCell.font = { name: 'Arial', size: 10, bold: true };
       totalTripsCell.alignment = { vertical: 'middle', horizontal: 'right' };
 
       const completedTripsCell = worksheet.getCell(`D${summaryRowIndex}`);
-      completedTripsCell.value = { formula: `=SUM(D6:D${lastDataRow})` };
+      completedTripsCell.value = { formula: `SUM(D6:D${lastDataRow})` };
       completedTripsCell.numFmt = '#,##0';
       completedTripsCell.font = { name: 'Arial', size: 10, bold: true };
       completedTripsCell.alignment = { vertical: 'middle', horizontal: 'right' };
 
       const avgCompletionRateCell = worksheet.getCell(`E${summaryRowIndex}`);
-      avgCompletionRateCell.value = { formula: `=IF(C${summaryRowIndex}>0, D${summaryRowIndex}/C${summaryRowIndex}, 0)` };
+      avgCompletionRateCell.value = { formula: `IF(C${summaryRowIndex}>0, D${summaryRowIndex}/C${summaryRowIndex}, 0)` };
       avgCompletionRateCell.numFmt = '0.00%';
       avgCompletionRateCell.font = { name: 'Arial', size: 10, bold: true };
       avgCompletionRateCell.alignment = { vertical: 'middle', horizontal: 'right' };
 
       const speedViolationsCell = worksheet.getCell(`F${summaryRowIndex}`);
-      speedViolationsCell.value = { formula: `=SUM(F6:F${lastDataRow})` };
+      speedViolationsCell.value = { formula: `SUM(F6:F${lastDataRow})` };
       speedViolationsCell.numFmt = '#,##0';
       speedViolationsCell.font = { name: 'Arial', size: 10, bold: true };
       speedViolationsCell.alignment = { vertical: 'middle', horizontal: 'right' };
 
       const routeViolationsCell = worksheet.getCell(`G${summaryRowIndex}`);
-      routeViolationsCell.value = { formula: `=SUM(G6:G${lastDataRow})` };
+      routeViolationsCell.value = { formula: `SUM(G6:G${lastDataRow})` };
       routeViolationsCell.numFmt = '#,##0';
       routeViolationsCell.font = { name: 'Arial', size: 10, bold: true };
       routeViolationsCell.alignment = { vertical: 'middle', horizontal: 'right' };
 
-      const totalViolationsCell = worksheet.getCell(`H${summaryRowIndex}`);
-      totalViolationsCell.value = { formula: `=SUM(H6:H${lastDataRow})` };
+      const abnormalStopsCell = worksheet.getCell(`H${summaryRowIndex}`);
+      abnormalStopsCell.value = { formula: `SUM(H6:H${lastDataRow})` };
+      abnormalStopsCell.numFmt = '#,##0';
+      abnormalStopsCell.font = { name: 'Arial', size: 10, bold: true };
+      abnormalStopsCell.alignment = { vertical: 'middle', horizontal: 'right' };
+
+      const incidentsCell = worksheet.getCell(`I${summaryRowIndex}`);
+      incidentsCell.value = { formula: `SUM(I6:I${lastDataRow})` };
+      incidentsCell.numFmt = '#,##0';
+      incidentsCell.font = { name: 'Arial', size: 10, bold: true };
+      incidentsCell.alignment = { vertical: 'middle', horizontal: 'right' };
+
+      const totalViolationsCell = worksheet.getCell(`J${summaryRowIndex}`);
+      totalViolationsCell.value = { formula: `SUM(J6:J${lastDataRow})` };
       totalViolationsCell.numFmt = '#,##0';
       totalViolationsCell.font = { name: 'Arial', size: 10, bold: true };
       totalViolationsCell.alignment = { vertical: 'middle', horizontal: 'right' };
 
-      const avgKpiScoreCell = worksheet.getCell(`I${summaryRowIndex}`);
-      avgKpiScoreCell.value = { formula: `=AVERAGE(I6:I${lastDataRow})` };
+      const avgKpiScoreCell = worksheet.getCell(`K${summaryRowIndex}`);
+      avgKpiScoreCell.value = { formula: `AVERAGE(K6:K${lastDataRow})` };
       avgKpiScoreCell.numFmt = '0.00';
       avgKpiScoreCell.font = { name: 'Arial', size: 10, bold: true };
       avgKpiScoreCell.alignment = { vertical: 'middle', horizontal: 'right' };
 
-      for (let col = 1; col <= 10; col++) {
+      for (let col = 1; col <= 12; col++) {
         const cell = summaryRow.getCell(col);
         cell.border = {
           top: { style: 'thin', color: { argb: 'FF9CA3AF' } },

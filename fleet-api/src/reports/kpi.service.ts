@@ -35,6 +35,8 @@ export class KpiService {
         totalViolations: 0,
         speedViolations: 0,
         routeViolations: 0,
+        abnormalStops: 0,
+        incidents: 0,
         kpiScore: 100,
       });
       try {
@@ -98,6 +100,12 @@ export class KpiService {
     if (alert.type === 'route_deviation') {
       updateObj.routeViolations = () => 'route_violations + 1';
     }
+    if (alert.type === 'abnormal_stop') {
+      updateObj.abnormalStops = () => 'abnormal_stops + 1';
+    }
+    if (alert.type === 'incident') {
+      updateObj.incidents = () => 'incidents + 1';
+    }
 
     await this.kpiRepository.update({ driverId: alert.driverId }, updateObj);
   }
@@ -148,6 +156,8 @@ export class KpiService {
       {
         speedViolations,
         routeViolations,
+        abnormalStops,
+        incidents,
         totalViolations,
         kpiScore,
       },

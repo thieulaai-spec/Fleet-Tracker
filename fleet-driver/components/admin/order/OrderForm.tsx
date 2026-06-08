@@ -27,10 +27,10 @@ import { Order, OrderStatus } from '../../../store/useOrderStore';
 import { MapPicker } from './MapPicker';
 
 const categories = [
-  { label: 'Nguyên liệu', value: 'raw_material', desc: 'Sắt, thép, hóa chất, vật liệu thô...' },
-  { label: 'Thành phẩm', value: 'finished_goods', desc: 'Quần áo, thực phẩm, hàng tiêu dùng...' },
-  { label: 'Linh kiện', value: 'component', desc: 'Chip điện tử, phụ tùng ô tô, xe máy...' },
-  { label: 'Thiết bị', value: 'equipment', desc: 'Máy móc, dụng cụ chuyên dụng, đồ gia dụng...' },
+  { label: 'Dạng thô', value: 'bulk', desc: 'Cát, đá, vật liệu thô, hàng rời...' },
+  { label: 'Dễ vỡ', value: 'fragile', desc: 'Thủy tinh, đồ gốm sứ, thiết bị điện tử...' },
+  { label: 'Hàng cồng kềnh', value: 'bulky', desc: 'Bàn ghế, thiết bị kích thước lớn...' },
+  { label: 'Hàng nguy hiểm', value: 'dangerous', desc: 'Hóa chất, chất dễ cháy nổ...' },
   { label: 'Khác', value: 'other', desc: 'Các mặt hàng khác...' },
 ];
 

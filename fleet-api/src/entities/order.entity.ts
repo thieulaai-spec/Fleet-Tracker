@@ -18,10 +18,10 @@ export enum OrderStatus {
 }
 
 export enum OrderCategory {
-  RAW_MATERIAL = 'raw_material',
-  FINISHED_GOODS = 'finished_goods',
-  COMPONENT = 'component',
-  EQUIPMENT = 'equipment',
+  BULK = 'bulk',
+  FRAGILE = 'fragile',
+  BULKY = 'bulky',
+  DANGEROUS = 'dangerous',
   OTHER = 'other',
 }
 

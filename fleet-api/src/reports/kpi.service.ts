@@ -84,6 +84,7 @@ export class KpiService {
   @OnEvent('alert.new')
   async handleViolation(alert: any) {
     if (!alert.driverId) return;
+    if (alert.type === 'delivery_overdue') return; // Ignore delivery_overdue alerts
 
     // Ensure KPI record exists
     await this.getOrCreateKpi(alert.driverId);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Power, Settings, Lock, Info } from 'lucide-react-native';
+import { Power, Lock } from 'lucide-react-native';
 import { SettingsItem } from '../ui/SettingsItem';
 
 interface SettingsSectionProps {
@@ -41,21 +41,9 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
         )}
 
         <SettingsItem 
-          label="App Configuration"
-          icon={Settings}
-          onPress={() => {}}
-        />
-        
-        <SettingsItem 
           label="Security & Access"
           icon={Lock}
           onPress={onOpenSecurity}
-        />
-        
-        <SettingsItem 
-          label="Support Center"
-          icon={Info}
-          onPress={() => {}}
           showDivider={false}
         />
       </View>

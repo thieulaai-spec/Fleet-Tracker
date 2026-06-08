@@ -16,6 +16,36 @@ describe('ExportService Logic', () => {
     expect(buffer.length).toBeGreaterThan(0);
   });
 
+  it('should generate a formatted Excel buffer for KPI leaderboard with Vietnamese custom columns and formulas', async () => {
+    const data = [
+      {
+        id: '1e82e653-5ba1-4dd8-a55b-e850c1d972d9',
+        driverId: '4574654b-832d-415a-a55b-e850c1d972d9',
+        totalTrips: 58,
+        completedTrips: 58,
+        completionRate: 100,
+        totalViolations: 0,
+        speedViolations: 0,
+        routeViolations: 0,
+        kpiScore: 99,
+        updatedAt: '2026-06-07T15:30:00.000Z',
+        driver: {
+          id: '4574654b-832d-415a-a55b-e850c1d972d9',
+          user: {
+            id: '0f449c7c-832d-415a-a55b-e850c1d972d9',
+            fullName: 'Tài xế A',
+            phone: '0987654321',
+          },
+        },
+      },
+    ];
+
+    const buffer = await exportService.exportExcel(data, 'kpi-leaderboard');
+
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer.length).toBeGreaterThan(0);
+  });
+
   it('should generate an Excel buffer for a single object summary', async () => {
     const data = {
       totalTrips: 10,

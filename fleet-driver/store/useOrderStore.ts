@@ -28,7 +28,7 @@ export interface Order {
   description?: string;
   recipientName?: string;
   recipientPhone?: string;
-  category?: 'raw_material' | 'finished_goods' | 'component' | 'equipment' | 'other';
+  category?: 'bulk' | 'fragile' | 'bulky' | 'dangerous' | 'other';
   priority?: 'low' | 'medium' | 'high';
   deliveryDeadline?: string;
   status: OrderStatus;

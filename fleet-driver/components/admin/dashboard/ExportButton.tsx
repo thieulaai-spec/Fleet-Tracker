@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, ActivityIndicator, Text, View } from 'react-native';
-import { FileText, Share2 } from 'lucide-react-native';
+import { Share2 } from 'lucide-react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '../../../store/useAuthStore';
@@ -18,16 +18,16 @@ export function ExportButton({ reportName, params = {}, color = '#6366f1' }: Exp
   const [loading, setLoading] = useState(false);
   const { token } = useAuthStore();
 
-  const handleExport = async (type: 'PDF' | 'EXCEL') => {
+  const handleExport = async () => {
     setLoading(true);
     try {
       const queryString = new URLSearchParams({
         report_name: reportName,
-        type: type.toLowerCase(),
+        type: 'excel',
         ...params,
       }).toString();
 
-      const fileUri = `${(FileSystem as any).documentDirectory}${reportName}.${type === 'PDF' ? 'pdf' : 'xlsx'}`;
+      const fileUri = `${(FileSystem as any).documentDirectory}${reportName}.xlsx`;
       
       const downloadResumable = (FileSystem as any).createDownloadResumable(
         `${API_URL}/reports/export?${queryString}`,
@@ -67,22 +67,7 @@ export function ExportButton({ reportName, params = {}, color = '#6366f1' }: Exp
   return (
     <View className="flex-row gap-3">
       <TouchableOpacity 
-        onPress={() => handleExport('PDF')}
-        disabled={loading}
-        className="flex-row items-center bg-slate-900 border border-white/10 px-4 py-2 rounded-xl"
-      >
-        {loading ? (
-          <ActivityIndicator size="small" color={color} />
-        ) : (
-          <>
-            <FileText size={16} color={color} />
-            <Text className="text-slate-50 text-xs font-bold ml-2">PDF</Text>
-          </>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        onPress={() => handleExport('EXCEL')}
+        onPress={handleExport}
         disabled={loading}
         className="flex-row items-center bg-slate-900 border border-white/10 px-4 py-2 rounded-xl"
       >

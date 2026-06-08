@@ -71,11 +71,11 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     // 5 Drivers (Realistic Vietnamese Names & phones)
     const driversData: Driver[] = [];
     const driversInfo = [
-      { email: 'driver1@fleettracker.com', name: 'Nguyễn Văn Hùng', phone: '0901234567', license: 'C', fingerprintId: null as any },
-      { email: 'driver2@fleettracker.com', name: 'Trần Thanh Hải', phone: '0912345678', license: 'B2', fingerprintId: null as any },
-      { email: 'driver3@fleettracker.com', name: 'Lê Minh Quốc', phone: '0987654321', license: 'D', fingerprintId: null as any },
-      { email: 'driver4@fleettracker.com', name: 'Phạm Hoàng Nam', phone: '0934567890', license: 'FC', fingerprintId: null as any },
-      { email: 'driver5@fleettracker.com', name: 'Vũ Tiến Đạt', phone: '0977889900', license: 'C', fingerprintId: null as any },
+      { email: 'driver1@fleettracker.com', name: 'Nguyễn Văn Hùng', phone: '0901234567', license: 'C', fingerprintId: null as any, avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop' },
+      { email: 'driver2@fleettracker.com', name: 'Trần Thanh Hải', phone: '0912345678', license: 'B2', fingerprintId: null as any, avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop' },
+      { email: 'driver3@fleettracker.com', name: 'Lê Minh Quốc', phone: '0987654321', license: 'D', fingerprintId: null as any, avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop' },
+      { email: 'driver4@fleettracker.com', name: 'Phạm Hoàng Nam', phone: '0934567890', license: 'FC', fingerprintId: null as any, avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop' },
+      { email: 'driver5@fleettracker.com', name: 'Vũ Tiến Đạt', phone: '0977889900', license: 'C', fingerprintId: null as any, avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop' },
     ];
 
     for (const info of driversInfo) {
@@ -86,6 +86,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
           role: UserRole.DRIVER,
           fullName: info.name,
           phone: info.phone,
+          avatarUrl: info.avatarUrl,
         })
       );
 
@@ -128,11 +129,11 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     console.log('Seeding vehicles...');
     const vehiclesData: Vehicle[] = [];
     const vehiclesInfo = [
-      { plateNumber: '29C-432.10', type: VehicleType.MEDIUM, capacity: 3500, model: 'Isuzu NPR400', year: 2022, status: VehicleStatus.DELIVERING },
-      { plateNumber: '29D-876.54', type: VehicleType.LARGE, capacity: 8000, model: 'Hino 500', year: 2021, status: VehicleStatus.MAINTENANCE },
-      { plateNumber: '30A-999.99', type: VehicleType.SMALL, capacity: 1500, model: 'Suzuki Carry Pro', year: 2023, status: VehicleStatus.AVAILABLE },
-      { plateNumber: '29C-543.21', type: VehicleType.MEDIUM, capacity: 4000, model: 'Hyundai Mighty', year: 2020, status: VehicleStatus.AVAILABLE },
-      { plateNumber: '30E-888.88', type: VehicleType.LARGE, capacity: 10000, model: 'Thaco Auman', year: 2019, status: VehicleStatus.DELIVERING },
+      { plateNumber: '29C-432.10', type: VehicleType.MEDIUM, capacity: 3500, model: 'Isuzu NPR400', year: 2022, status: VehicleStatus.DELIVERING, imageUrl: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&h=400&fit=crop' },
+      { plateNumber: '29D-876.54', type: VehicleType.LARGE, capacity: 8000, model: 'Hino 500', year: 2021, status: VehicleStatus.MAINTENANCE, imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop' },
+      { plateNumber: '30A-999.99', type: VehicleType.SMALL, capacity: 1500, model: 'Suzuki Carry Pro', year: 2023, status: VehicleStatus.AVAILABLE, imageUrl: 'https://images.unsplash.com/photo-1626847037657-fd3622613ce3?w=600&h=400&fit=crop' },
+      { plateNumber: '29C-543.21', type: VehicleType.MEDIUM, capacity: 4000, model: 'Hyundai Mighty', year: 2020, status: VehicleStatus.AVAILABLE, imageUrl: 'https://images.unsplash.com/photo-1591768793355-74d75b57d59f?w=600&h=400&fit=crop' },
+      { plateNumber: '30E-888.88', type: VehicleType.LARGE, capacity: 10000, model: 'Thaco Auman', year: 2019, status: VehicleStatus.DELIVERING, imageUrl: 'https://images.unsplash.com/photo-1516576880881-14017bab1012?w=600&h=400&fit=crop' },
     ];
 
     for (let i = 0; i < vehiclesInfo.length; i++) {
@@ -149,7 +150,7 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
           status: v.status,
           deviceId: `device_00${i + 1}`,
           driver: assignedDriver,
-          imageUrl: `https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&h=400&fit=crop`,
+          imageUrl: v.imageUrl,
           lastKnownLocation: {
             type: 'Point',
             coordinates: [105.834159 + i * 0.015, 21.027764 + i * 0.012],
@@ -164,16 +165,16 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
     console.log('Seeding realistic orders...');
     const ordersData: Order[] = [];
     const ordersInfo = [
-      { weight: 1200, desc: 'Lô hàng may mặc xuất khẩu - Hoàn Kiếm', pickup: 'Chợ Đồng Xuân, Hoàn Kiếm, Hà Nội', pLng: 105.8492, pLat: 21.0382, deliv: 'Ga Hà Nội, Đống Đa, Hà Nội', dLng: 105.8405, dLat: 21.0253, status: OrderStatus.PENDING, category: OrderCategory.FINISHED_GOODS, priority: OrderPriority.HIGH, name: 'Nguyễn Thị Hoa', phone: '0987654321', deadline: new Date(Date.now() + 2 * 3600000), createdAt: new Date(Date.now() - 2 * 60 * 1000) },
-      { weight: 800, desc: 'Thiết bị điện tử gia dụng - Cầu Giấy', pickup: 'Trần Duy Hưng, Cầu Giấy, Hà Nội', pLng: 105.7960, pLat: 21.0090, deliv: 'Khu công nghiệp Bắc Thăng Long, Đông Anh, Hà Nội', dLng: 105.7830, dLat: 21.1150, status: OrderStatus.PENDING, category: OrderCategory.EQUIPMENT, priority: OrderPriority.MEDIUM, name: 'Phạm Minh Đức', phone: '0912345678', deadline: new Date(Date.now() + 4 * 3600000), createdAt: new Date(Date.now() - 10 * 60 * 1000) },
+      { weight: 1200, desc: 'Lô hàng may mặc xuất khẩu - Hoàn Kiếm', pickup: 'Chợ Đồng Xuân, Hoàn Kiếm, Hà Nội', pLng: 105.8492, pLat: 21.0382, deliv: 'Ga Hà Nội, Đống Đa, Hà Nội', dLng: 105.8405, dLat: 21.0253, status: OrderStatus.PENDING, category: OrderCategory.OTHER, priority: OrderPriority.HIGH, name: 'Nguyễn Thị Hoa', phone: '0987654321', deadline: new Date(Date.now() + 2 * 3600000), createdAt: new Date(Date.now() - 2 * 60 * 1000) },
+      { weight: 800, desc: 'Thiết bị điện tử gia dụng - Cầu Giấy', pickup: 'Trần Duy Hưng, Cầu Giấy, Hà Nội', pLng: 105.7960, pLat: 21.0090, deliv: 'Khu công nghiệp Bắc Thăng Long, Đông Anh, Hà Nội', dLng: 105.7830, dLat: 21.1150, status: OrderStatus.PENDING, category: OrderCategory.FRAGILE, priority: OrderPriority.MEDIUM, name: 'Phạm Minh Đức', phone: '0912345678', deadline: new Date(Date.now() + 4 * 3600000), createdAt: new Date(Date.now() - 10 * 60 * 1000) },
       { weight: 2400, desc: 'Thực phẩm đông lạnh nhập khẩu - Nội Bài', pickup: 'Cảng Hàng Không Nội Bài, Sóc Sơn, Hà Nội', pLng: 105.8056, pLat: 21.2187, deliv: 'Siêu thị Big C Thăng Long, Cầu Giấy, Hà Nội', dLng: 105.7942, dLat: 21.0068, status: OrderStatus.PENDING, category: OrderCategory.OTHER, priority: OrderPriority.HIGH, name: 'Trần Văn Cường', phone: '0901234567', deadline: new Date(Date.now() + 30 * 60 * 1000), createdAt: new Date(Date.now() - 25 * 60 * 1000) },
-      { weight: 1500, desc: 'Vật liệu xây dựng & phụ gia - Hà Đông', pickup: 'Khu đô thị Văn Quán, Hà Đông, Hà Nội', pLng: 105.7830, pLat: 20.9780, deliv: 'Khu đô thị Times City, Hai Bà Trưng, Hà Nội', dLng: 105.8690, dLat: 21.0060, status: OrderStatus.DELIVERED, category: OrderCategory.RAW_MATERIAL, priority: OrderPriority.MEDIUM, name: 'Lê Hoàng Anh', phone: '0934567890', deadline: new Date(Date.now() - 2 * 3600000), createdAt: new Date(Date.now() - 3 * 3600000) },
-      { weight: 950, desc: 'Nông sản & Trái cây miền Bắc - Long Biên', pickup: 'Chợ đầu mối Long Biên, Ba Đình, Hà Nội', pLng: 105.8499, pLat: 21.0450, deliv: 'Chợ Hôm, Hai Bà Trưng, Hà Nội', dLng: 105.8495, dLat: 21.0182, status: OrderStatus.DELIVERED, category: OrderCategory.OTHER, priority: OrderPriority.LOW, name: 'Vũ Thị Lan', phone: '0977889900', deadline: new Date(Date.now() - 1 * 3600000), createdAt: new Date(Date.now() - 4 * 3600000) },
-      { weight: 3100, desc: 'Hóa mỹ phẩm & Chai lọ thủy tinh - Bắc Ninh', pickup: 'KCN Tiên Sơn, Tiên Du, Bắc Ninh', pLng: 106.0150, pLat: 21.0900, deliv: 'Kho tổng Đức Giang, Long Biên, Hà Nội', dLng: 105.8950, dLat: 21.0550, status: OrderStatus.DELIVERED, category: OrderCategory.RAW_MATERIAL, priority: OrderPriority.HIGH, name: 'Nguyễn Tiến Dũng', phone: '0966778899', deadline: new Date(Date.now() - 3 * 3600000), createdAt: new Date(Date.now() - 5 * 3600000) },
-      { weight: 1900, desc: 'Dược phẩm & Vật tư y tế - Đống Đa', pickup: 'Bệnh viện Bạch Mai, Đống Đa, Hà Nội', pLng: 105.8418, pLat: 21.0015, deliv: 'Trung tâm Y tế Sóc Sơn, Hà Nội', dLng: 105.8300, dLat: 21.2580, status: OrderStatus.DELIVERING, category: OrderCategory.OTHER, priority: OrderPriority.HIGH, name: 'Hoàng Văn Nam', phone: '0988990011', deadline: new Date(Date.now() + 5 * 3600000), createdAt: new Date(Date.now() - 40 * 60 * 1000) },
-      { weight: 700, desc: 'Phụ tùng ô tô & Xe máy chuyên dụng - Gia Lâm', pickup: 'KCN Sài Đồng B, Long Biên, Hà Nội', pLng: 105.9050, pLat: 21.0250, deliv: 'Đường Nguyễn Trãi, Thanh Xuân, Hà Nội', dLng: 105.8100, dLat: 20.9980, status: OrderStatus.ASSIGNED, category: OrderCategory.COMPONENT, priority: OrderPriority.MEDIUM, name: 'Đặng Quốc Huy', phone: '0955667788', deadline: new Date(Date.now() - 90 * 60 * 1000), createdAt: new Date(Date.now() - 50 * 60 * 1000) },
-      { weight: 1350, desc: 'Bao bì giấy & Hộp carton - Thanh Trì', pickup: 'KCN Ngọc Hồi, Thanh Trì, Hà Nội', pLng: 105.8400, pLat: 20.9320, deliv: 'Đường Giải Phóng, Hai Bà Trưng, Hà Nội', dLng: 105.8420, dLat: 20.9850, status: OrderStatus.ASSIGNED, category: OrderCategory.OTHER, priority: OrderPriority.LOW, name: 'Lê Minh Tâm', phone: '0944556677', deadline: new Date(Date.now() + 75 * 60 * 1000), createdAt: new Date(Date.now() - 60 * 60 * 1000) },
-      { weight: 2800, desc: 'Thức ăn chăn nuôi dạng hạt - Hưng Yên', pickup: 'KCN Phố Nối A, Yên Mỹ, Hưng Yên', pLng: 106.0300, pLat: 20.9600, deliv: 'Trang trại chăn nuôi Đông Anh, Hà Nội', dLng: 105.8400, dLat: 21.1500, status: OrderStatus.ASSIGNED, category: OrderCategory.RAW_MATERIAL, priority: OrderPriority.MEDIUM, name: 'Phạm Minh Tuấn', phone: '0933445566', deadline: new Date(Date.now() + 5 * 3600000), createdAt: new Date(Date.now() - 70 * 60 * 1000) },
+      { weight: 1500, desc: 'Vật liệu xây dựng & phụ gia - Hà Đông', pickup: 'Khu đô thị Văn Quán, Hà Đông, Hà Nội', pLng: 105.7830, pLat: 20.9780, deliv: 'Khu đô thị Times City, Hai Bà Trưng, Hà Nội', dLng: 105.8690, dLat: 21.0060, status: OrderStatus.DELIVERED, category: OrderCategory.BULK, priority: OrderPriority.MEDIUM, name: 'Lê Hoàng Anh', phone: '0934567890', deadline: new Date(Date.now() - 2 * 3600000), createdAt: new Date(Date.now() - 3 * 3600000) },
+      { weight: 950, desc: 'Nông sản & Trái cây miền Bắc - Long Biên', pickup: 'Chợ đầu mối Long Biên, Ba Đình, Hà Nội', pLng: 105.8499, pLat: 21.0450, deliv: 'Chợ Hôm, Hai Bà Trưng, Hà Nội', dLng: 105.8495, dLat: 21.0182, status: OrderStatus.DELIVERED, category: OrderCategory.BULK, priority: OrderPriority.LOW, name: 'Vũ Thị Lan', phone: '0977889900', deadline: new Date(Date.now() - 1 * 3600000), createdAt: new Date(Date.now() - 4 * 3600000) },
+      { weight: 3100, desc: 'Hóa chất công nghiệp nguy hiểm - Bắc Ninh', pickup: 'KCN Tiên Sơn, Tiên Du, Bắc Ninh', pLng: 106.0150, pLat: 21.0900, deliv: 'Kho tổng Đức Giang, Long Biên, Hà Nội', dLng: 105.8950, dLat: 21.0550, status: OrderStatus.DELIVERED, category: OrderCategory.DANGEROUS, priority: OrderPriority.HIGH, name: 'Nguyễn Tiến Dũng', phone: '0966778899', deadline: new Date(Date.now() - 3 * 3600000), createdAt: new Date(Date.now() - 5 * 3600000) },
+      { weight: 1900, desc: 'Dược phẩm & Vật tư y tế - Đống Đa', pickup: 'Bệnh viện Bạch Mai, Đống Đa, Hà Nội', pLng: 105.8418, pLat: 21.0015, deliv: 'Trung tâm Y tế Sóc Sơn, Hà Nội', dLng: 105.8300, dLat: 21.2580, status: OrderStatus.DELIVERING, category: OrderCategory.FRAGILE, priority: OrderPriority.HIGH, name: 'Hoàng Văn Nam', phone: '0988990011', deadline: new Date(Date.now() + 5 * 3600000), createdAt: new Date(Date.now() - 40 * 60 * 1000) },
+      { weight: 700, desc: 'Phụ tùng ô tô & Xe máy chuyên dụng - Gia Lâm', pickup: 'KCN Sài Đồng B, Long Biên, Hà Nội', pLng: 105.9050, pLat: 21.0250, deliv: 'Đường Nguyễn Trãi, Thanh Xuân, Hà Nội', dLng: 105.8100, dLat: 20.9980, status: OrderStatus.ASSIGNED, category: OrderCategory.BULKY, priority: OrderPriority.MEDIUM, name: 'Đặng Quốc Huy', phone: '0955667788', deadline: new Date(Date.now() - 90 * 60 * 1000), createdAt: new Date(Date.now() - 50 * 60 * 1000) },
+      { weight: 1350, desc: 'Bao bì giấy & Hộp carton - Thanh Trì', pickup: 'KCN Ngọc Hồi, Thanh Trì, Hà Nội', pLng: 105.8400, pLat: 20.9320, deliv: 'Đường Giải Phóng, Hai Bà Trưng, Hà Nội', dLng: 105.8420, dLat: 20.9850, status: OrderStatus.ASSIGNED, category: OrderCategory.BULKY, priority: OrderPriority.LOW, name: 'Lê Minh Tâm', phone: '0944556677', deadline: new Date(Date.now() + 75 * 60 * 1000), createdAt: new Date(Date.now() - 60 * 60 * 1000) },
+      { weight: 2800, desc: 'Thức ăn chăn nuôi dạng hạt - Hưng Yên', pickup: 'KCN Phố Nối A, Yên Mỹ, Hưng Yên', pLng: 106.0300, pLat: 20.9600, deliv: 'Trang trại chăn nuôi Đông Anh, Hà Nội', dLng: 105.8400, dLat: 21.1500, status: OrderStatus.ASSIGNED, category: OrderCategory.BULK, priority: OrderPriority.MEDIUM, name: 'Phạm Minh Tuấn', phone: '0933445566', deadline: new Date(Date.now() + 5 * 3600000), createdAt: new Date(Date.now() - 70 * 60 * 1000) },
     ];
 
     for (const info of ordersInfo) {
@@ -369,10 +370,10 @@ export async function seedDatabase(dataSource: DataSource, adminEmail?: string, 
         
         // Save TripOrders
         const categories = [
-          OrderCategory.RAW_MATERIAL,
-          OrderCategory.FINISHED_GOODS,
-          OrderCategory.COMPONENT,
-          OrderCategory.EQUIPMENT,
+          OrderCategory.BULK,
+          OrderCategory.FRAGILE,
+          OrderCategory.BULKY,
+          OrderCategory.DANGEROUS,
           OrderCategory.OTHER,
         ];
         const priorities = [OrderPriority.LOW, OrderPriority.MEDIUM, OrderPriority.HIGH];

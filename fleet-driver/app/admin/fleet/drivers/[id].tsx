@@ -3,26 +3,18 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   Alert,
   ActivityIndicator,
   Image,
+  TouchableOpacity,
 } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ArrowLeft,
-  Edit3,
-  Trash2,
-  User as UserIcon,
-  Fingerprint,
-} from "lucide-react-native";
 import axios from "axios";
 import { useAuthStore } from "../../../../store/useAuthStore";
 import {
   useFleetStore,
   Driver,
-  DriverStatus,
 } from "../../../../store/useFleetStore";
 import { DriverForm } from "../../../../components/admin/fleet/DriverForm";
 
@@ -33,11 +25,10 @@ import { DriverKpi } from "../../../../components/admin/fleet/DriverKpi";
 import { DriverJourneyTimeline } from "../../../../components/admin/fleet/DriverJourneyTimeline";
 import { DriverKpiModal } from "../../../../components/profile/DriverKpiModal";
 
-const STATUS_CONFIG = {
-  [DriverStatus.AVAILABLE]: { label: "Available", color: "#10b981" },
-  [DriverStatus.ON_TRIP]: { label: "On Trip", color: "#6366f1" },
-  [DriverStatus.OFF_DUTY]: { label: "Off Duty", color: "#94a3b8" },
-};
+import { DriverHeader } from "../../../../components/admin/fleet/DriverHeader";
+import { DriverProfileCard } from "../../../../components/admin/fleet/DriverProfileCard";
+import { FingerprintStatusCard } from "../../../../components/admin/fleet/FingerprintStatusCard";
+import { DriverDetailTabs } from "../../../../components/admin/fleet/DriverDetailTabs";
 
 export default function DriverDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -169,6 +160,29 @@ export default function DriverDetailScreen() {
     }
   };
 
+  const handleClearFingerprintPrompt = () => {
+    if (!driver) return;
+    Alert.alert(
+      "Xóa vân tay",
+      `Bạn có chắc chắn muốn xóa đăng ký vân tay (#${driver.fingerprintId}) của tài xế ${driver.user.fullName}?`,
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearFingerprint(driver.id);
+              Alert.alert("Thành công", "Đã xóa đăng ký vân tay của tài xế.");
+            } catch (error: any) {
+              Alert.alert("Lỗi", error.message);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading && !driver && id !== "create") {
     return (
       <SafeAreaView className="flex-1 bg-slate-950">
@@ -198,40 +212,17 @@ export default function DriverDetailScreen() {
     );
   }
 
-  const status = driver
-    ? STATUS_CONFIG[driver.status] || STATUS_CONFIG[DriverStatus.OFF_DUTY]
-    : null;
-
   return (
     <SafeAreaView className="flex-1 bg-slate-950" edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-row items-center px-4 py-3 gap-4">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
-        >
-          <ArrowLeft size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-xl font-extrabold text-white">
-          {id === "create" ? "New Driver" : "Driver Detail"}
-        </Text>
-        {id !== "create" && (
-          <View className="flex-row gap-2">
-            <TouchableOpacity
-              onPress={() => setIsEditing(!isEditing)}
-              className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
-            >
-              <Edit3 size={20} color={isEditing ? "#10b981" : "#6366f1"} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleDelete}
-              className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
-            >
-              <Trash2 size={20} color="#ef4444" />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      
+      <DriverHeader
+        onBack={() => router.back()}
+        isCreate={id === "create"}
+        isEditing={isEditing}
+        onToggleEdit={() => setIsEditing(!isEditing)}
+        onDelete={handleDelete}
+      />
 
       {isEditing ? (
         <DriverForm
@@ -241,107 +232,20 @@ export default function DriverDetailScreen() {
         />
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-          <View className="items-center py-8 bg-slate-800 rounded-b-[32px] border-b border-x border-white/5">
-            <View className="w-24 h-24 rounded-[32px] bg-indigo-500/10 justify-center items-center mb-4 overflow-hidden">
-              {driver?.avatarUrl || driver?.user?.avatarUrl ? (
-                <Image 
-                  source={{ uri: driver.avatarUrl || driver.user.avatarUrl }} 
-                  className="w-full h-full" 
-                />
-              ) : (
-                <UserIcon size={48} color="#6366f1" />
-              )}
-            </View>
-            <Text className="text-2xl font-bold text-slate-50 mb-2">{driver?.user.fullName}</Text>
-            {status && (
-              <View
-                className="flex-row items-center px-3 py-1.5 rounded-xl gap-2"
-                style={{ backgroundColor: `${status.color}20` }}
-              >
-                <View
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: status.color }}
-                />
-                <Text
-                  className="text-xs font-extrabold uppercase"
-                  style={{ color: status.color }}
-                >
-                  {status.label}
-                </Text>
-              </View>
-            )}
-          </View>
+          <DriverProfileCard driver={driver} />
 
           {/* Segmented Tab Selector */}
-          <View className="flex-row border-b border-white/5 mx-5 mt-6 mb-2">
-            <TouchableOpacity
-              onPress={() => setActiveTab('info')}
-              className="flex-1 pb-3 items-center"
-              style={{ borderBottomWidth: activeTab === 'info' ? 2 : 0, borderBottomColor: '#6366f1' }}
-            >
-              <Text className={`text-sm font-extrabold uppercase tracking-wider ${activeTab === 'info' ? 'text-indigo-400' : 'text-slate-400'}`}>Thông tin</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setActiveTab('journey')}
-              className="flex-1 pb-3 items-center"
-              style={{ borderBottomWidth: activeTab === 'journey' ? 2 : 0, borderBottomColor: '#6366f1' }}
-            >
-              <Text className={`text-sm font-extrabold uppercase tracking-wider ${activeTab === 'journey' ? 'text-indigo-400' : 'text-slate-400'}`}>Hành trình minh chứng</Text>
-            </TouchableOpacity>
-          </View>
+          <DriverDetailTabs
+            activeTab={activeTab}
+            onTabChange={(tab) => setActiveTab(tab)}
+          />
 
           {activeTab === 'info' && driver && (
             <View className="p-5 gap-5">
-              {driver.fingerprintId ? (
-                <View className="bg-slate-850 p-5 rounded-[24px] border border-white/5 flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-xl bg-indigo-500/10 items-center justify-center">
-                      <Fingerprint size={20} color="#6366f1" />
-                    </View>
-                    <View>
-                      <Text className="text-slate-50 font-bold text-sm">Sinh trắc học vân tay</Text>
-                      <Text className="text-indigo-400 text-xs mt-0.5 font-medium">Mã vân tay: #{driver.fingerprintId}</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      Alert.alert(
-                        "Xóa vân tay",
-                        `Bạn có chắc chắn muốn xóa đăng ký vân tay (#${driver.fingerprintId}) của tài xế ${driver.user.fullName}?`,
-                        [
-                          { text: "Hủy", style: "cancel" },
-                          {
-                            text: "Xóa",
-                            style: "destructive",
-                            onPress: async () => {
-                              try {
-                                await clearFingerprint(driver.id);
-                                Alert.alert("Thành công", "Đã xóa đăng ký vân tay của tài xế.");
-                              } catch (error: any) {
-                                Alert.alert("Lỗi", error.message);
-                              }
-                            }
-                          }
-                        ]
-                      );
-                    }}
-                    className="bg-red-500/10 px-3 py-2 rounded-xl border border-red-500/20"
-                    activeOpacity={0.7}
-                  >
-                    <Text className="text-red-400 text-xs font-extrabold uppercase">Xóa</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View className="bg-slate-850 p-5 rounded-[24px] border border-white/5 flex-row items-center gap-3">
-                  <View className="w-10 h-10 rounded-xl bg-slate-800 items-center justify-center">
-                    <Fingerprint size={20} color="#64748b" />
-                  </View>
-                  <View>
-                    <Text className="text-slate-400 font-bold text-sm">Sinh trắc học vân tay</Text>
-                    <Text className="text-slate-500 text-xs mt-0.5 font-medium">Chưa đăng ký vân tay</Text>
-                  </View>
-                </View>
-              )}
+              <FingerprintStatusCard
+                driver={driver}
+                onClearFingerprint={handleClearFingerprintPrompt}
+              />
 
               <DriverContact driver={driver} />
               <DriverLicense driver={driver} />

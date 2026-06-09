@@ -22,7 +22,10 @@ import { BlurView } from 'expo-blur';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useOrderStore, OrderStatus, Order } from '../../store/useOrderStore';
-import { OrderCardItem, STATUS_CONFIG, FILTER_STATUSES } from '../../components/admin/order/OrderCardItem';
+import { OrderCardItem } from '../../components/admin/order/OrderCardItem';
+import { OrderFilterPills } from '../../components/admin/order/OrderFilterPills';
+
+type FilterDateType = 'all' | 'today' | '7days' | '30days' | 'custom';
 
 export default function AdminOrdersScreen() {
   const router = useRouter();
@@ -33,7 +36,6 @@ export default function AdminOrdersScreen() {
 
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  type FilterDateType = 'all' | 'today' | '7days' | '30days' | 'custom';
   const [activeDateFilter, setActiveDateFilter] = useState<FilterDateType>('all');
   const [showPicker, setShowPicker] = useState<'start' | 'end' | null>(null);
 
@@ -114,14 +116,12 @@ export default function AdminOrdersScreen() {
 
   return (
     <View className="flex-1 bg-slate-950">
-      {/* Decorative premium gradient background */}
       <LinearGradient
         colors={['#e6fcf0', '#f1f5f9', '#ffffff']}
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.8, y: 0.8 }}
       />
-      {/* Soft blurred decorative glowing mint/emerald circles */}
       <View 
         style={{
           position: 'absolute',
@@ -187,39 +187,12 @@ export default function AdminOrdersScreen() {
           </BlurView>
         </View>
 
-        {/* Quick Date Filters Pills */}
-        <View className="px-5 mb-4 mt-1">
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8, paddingRight: 20 }}
-          >
-            {[
-              { id: 'all', label: 'Tất cả' },
-              { id: 'today', label: 'Hôm nay' },
-              { id: '7days', label: '7 ngày qua' },
-              { id: '30days', label: '30 ngày qua' },
-              { id: 'custom', label: 'Tùy chỉnh' },
-            ].map((f) => {
-              const isActive = activeDateFilter === f.id;
-              return (
-                <TouchableOpacity
-                  key={f.id}
-                  onPress={() => setActiveDateFilter(f.id as FilterDateType)}
-                  className={isActive 
-                    ? "px-4 py-2.5 rounded-full border bg-indigo-600 border-indigo-500" 
-                    : "px-4 py-2.5 rounded-full border bg-slate-900/60 border-white/5"
-                  }
-                  activeOpacity={0.7}
-                >
-                  <Text className={isActive ? "text-xs font-bold text-white" : "text-xs font-bold text-slate-400"}>
-                    {f.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+        <OrderFilterPills
+          activeDateFilter={activeDateFilter}
+          onSelectDateFilter={(filter) => setActiveDateFilter(filter)}
+          selectedStatus={selectedStatus}
+          onSelectStatus={(status) => setSelectedStatus(status)}
+        />
 
         {/* Custom Range picker buttons */}
         {activeDateFilter === 'custom' && (
@@ -244,7 +217,7 @@ export default function AdminOrdersScreen() {
               activeOpacity={0.7}
             >
               <View>
-                <Text className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Đến ngày</Text>
+                <Text className="text-[8px] font-black uppercase text-slate-550 tracking-wider">Đến ngày</Text>
                 <Text className="text-white text-xs font-bold mt-0.5">
                   {endDate ? endDate.toLocaleDateString('vi-VN') : '--/--/----'}
                 </Text>
@@ -282,41 +255,6 @@ export default function AdminOrdersScreen() {
           />
         )}
 
-        <View className="mb-4">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
-            <TouchableOpacity 
-              className={`px-4 py-2 rounded-full bg-slate-800 border border-white/5 ${
-                selectedStatus === 'all' ? 'bg-indigo-500 border-indigo-500' : ''
-              }`}
-              onPress={() => setSelectedStatus('all')}
-              activeOpacity={0.7}
-            >
-              <Text className={`font-semibold text-sm ${
-                selectedStatus === 'all' ? 'text-white' : 'text-slate-400'
-              }`}>All</Text>
-            </TouchableOpacity>
-            {FILTER_STATUSES.map((status) => {
-              const config = STATUS_CONFIG[status];
-              return (
-                <TouchableOpacity 
-                  key={status}
-                  className={`px-4 py-2 rounded-full bg-slate-800 border border-white/5 ${
-                    selectedStatus === status ? 'bg-indigo-500 border-indigo-500' : ''
-                  }`}
-                  onPress={() => setSelectedStatus(status)}
-                  activeOpacity={0.7}
-                >
-                  <Text className={`font-semibold text-sm ${
-                    selectedStatus === status ? 'text-white' : 'text-slate-400'
-                  }`}>
-                    {config?.label || status}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
         <FlatList
           data={filteredOrders}
           renderItem={renderOrderCard}
@@ -333,7 +271,7 @@ export default function AdminOrdersScreen() {
             !loading ? (
               <View className="items-center justify-center mt-20 gap-4">
                 <Package size={64} color="#1e293b" />
-                <Text className="text-slate-50 text-xl font-bold">No Orders Found</Text>
+                <Text className="text-slate-550 text-xl font-bold">No Orders Found</Text>
                 <Text className="text-slate-500 text-base">Try adjusting your search or filters</Text>
               </View>
             ) : (

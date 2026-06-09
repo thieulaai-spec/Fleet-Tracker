@@ -25,6 +25,47 @@ const getStatusColor = (status: string = '') => {
   }
 };
 
+const getCategoryLabel = (category?: string) => {
+  switch (category) {
+    case 'bulk': return 'Dạng thô';
+    case 'fragile': return 'Dễ vỡ';
+    case 'bulky': return 'Cồng kềnh';
+    case 'dangerous': return 'Nguy hiểm';
+    case 'other': return 'Hàng khác';
+    default: return '';
+  }
+};
+
+const getCategoryBadgeStyles = (category?: string) => {
+  switch (category) {
+    case 'fragile': 
+      return { 
+        bg: 'bg-amber-500/10 border-amber-500/25', 
+        text: 'text-amber-500' 
+      };
+    case 'dangerous': 
+      return { 
+        bg: 'bg-rose-500/10 border-rose-500/25', 
+        text: 'text-rose-500' 
+      };
+    case 'bulk': 
+      return { 
+        bg: 'bg-blue-500/10 border-blue-500/25', 
+        text: 'text-blue-400' 
+      };
+    case 'bulky': 
+      return { 
+        bg: 'bg-violet-500/10 border-violet-500/25', 
+        text: 'text-violet-400' 
+      };
+    default: 
+      return { 
+        bg: 'bg-slate-500/10 border-slate-500/25', 
+        text: 'text-slate-400' 
+      };
+  }
+};
+
 export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, currentOrder, routeData }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -59,7 +100,7 @@ export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, 
                   <Navigation size={22} color="#fff" strokeWidth={2} />
                 </LinearGradient>
                 <View className="flex-1">
-                  <View className="flex-row items-center gap-1.5 mb-0.5">
+                  <View className="flex-row items-center gap-1.5 mb-0.5 flex-wrap">
                     <View className="bg-indigo-500/20 px-1.5 py-0.5 rounded-full border border-indigo-500/30">
                       <Text className="text-indigo-400 text-[7px] font-black uppercase tracking-widest">In Progress</Text>
                     </View>
@@ -67,6 +108,13 @@ export const MissionDashboard: React.FC<MissionDashboardProps> = ({ activeTrip, 
                       <View className="w-1 h-1 rounded-full bg-emerald-500" />
                       <Text className="text-emerald-400 text-[7px] font-black uppercase tracking-widest">Live</Text>
                     </View>
+                    {currentOrder?.category && (
+                      <View className={`px-1.5 py-0.5 rounded-full border ${getCategoryBadgeStyles(currentOrder.category).bg}`}>
+                        <Text className={`text-[7px] font-black uppercase tracking-widest ${getCategoryBadgeStyles(currentOrder.category).text}`}>
+                          {getCategoryLabel(currentOrder.category)}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                   <Text className="text-white font-black text-lg tracking-tighter uppercase">Mission Intel</Text>
                   {!isCollapsed && (

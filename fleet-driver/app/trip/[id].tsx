@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Linking, Platform, RefreshControl, Image, StatusBar } from 'react-native';
+import { View, Text, ScrollView, Alert, ActivityIndicator, Linking, Platform, RefreshControl, StatusBar, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { MapPin, Calendar, Clock, ChevronLeft, Package, Truck, CheckCircle2, AlertTriangle, Navigation, Camera, Fuel, Route, Fingerprint, FileText, UserCheck, Check } from 'lucide-react-native';
+import { Calendar, Clock, Package, AlertTriangle } from 'lucide-react-native';
 import { useTripStore, TripStatus, OrderStatus } from '../../store/useTripStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import Toast from 'react-native-toast-message';
-import { SosButton } from '../../components/ui/SosButton';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TripBadge } from '../../components/trip/TripBadge';
 import { OrderCard } from '../../components/trip/OrderCard';
 import { TripSummaryCard } from '../../components/trip/TripSummaryCard';
+import { TripHeader } from '../../components/trip/TripHeader';
+import { TripTimeline } from '../../components/trip/TripTimeline';
+import { TripActions } from '../../components/trip/TripActions';
 
 export default function TripDetails() {
   const { id } = useLocalSearchParams();
@@ -47,14 +48,13 @@ export default function TripDetails() {
       setVerifications(data.verifications);
     } catch (err: any) {
       console.error('Failed to load trip details from API:', err);
-      // Fallback to local store
       const localFound = (activeTrip?.id === id ? activeTrip : null) || 
                          pendingTrips.find(t => t.id === id) || 
                          tripHistory.find(t => t.id === id);
       if (localFound) {
         setTrip(localFound);
       }
-    } finally {
+    } fillAll: {
       setLocalLoading(false);
       setRefreshing(false);
     }
@@ -83,7 +83,6 @@ export default function TripDetails() {
               if (newStatus === TripStatus.COMPLETED) {
                 router.replace('/(tabs)');
               } else {
-                // Refresh data to reflect in-progress state
                 loadData();
               }
             } catch (err: any) {
@@ -220,8 +219,6 @@ export default function TripDetails() {
     return `${mins} phút`;
   };
 
-
-
   if (localLoading && !trip) {
     return (
       <SafeAreaView className="flex-1 bg-slate-950 justify-center items-center" edges={['top']}>
@@ -255,21 +252,12 @@ export default function TripDetails() {
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <Stack.Screen options={{ headerShown: false }} />
       
-      {/* Custom Premium Header */}
-      <View className="flex-row items-center px-4 py-3 gap-4 border-b border-white/5 bg-slate-950">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-white/5 justify-center items-center"
-        >
-          <ChevronLeft color="#fff" size={24} />
-        </TouchableOpacity>
-        <Text className="flex-1 text-base font-black text-white uppercase tracking-wider">
-          {isCompletedTrip ? 'LỊCH SỬ CHUYẾN ĐI' : 'CHI TIẾT CHUYẾN ĐI'}
-        </Text>
-      </View>
+      <TripHeader
+        onBack={() => router.back()}
+        isCompletedTrip={isCompletedTrip}
+      />
 
       <View className="flex-1">
-        {/* Background Decorative Elements */}
         <View className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px]" />
         <View className="absolute bottom-[-150px] left-[-150px] w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px]" />
         
@@ -323,84 +311,10 @@ export default function TripDetails() {
             </View>
           </BlurView>
 
-          {/* Trip Timeline Node Grid (Premium UI for history) */}
-          {isCompletedTrip && (
-            <BlurView 
-              intensity={10} 
-              tint="light" 
-              className="rounded-[32px] p-6 mb-8 border border-white/5 overflow-hidden"
-            >
-              <Text className="text-white text-base font-black italic mb-5 uppercase tracking-tight">Timeline hành trình</Text>
-              
-              <View className="gap-5">
-                {/* Node 1: Dispatch */}
-                <View className="flex-row gap-4">
-                  <View className="items-center">
-                    <View className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 items-center justify-center">
-                      <Calendar size={14} color="#818cf8" />
-                    </View>
-                    <View className="w-px flex-1 bg-white/10 my-1" />
-                  </View>
-                  <View className="flex-1 pb-1">
-                    <Text className="text-slate-400 text-[10px] font-black uppercase tracking-wider mb-0.5">Bàn giao</Text>
-                    <Text className="text-white text-sm font-bold">Chuyến đi được tạo & điều phối</Text>
-                    <Text className="text-slate-500 text-[11px] mt-0.5">
-                      {new Date(trip.createdAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Node 2: Start */}
-                {trip.startedAt && (
-                  <View className="flex-row gap-4">
-                    <View className="items-center">
-                      <View className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 items-center justify-center">
-                        <Truck size={14} color="#60a5fa" />
-                      </View>
-                      {trip.completedAt && <View className="w-px flex-1 bg-white/10 my-1" />}
-                    </View>
-                    <View className="flex-1 pb-1">
-                      <Text className="text-slate-400 text-[10px] font-black uppercase tracking-wider mb-0.5">Bắt đầu di chuyển</Text>
-                      <Text className="text-white text-sm font-bold">Rời trạm & bắt đầu giao hàng</Text>
-                      <Text className="text-slate-500 text-[11px] mt-0.5">
-                        {new Date(trip.startedAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-                {/* Node 3: Complete */}
-                {trip.completedAt && (
-                  <View className="flex-row gap-4">
-                    <View className="items-center">
-                      <View className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 items-center justify-center">
-                        <CheckCircle2 size={14} color="#10b981" />
-                      </View>
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-slate-400 text-[10px] font-black uppercase tracking-wider mb-0.5">
-                        {trip.status === TripStatus.COMPLETED ? 'Hoàn thành' : 'Hủy chuyến'}
-                      </Text>
-                      <Text className={trip.status === TripStatus.COMPLETED ? 'text-emerald-400 text-sm font-bold' : 'text-rose-400 text-sm font-bold'}>
-                        {trip.status === TripStatus.COMPLETED ? 'Giao tất cả đơn hàng thành công' : 'Chuyến đi đã bị hủy'}
-                      </Text>
-                      <Text className="text-slate-500 text-[11px] mt-0.5">
-                        {new Date(trip.completedAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
-                      </Text>
-                      
-                      {getTripDuration() && (
-                        <View className="bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl self-start mt-2">
-                          <Text className="text-emerald-400 text-[10px] font-black uppercase">
-                            Thời gian vận hành: {getTripDuration()}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                )}
-              </View>
-            </BlurView>
-          )}
+          <TripTimeline
+            trip={trip}
+            getTripDuration={getTripDuration}
+          />
 
           {/* Orders Section */}
           <View className="flex-row items-center gap-2 mb-4 ml-1">
@@ -421,102 +335,19 @@ export default function TripDetails() {
             />
           ))}
 
-          {/* Stats Summary */}
           <TripSummaryCard 
             totalDistanceKm={trip.totalDistanceKm} 
             estimatedFuelCost={trip.estimatedFuelCost}
           />
 
-          {/* Action Buttons for Pending Trip */}
-          {trip.status === TripStatus.PENDING && (
-            <View className="mt-10 gap-4">
-              <TouchableOpacity 
-                activeOpacity={0.9}
-                onPress={handleAcceptTrip}
-                disabled={isStoreLoading}
-              >
-                <LinearGradient
-                  colors={["#6366f1", "#4f46e5"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="h-20 rounded-[32px] flex-row items-center justify-center gap-4 shadow-xl shadow-indigo-500/40"
-                >
-                  {isStoreLoading ? <ActivityIndicator color="#fff" /> : (
-                    <>
-                      <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-                        <Check size={20} color="#fff" />
-                      </View>
-                      <Text className="text-white text-xl font-black italic tracking-widest">CHẤP NHẬN CHUYẾN ĐI</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                activeOpacity={0.9}
-                onPress={handleRejectTrip}
-                disabled={isStoreLoading}
-                className="h-16 rounded-[28px] border border-rose-500/30 bg-rose-500/5 flex-row items-center justify-center gap-3"
-              >
-                <Text className="text-rose-400 font-black text-sm uppercase tracking-wider">Từ chối chuyến đi</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Action Buttons (Only for non-completed active trip) */}
-          {!isCompletedTrip && activeTrip?.id === id && (
-            <View className="mt-10 gap-4">
-              {trip.status === TripStatus.ACCEPTED && (
-                <TouchableOpacity 
-                  activeOpacity={0.9}
-                  onPress={() => handleStatusUpdate(TripStatus.IN_PROGRESS)}
-                  disabled={isStoreLoading}
-                >
-                  <LinearGradient
-                    colors={["#6366f1", "#4f46e5"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    className="h-20 rounded-[32px] flex-row items-center justify-center gap-4 shadow-xl shadow-indigo-500/40"
-                  >
-                    {isStoreLoading ? <ActivityIndicator color="#fff" /> : (
-                      <>
-                        <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-                          <Truck size={20} color="#fff" />
-                        </View>
-                        <Text className="text-white text-xl font-black italic tracking-widest">BẮT ĐẦU VẬN CHUYỂN</Text>
-                      </>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-              )}
-
-              {trip.status === TripStatus.IN_PROGRESS && (
-                <TouchableOpacity 
-                  activeOpacity={0.9}
-                  onPress={() => handleStatusUpdate(TripStatus.COMPLETED)}
-                  disabled={isStoreLoading}
-                >
-                  <LinearGradient
-                    colors={["#10b981", "#059669"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    className="h-20 rounded-[32px] flex-row items-center justify-center gap-4 shadow-xl shadow-emerald-500/40"
-                  >
-                    {isStoreLoading ? <ActivityIndicator color="#fff" /> : (
-                      <>
-                        <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-                          <CheckCircle2 size={20} color="#fff" />
-                        </View>
-                        <Text className="text-white text-xl font-black italic tracking-widest">HOÀN THÀNH CHUYẾN ĐI</Text>
-                      </>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-              )}
-              
-              <SosButton tripId={id as string} />
-            </View>
-          )}
+          <TripActions
+            trip={trip}
+            activeTrip={activeTrip}
+            isStoreLoading={isStoreLoading}
+            handleAcceptTrip={handleAcceptTrip}
+            handleRejectTrip={handleRejectTrip}
+            handleStatusUpdate={handleStatusUpdate}
+          />
         </ScrollView>
       </View>
     </SafeAreaView>

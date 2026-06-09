@@ -7,16 +7,16 @@ import {
   RefreshControl, 
   ActivityIndicator, 
   StatusBar,
-  ScrollView,
-  Platform,
   TextInput
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
-import { ArrowLeft, Calendar, ChevronRight, History, Truck, Users, Search, X } from 'lucide-react-native';
+import { ArrowLeft, History, Search, X } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { authFetch } from '../../lib/authFetch';
-import { TripBadge } from '../../components/trip/TripBadge';
+import { TripFilterPills } from '../../components/admin/trip/TripFilterPills';
+import { CustomDatePickerRange } from '../../components/admin/trip/CustomDatePickerRange';
+import { AdminTripCard } from '../../components/admin/trip/AdminTripCard';
 
 type FilterType = 'all' | 'today' | '7days' | '30days' | 'custom';
 
@@ -39,15 +39,12 @@ export default function AdminTripsScreen() {
     if (!searchText) return true;
     const searchLower = searchText.toLowerCase().trim();
     
-    // Match Trip ID (excluding leading # if any)
     const tripId = trip.id.toLowerCase();
     const tripIdMatch = tripId.includes(searchLower.replace(/^#/, ''));
     
-    // Match Driver Name
     const driverName = trip.driver?.user?.fullName || '';
     const driverMatch = driverName.toLowerCase().includes(searchLower);
     
-    // Match License Plate
     const plateNumber = trip.vehicle?.plateNumber || '';
     const vehicleMatch = plateNumber.toLowerCase().includes(searchLower);
     
@@ -140,63 +137,6 @@ export default function AdminTripsScreen() {
     await fetchAllTrips({ startDate: startStr, endDate: endStr });
   }, [activeFilter, startDate, endDate]);
 
-  const renderTripItem = ({ item }: { item: any }) => {
-    const date = new Date(item.createdAt);
-    const orderCount = item.tripOrders?.length || 0;
-    const driverName = item.driver?.user?.fullName || 'Chưa gán tài xế';
-    const plateNumber = item.vehicle?.plateNumber || 'Chưa gán xe';
-
-    return (
-      <TouchableOpacity
-        onPress={() => router.push(`/trip/${item.id}`)}
-        className="bg-slate-900/60 border border-white/5 p-4 rounded-2xl mb-4 flex-row items-center justify-between"
-        activeOpacity={0.7}
-      >
-        <View className="flex-1 pr-2">
-          <View className="flex-row items-center gap-2 mb-2 flex-wrap">
-            <Text className="text-white text-sm font-mono font-bold">Trip: #{item.id.substring(0, 8).toUpperCase()}</Text>
-            <TripBadge status={item.status} />
-          </View>
-
-          <View className="space-y-1">
-            <View className="flex-row items-center gap-1.5">
-              <Users size={12} color="#94a3b8" />
-              <Text className="text-slate-300 text-xs font-semibold">{driverName}</Text>
-            </View>
-
-            <View className="flex-row items-center gap-1.5">
-              <Truck size={12} color="#94a3b8" />
-              <Text className="text-slate-300 text-xs font-semibold">Xe: {plateNumber}</Text>
-            </View>
-
-            <View className="flex-row items-center gap-1.5">
-              <Calendar size={12} color="#94a3b8" />
-              <Text className="text-slate-400 text-[11px] font-medium">
-                {date.toLocaleDateString('vi-VN')} {date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-row gap-4 mt-3 pt-3 border-t border-white/5">
-            <View>
-              <Text className="text-slate-500 text-[8px] font-bold uppercase tracking-wider">Số đơn hàng</Text>
-              <Text className="text-white text-xs font-extrabold mt-0.5">{orderCount} đơn</Text>
-            </View>
-            <View>
-              <Text className="text-slate-500 text-[8px] font-bold uppercase tracking-wider">Quãng đường</Text>
-              <Text className="text-white text-xs font-extrabold mt-0.5">{item.totalDistanceKm || 0} km</Text>
-            </View>
-          </View>
-        </View>
-
-        <View className="bg-white/5 w-8 h-8 rounded-full items-center justify-center border border-white/10 ml-2">
-          <ChevronRight size={16} color="#94a3b8" />
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  // First render: show a plain loading screen without className (avoids CssInterop race condition)
   if (!mounted) {
     return (
       <View style={{ flex: 1, backgroundColor: '#020617' }}>
@@ -251,67 +191,19 @@ export default function AdminTripsScreen() {
         </View>
       </View>
 
-      {/* Quick Date Filters Pills */}
-      <View className="px-6 mb-4 mt-2">
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, paddingRight: 20 }}
-        >
-          {[
-            { id: 'all', label: 'Tất cả' },
-            { id: 'today', label: 'Hôm nay' },
-            { id: '7days', label: '7 ngày qua' },
-            { id: '30days', label: '30 ngày qua' },
-            { id: 'custom', label: 'Tùy chỉnh' },
-          ].map((f) => {
-            const isActive = activeFilter === f.id;
-            return (
-              <TouchableOpacity
-                key={f.id}
-                onPress={() => setActiveFilter(f.id as FilterType)}
-                className={isActive 
-                  ? "px-4 py-2.5 rounded-full border bg-indigo-600 border-indigo-500" 
-                  : "px-4 py-2.5 rounded-full border bg-slate-900/60 border-white/5"
-                }
-                activeOpacity={0.7}
-              >
-                <Text className={isActive ? "text-xs font-bold text-white" : "text-xs font-bold text-slate-400"}>
-                  {f.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+      {/* Date Filters Pills */}
+      <TripFilterPills
+        activeFilter={activeFilter}
+        onSelectFilter={(filter) => setActiveFilter(filter)}
+      />
 
       {/* Custom Range picker buttons */}
       {activeFilter === 'custom' && (
-        <View className="px-6 mb-4 flex-row gap-3">
-          <TouchableOpacity
-            onPress={() => setShowPicker('start')}
-            className="flex-1 bg-slate-900/40 border border-white/5 p-3 rounded-2xl flex-row items-center justify-between"
-            activeOpacity={0.7}
-          >
-            <View>
-              <Text className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Từ ngày</Text>
-              <Text className="text-white text-xs font-bold mt-0.5">{startDate.toLocaleDateString('vi-VN')}</Text>
-            </View>
-            <Calendar size={14} color="#10b981" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setShowPicker('end')}
-            className="flex-1 bg-slate-900/40 border border-white/5 p-3 rounded-2xl flex-row items-center justify-between"
-            activeOpacity={0.7}
-          >
-            <View>
-              <Text className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Đến ngày</Text>
-              <Text className="text-white text-xs font-bold mt-0.5">{endDate.toLocaleDateString('vi-VN')}</Text>
-            </View>
-            <Calendar size={14} color="#10b981" />
-          </TouchableOpacity>
-        </View>
+        <CustomDatePickerRange
+          startDate={startDate}
+          endDate={endDate}
+          onShowPicker={(type) => setShowPicker(type)}
+        />
       )}
 
       {/* Date Picker Component */}
@@ -346,7 +238,12 @@ export default function AdminTripsScreen() {
       ) : (
         <FlatList
           data={filteredTrips}
-          renderItem={renderTripItem}
+          renderItem={({ item }) => (
+            <AdminTripCard
+              item={item}
+              onPress={() => router.push(`/trip/${item.id}`)}
+            />
+          )}
           keyExtractor={item => item.id}
           contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}

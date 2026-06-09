@@ -6,9 +6,7 @@ import { OrderVerificationsService } from './order-verifications.service';
 import { OrderVerificationsController } from './order-verifications.controller';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([OrderVerification, Order]),
-  ],
+  imports: [TypeOrmModule.forFeature([OrderVerification, Order])],
   controllers: [OrderVerificationsController],
   providers: [OrderVerificationsService],
   exports: [OrderVerificationsService],

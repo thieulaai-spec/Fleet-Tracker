@@ -4,13 +4,14 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Alert, AlertType, AlertSeverity } from '../entities/alert.entity';
 import { Trip } from '../entities/trip.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 
 describe('AlertsService', () => {
   let service: AlertsService;
   let alertRepo: Repository<Alert>;
   let tripRepo: Repository<Trip>;
   let eventEmitter: EventEmitter2;
+  let dataSource: DataSource;
 
   const mockAlert = {
     id: 'a1',
@@ -64,6 +65,12 @@ describe('AlertsService', () => {
             emit: jest.fn(),
           },
         },
+        {
+          provide: DataSource,
+          useValue: {
+            getRepository: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -71,6 +78,7 @@ describe('AlertsService', () => {
     alertRepo = module.get<Repository<Alert>>(getRepositoryToken(Alert));
     tripRepo = module.get<Repository<Trip>>(getRepositoryToken(Trip));
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    dataSource = module.get<DataSource>(DataSource);
   });
 
   it('should be defined', () => {
@@ -173,6 +181,52 @@ describe('AlertsService', () => {
 
       expect(alertRepo.createQueryBuilder).toHaveBeenCalled();
       expect(result).toEqual([{ type: 'SPEED_VIOLATION', count: '1' }]);
+    });
+  });
+
+  describe('checkOverdueOrders', () => {
+    it('should retry on connection error and eventually succeed', async () => {
+      const mockOrderRepo = {
+        createQueryBuilder: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          getMany: jest.fn().mockResolvedValue([]),
+        }),
+      };
+
+      let callCount = 0;
+      jest.spyOn(dataSource, 'getRepository').mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          throw new Error(
+            'terminating connection due to administrator command',
+          );
+        }
+        return mockOrderRepo as any;
+      });
+
+      jest.useFakeTimers();
+      const checkPromise = service.checkOverdueOrders();
+
+      await jest.runAllTimersAsync();
+      await checkPromise;
+
+      expect(callCount).toBe(3);
+      jest.useRealTimers();
+    });
+
+    it('should throw error if retries exhausted', async () => {
+      jest.spyOn(dataSource, 'getRepository').mockImplementation(() => {
+        throw new Error('terminating connection due to administrator command');
+      });
+
+      jest.useFakeTimers();
+      const checkPromise = expect(service.checkOverdueOrders()).rejects.toThrow(
+        'terminating connection due to administrator command',
+      );
+      await jest.runAllTimersAsync();
+      await checkPromise;
+      jest.useRealTimers();
     });
   });
 });

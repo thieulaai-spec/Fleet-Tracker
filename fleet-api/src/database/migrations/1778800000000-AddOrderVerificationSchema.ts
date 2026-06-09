@@ -30,6 +30,8 @@ export class AddOrderVerificationSchema1778800000000 implements MigrationInterfa
       `ALTER TABLE "order_verifications" DROP CONSTRAINT "FK_order_verifications_order_id"`,
     );
     await queryRunner.query(`DROP TABLE "order_verifications"`);
-    await queryRunner.query(`DROP TYPE "public"."order_verifications_step_enum"`);
+    await queryRunner.query(
+      `DROP TYPE "public"."order_verifications_step_enum"`,
+    );
   }
 }

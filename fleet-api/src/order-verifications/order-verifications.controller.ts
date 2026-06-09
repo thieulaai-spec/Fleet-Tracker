@@ -27,7 +27,10 @@ export class OrderVerificationsController {
 
   @Post('orders/:orderId/verifications')
   @Roles(UserRole.DRIVER, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Submit order verification proof (Fingerprint/ESP32 Cam/Phone Cargo)' })
+  @ApiOperation({
+    summary:
+      'Submit order verification proof (Fingerprint/ESP32 Cam/Phone Cargo)',
+  })
   create(
     @Param('orderId') orderId: string,
     @Body() dto: CreateVerificationDto,
@@ -37,32 +40,44 @@ export class OrderVerificationsController {
 
   @Patch('orders/:orderId/verifications/:step/cargo-photo')
   @Roles(UserRole.DRIVER, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Update cargo photo for an existing verification step' })
+  @ApiOperation({
+    summary: 'Update cargo photo for an existing verification step',
+  })
   updateCargoPhoto(
     @Param('orderId') orderId: string,
     @Param('step') step: VerificationStep,
     @Body('cargoPhotoUrl') cargoPhotoUrl: string,
   ) {
-    return this.verificationsService.updateCargoPhoto(orderId, step, cargoPhotoUrl);
+    return this.verificationsService.updateCargoPhoto(
+      orderId,
+      step,
+      cargoPhotoUrl,
+    );
   }
 
   @Get('orders/:orderId/verifications')
   @Roles(UserRole.ADMIN, UserRole.DRIVER, UserRole.DISPATCHER)
-  @ApiOperation({ summary: 'Get all verifications/milestones for a specific order' })
+  @ApiOperation({
+    summary: 'Get all verifications/milestones for a specific order',
+  })
   findByOrder(@Param('orderId') orderId: string) {
     return this.verificationsService.findByOrder(orderId);
   }
 
   @Get('trips/:tripId/verifications')
   @Roles(UserRole.ADMIN, UserRole.DRIVER, UserRole.DISPATCHER)
-  @ApiOperation({ summary: 'Get all verifications/milestones for all orders in a trip' })
+  @ApiOperation({
+    summary: 'Get all verifications/milestones for all orders in a trip',
+  })
   findByTrip(@Param('tripId') tripId: string) {
     return this.verificationsService.findByTrip(tripId);
   }
 
   @Get('drivers/:driverId/verifications')
   @Roles(UserRole.ADMIN, UserRole.DISPATCHER)
-  @ApiOperation({ summary: 'Get historical verification journey for a driver (Admin only)' })
+  @ApiOperation({
+    summary: 'Get historical verification journey for a driver (Admin only)',
+  })
   findByDriver(@Param('driverId') driverId: string) {
     return this.verificationsService.findByDriver(driverId);
   }

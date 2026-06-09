@@ -46,9 +46,11 @@ describe('OrdersService', () => {
   const countMock = jest.fn().mockResolvedValue(0);
 
   const mockOrderVerificationRepository = {
-    find: jest.fn().mockResolvedValue([
-      { facePhotoUrl: 'face.jpg', cargoPhotoUrl: 'cargo.jpg' }
-    ]),
+    find: jest
+      .fn()
+      .mockResolvedValue([
+        { facePhotoUrl: 'face.jpg', cargoPhotoUrl: 'cargo.jpg' },
+      ]),
   };
 
   const mockTripOrderRepository = {
@@ -272,7 +274,9 @@ describe('OrdersService', () => {
       await service.remove('order-1');
 
       expect(deleteMock).toHaveBeenCalledWith('order-1');
-      expect(uploadService.deleteFileByUrl).toHaveBeenCalledWith('delivered.jpg');
+      expect(uploadService.deleteFileByUrl).toHaveBeenCalledWith(
+        'delivered.jpg',
+      );
       expect(uploadService.deleteFileByUrl).toHaveBeenCalledWith('face.jpg');
       expect(uploadService.deleteFileByUrl).toHaveBeenCalledWith('cargo.jpg');
       expect(kpiService.syncTotalTrips).toHaveBeenCalledWith('driver-1');

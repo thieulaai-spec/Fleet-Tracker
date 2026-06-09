@@ -62,7 +62,8 @@ export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^(0|84|\+84)\d{9}$/, {
-    message: 'Phone number must be a valid Vietnamese number starting with 0 or 84, followed by 9 digits',
+    message:
+      'Phone number must be a valid Vietnamese number starting with 0 or 84, followed by 9 digits',
   })
   recipientPhone: string;
 

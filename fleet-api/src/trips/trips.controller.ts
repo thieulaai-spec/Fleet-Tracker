@@ -36,7 +36,12 @@ export class TripsController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.tripsService.findMyTrips(req.user.id, req.user.role, startDate, endDate);
+    return this.tripsService.findMyTrips(
+      req.user.id,
+      req.user.role,
+      startDate,
+      endDate,
+    );
   }
 
   @Roles(UserRole.ADMIN, UserRole.DISPATCHER)

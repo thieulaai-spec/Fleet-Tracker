@@ -40,8 +40,8 @@ describe('TrackingService', () => {
         status: 'available',
         driver: {
           id: 'd1',
-          user: { fullName: 'Nguyen Van Hung' }
-        }
+          user: { fullName: 'Nguyen Van Hung' },
+        },
       }),
     };
 
@@ -51,6 +51,7 @@ describe('TrackingService', () => {
 
     tripRepo = {
       findOne: jest.fn(),
+      find: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -258,7 +259,7 @@ describe('TrackingService', () => {
       detector.checkViolations.mockRejectedValue(new Error('Detector Error'));
       const loggerSpy = jest.spyOn((service as any).logger, 'error');
 
-      tripRepo.findOne.mockResolvedValue({ id: 't1' });
+      tripRepo.findOne.mockResolvedValue({ id: 't1', status: 'in_progress' });
 
       const deviceData = {
         deviceId: 'device_001',

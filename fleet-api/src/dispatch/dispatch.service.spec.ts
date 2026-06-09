@@ -194,9 +194,7 @@ describe('DispatchService', () => {
         id: 'active-trip-id',
         status: TripStatus.PENDING,
       };
-      const mockTripOrders = [
-        { id: 'to1', sequence: 1 },
-      ];
+      const mockTripOrders = [{ id: 'to1', sequence: 1 }];
 
       mockQueryRunner.manager.findOne
         .mockResolvedValueOnce(mockOrder) // First findOne is order

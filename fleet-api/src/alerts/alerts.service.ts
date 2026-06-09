@@ -32,6 +32,39 @@ export class AlertsService implements OnModuleInit {
   }
 
   async checkOverdueOrders() {
+    let retries = 3;
+    let delay = 1000;
+    while (retries > 0) {
+      try {
+        await this.runCheckOverdueOrders();
+        break;
+      } catch (error) {
+        retries--;
+        const errMsg = error instanceof Error ? error.message : String(error);
+        const errObj = error as { code?: unknown };
+        const errCode =
+          errObj && typeof errObj === 'object' && 'code' in errObj
+            ? String(errObj.code)
+            : '';
+        const isConnectionError =
+          errMsg.includes('terminating connection') ||
+          errCode === '57P01' ||
+          errMsg.includes('connection');
+
+        if (isConnectionError && retries > 0) {
+          this.logger.warn(
+            `Database connection error during overdue check, retrying in ${delay}ms... (${retries} retries left): ${errMsg}`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          delay *= 2;
+        } else {
+          throw error;
+        }
+      }
+    }
+  }
+
+  private async runCheckOverdueOrders() {
     const now = new Date();
     const ordersRepository = this.dataSource.getRepository(Order);
     const tripOrderRepository = this.dataSource.getRepository(TripOrder);
@@ -42,7 +75,11 @@ export class AlertsService implements OnModuleInit {
       .where('order.delivery_deadline IS NOT NULL')
       .andWhere('order.delivery_deadline < :now', { now })
       .andWhere('order.status IN (:...statuses)', {
-        statuses: [OrderStatus.ASSIGNED, OrderStatus.PICKED_UP, OrderStatus.DELIVERING],
+        statuses: [
+          OrderStatus.ASSIGNED,
+          OrderStatus.PICKED_UP,
+          OrderStatus.DELIVERING,
+        ],
       })
       .getMany();
 
@@ -194,7 +231,9 @@ export class AlertsService implements OnModuleInit {
 
       if (existingAlert) {
         await this.resolveAlert(existingAlert.id);
-        this.logger.log(`Auto-resolved overdue alert for order ${payload.id} (Status: ${payload.status})`);
+        this.logger.log(
+          `Auto-resolved overdue alert for order ${payload.id} (Status: ${payload.status})`,
+        );
       }
     }
   }

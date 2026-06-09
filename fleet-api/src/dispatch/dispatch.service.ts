@@ -133,7 +133,9 @@ export class DispatchService {
         vehicle.status !== VehicleStatus.AVAILABLE &&
         vehicle.status !== VehicleStatus.DELIVERING
       ) {
-        throw new BadRequestException('Vehicle is not available for assignment');
+        throw new BadRequestException(
+          'Vehicle is not available for assignment',
+        );
       }
 
       if (!vehicle.driver) {
@@ -165,7 +167,6 @@ export class DispatchService {
           },
           lock: { mode: 'pessimistic_write' },
         });
-
       }
 
       let savedTrip: Trip;
@@ -224,7 +225,10 @@ export class DispatchService {
         await this.optimizationService.optimizeTripRoute(savedTrip.id);
       } catch (optErr) {
         // We log the error but don't fail the assignment since Mapbox might fail or be unconfigured
-        console.error('Failed to optimize trip route after assignment:', optErr);
+        console.error(
+          'Failed to optimize trip route after assignment:',
+          optErr,
+        );
       }
 
       // Emit event for real-time notification
@@ -280,7 +284,9 @@ export class DispatchService {
         vehicle.status !== VehicleStatus.AVAILABLE &&
         vehicle.status !== VehicleStatus.DELIVERING
       ) {
-        throw new BadRequestException('Vehicle is not available for assignment');
+        throw new BadRequestException(
+          'Vehicle is not available for assignment',
+        );
       }
 
       if (!vehicle.driver) {
@@ -345,7 +351,6 @@ export class DispatchService {
           },
           lock: { mode: 'pessimistic_write' },
         });
-
       }
 
       let savedTrip: Trip;
@@ -416,7 +421,10 @@ export class DispatchService {
       try {
         await this.optimizationService.optimizeTripRoute(savedTrip.id);
       } catch (optErr) {
-        console.error('Failed to optimize trip route after assignment:', optErr);
+        console.error(
+          'Failed to optimize trip route after assignment:',
+          optErr,
+        );
       }
 
       // Emit event for real-time notification

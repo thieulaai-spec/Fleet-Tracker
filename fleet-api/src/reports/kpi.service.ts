@@ -141,7 +141,8 @@ export class KpiService {
       where: { driverId, type: 'incident' as any },
     });
 
-    const totalViolations = speedViolations + routeViolations + abnormalStops + incidents;
+    const totalViolations =
+      speedViolations + routeViolations + abnormalStops + incidents;
 
     const penalty =
       speedViolations * KPI_PENALTIES.speed_violation +

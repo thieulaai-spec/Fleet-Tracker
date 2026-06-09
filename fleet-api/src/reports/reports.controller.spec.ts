@@ -73,7 +73,9 @@ describe('ReportsController', () => {
 
   describe('getDriverKpi', () => {
     it('should return driver kpi', async () => {
-      expect(await controller.getDriverKpi('d1', { role: 'admin' })).toEqual({ rating: 4.5 });
+      expect(await controller.getDriverKpi('d1', { role: 'admin' })).toEqual({
+        rating: 4.5,
+      });
     });
   });
 

@@ -67,7 +67,9 @@ export class TrackingGateway
     this.server.to(`trip:${payload.id}`).emit('trip:status-changed', payload);
 
     if (payload.status === 'cancelled' && payload.driverId) {
-      this.logger.log(`Broadcasting trip:cancelled to driver:${payload.driverId} for trip ${payload.id}`);
+      this.logger.log(
+        `Broadcasting trip:cancelled to driver:${payload.driverId} for trip ${payload.id}`,
+      );
       this.server.to(`driver:${payload.driverId}`).emit('trip:cancelled', {
         tripId: payload.id,
         status: payload.status,
@@ -84,7 +86,9 @@ export class TrackingGateway
       this.logger.warn('WebSocket server not initialized yet');
       return;
     }
-    this.server.to(`driver:${payload.driverId}`).emit('order:verified', payload);
+    this.server
+      .to(`driver:${payload.driverId}`)
+      .emit('order:verified', payload);
     this.server.to('admin').emit('order:verified', payload);
   }
 
@@ -115,18 +119,24 @@ export class TrackingGateway
 
   @OnEvent('enroll.required')
   handleEnrollRequired(payload: any) {
-    this.logger.log(`Broadcasting remote enroll request for driver ${payload.driverId} on device ${payload.deviceId}`);
+    this.logger.log(
+      `Broadcasting remote enroll request for driver ${payload.driverId} on device ${payload.deviceId}`,
+    );
     if (!this.server) {
       this.logger.warn('WebSocket server not initialized yet');
       return;
     }
-    this.server.to(`driver:${payload.driverId}`).emit('enroll:required', payload);
+    this.server
+      .to(`driver:${payload.driverId}`)
+      .emit('enroll:required', payload);
     this.server.to('admin').emit('enroll:required', payload);
   }
 
   @OnEvent('enroll.result')
   handleEnrollResult(payload: any) {
-    this.logger.log(`Broadcasting remote enroll result for driver ${payload.driverId} on device ${payload.deviceId}: ${payload.success ? 'SUCCESS' : 'FAILED'}`);
+    this.logger.log(
+      `Broadcasting remote enroll result for driver ${payload.driverId} on device ${payload.deviceId}: ${payload.success ? 'SUCCESS' : 'FAILED'}`,
+    );
     if (!this.server) {
       this.logger.warn('WebSocket server not initialized yet');
       return;
@@ -137,18 +147,24 @@ export class TrackingGateway
 
   @OnEvent('fingerprint.deleted')
   handleFingerprintDeleted(payload: any) {
-    this.logger.log(`Broadcasting remote delete result for driver ${payload.driverId} on device ${payload.deviceId}: ${payload.success ? 'SUCCESS' : 'FAILED'}`);
+    this.logger.log(
+      `Broadcasting remote delete result for driver ${payload.driverId} on device ${payload.deviceId}: ${payload.success ? 'SUCCESS' : 'FAILED'}`,
+    );
     if (!this.server) {
       this.logger.warn('WebSocket server not initialized yet');
       return;
     }
-    this.server.to(`driver:${payload.driverId}`).emit('fingerprint:deleted', payload);
+    this.server
+      .to(`driver:${payload.driverId}`)
+      .emit('fingerprint:deleted', payload);
     this.server.to('admin').emit('fingerprint:deleted', payload);
   }
 
   @OnEvent('fingerprint.all_cleared')
   handleFingerprintAllCleared(payload: any) {
-    this.logger.log(`Broadcasting remote clear-all result for device ${payload.deviceId}: ${payload.success ? 'SUCCESS' : 'FAILED'}`);
+    this.logger.log(
+      `Broadcasting remote clear-all result for device ${payload.deviceId}: ${payload.success ? 'SUCCESS' : 'FAILED'}`,
+    );
     if (!this.server) {
       this.logger.warn('WebSocket server not initialized yet');
       return;
@@ -179,7 +195,9 @@ export class TrackingGateway
       const userRole = payload.role?.toLowerCase();
       if (userRole === 'admin' || userRole === 'dispatcher') {
         client.join('admin');
-        this.logger.log(`Admin/Dispatcher connected: ${client.id} (Role: ${payload.role})`);
+        this.logger.log(
+          `Admin/Dispatcher connected: ${client.id} (Role: ${payload.role})`,
+        );
       } else if (userRole === 'driver') {
         const driver = await this.trackingService.getDriverByUserId(
           payload.sub,
@@ -193,9 +211,13 @@ export class TrackingGateway
           );
 
           // Proactively trigger fingerprint enrollment if they are currently on an active trip and don't have a fingerprint
-          this.trackingService.checkAndTriggerEnrollmentForActiveDriver(driver.id).catch((err) => {
-            this.logger.error(`[Biometric Connection Check] Failed to trigger enrollment: ${err.message}`);
-          });
+          this.trackingService
+            .checkAndTriggerEnrollmentForActiveDriver(driver.id)
+            .catch((err) => {
+              this.logger.error(
+                `[Biometric Connection Check] Failed to trigger enrollment: ${err.message}`,
+              );
+            });
         } else {
           this.logger.warn(
             `User ${payload.sub} has driver role but no driver profile found. Disconnecting.`,

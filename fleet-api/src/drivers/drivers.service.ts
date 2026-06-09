@@ -28,7 +28,8 @@ export class DriversService {
   ) {}
 
   async create(createDriverDto: CreateDriverDto): Promise<Driver> {
-    const { email, password, fullName, phone, avatarUrl, ...driverData } = createDriverDto;
+    const { email, password, fullName, phone, avatarUrl, ...driverData } =
+      createDriverDto;
 
     // Check if user already exists
     const existingUser = await this.usersRepository.findOne({
@@ -123,7 +124,8 @@ export class DriversService {
 
   async update(id: string, updateDriverDto: UpdateDriverDto): Promise<Driver> {
     const driver = await this.findOne(id);
-    const { fullName, phone, avatarUrl, ...driverData } = updateDriverDto as any;
+    const { fullName, phone, avatarUrl, ...driverData } =
+      updateDriverDto as any;
 
     // Update User profile if needed
     if (fullName || phone || avatarUrl !== undefined) {

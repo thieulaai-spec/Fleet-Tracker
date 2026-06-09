@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { OrderVerification, VerificationStep } from '../entities/order-verification.entity';
+import {
+  OrderVerification,
+  VerificationStep,
+} from '../entities/order-verification.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
 import { TripOrder } from '../entities/trip-order.entity';
 import { Trip } from '../entities/trip.entity';
@@ -17,8 +24,18 @@ export class OrderVerificationsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(orderId: string, dto: CreateVerificationDto): Promise<OrderVerification> {
-    const { step, fingerprintStatus, facePhotoUrl, cargoPhotoUrl, latitude, longitude } = dto;
+  async create(
+    orderId: string,
+    dto: CreateVerificationDto,
+  ): Promise<OrderVerification> {
+    const {
+      step,
+      fingerprintStatus,
+      facePhotoUrl,
+      cargoPhotoUrl,
+      latitude,
+      longitude,
+    } = dto;
 
     if (step !== VerificationStep.ACCEPT && !cargoPhotoUrl) {
       throw new BadRequestException(`Cargo photo is required for step ${step}`);
@@ -31,16 +48,27 @@ export class OrderVerificationsService {
       }
 
       // Validate Geofencing for PICKUP and DELIVERY steps
-      if (step === VerificationStep.PICKUP || step === VerificationStep.DELIVERY) {
-        const targetLocation = step === VerificationStep.PICKUP 
-          ? order.pickupLocation 
-          : order.deliveryLocation;
+      if (
+        step === VerificationStep.PICKUP ||
+        step === VerificationStep.DELIVERY
+      ) {
+        const targetLocation =
+          step === VerificationStep.PICKUP
+            ? order.pickupLocation
+            : order.deliveryLocation;
 
         if (!targetLocation || !targetLocation.coordinates) {
-          throw new BadRequestException(`Target location for order step ${step} is not configured.`);
+          throw new BadRequestException(
+            `Target location for order step ${step} is not configured.`,
+          );
         }
 
-        if (latitude === undefined || latitude === null || longitude === undefined || longitude === null) {
+        if (
+          latitude === undefined ||
+          latitude === null ||
+          longitude === undefined ||
+          longitude === null
+        ) {
           throw new BadRequestException(`Tọa độ GPS là bắt buộc để xác nhận.`);
         }
 
@@ -48,12 +76,12 @@ export class OrderVerificationsService {
           latitude,
           longitude,
           targetLocation.coordinates[1],
-          targetLocation.coordinates[0]
+          targetLocation.coordinates[0],
         );
 
         if (distance > 200) {
           throw new BadRequestException(
-            `Khoảng cách quá xa. Bạn cách điểm ${step === VerificationStep.PICKUP ? 'lấy hàng' : 'giao hàng'} ${Math.round(distance)}m (yêu cầu dưới 200m).`
+            `Khoảng cách quá xa. Bạn cách điểm ${step === VerificationStep.PICKUP ? 'lấy hàng' : 'giao hàng'} ${Math.round(distance)}m (yêu cầu dưới 200m).`,
           );
         }
       }
@@ -62,29 +90,45 @@ export class OrderVerificationsService {
       let nextStatus: OrderStatus | null = null;
       if (step === VerificationStep.ACCEPT) {
         if (order.status !== OrderStatus.PENDING) {
-          throw new BadRequestException(`Cannot accept order with status ${order.status}`);
+          throw new BadRequestException(
+            `Cannot accept order with status ${order.status}`,
+          );
         }
         nextStatus = OrderStatus.ASSIGNED;
       } else if (step === VerificationStep.PICKUP) {
         if (order.status !== OrderStatus.ASSIGNED) {
-          throw new BadRequestException(`Cannot pickup order with status ${order.status}`);
+          throw new BadRequestException(
+            `Cannot pickup order with status ${order.status}`,
+          );
         }
         nextStatus = OrderStatus.PICKED_UP;
       } else if (step === VerificationStep.CHECKPOINT) {
-        if (order.status !== OrderStatus.PICKED_UP && order.status !== OrderStatus.DELIVERING) {
-          throw new BadRequestException(`Cannot record checkpoint for order with status ${order.status}`);
+        if (
+          order.status !== OrderStatus.PICKED_UP &&
+          order.status !== OrderStatus.DELIVERING
+        ) {
+          throw new BadRequestException(
+            `Cannot record checkpoint for order with status ${order.status}`,
+          );
         }
         nextStatus = OrderStatus.DELIVERING;
       } else if (step === VerificationStep.DELIVERY) {
-        if (order.status !== OrderStatus.PICKED_UP && order.status !== OrderStatus.DELIVERING) {
-          throw new BadRequestException(`Cannot deliver order with status ${order.status}`);
+        if (
+          order.status !== OrderStatus.PICKED_UP &&
+          order.status !== OrderStatus.DELIVERING
+        ) {
+          throw new BadRequestException(
+            `Cannot deliver order with status ${order.status}`,
+          );
         }
         nextStatus = OrderStatus.DELIVERED;
       }
 
-      const hasCoordinates = 
-        latitude !== undefined && latitude !== null &&
-        longitude !== undefined && longitude !== null;
+      const hasCoordinates =
+        latitude !== undefined &&
+        latitude !== null &&
+        longitude !== undefined &&
+        longitude !== null;
 
       const verification = manager.create(OrderVerification, {
         orderId,
@@ -100,7 +144,10 @@ export class OrderVerificationsService {
           : null,
       });
 
-      const savedVerification = await manager.save(OrderVerification, verification);
+      const savedVerification = await manager.save(
+        OrderVerification,
+        verification,
+      );
 
       // Update corresponding order status and actual coordinates
       const locationObj = hasCoordinates
@@ -132,20 +179,28 @@ export class OrderVerificationsService {
     });
   }
 
-  async updateCargoPhoto(orderId: string, step: VerificationStep, cargoPhotoUrl: string): Promise<OrderVerification> {
+  async updateCargoPhoto(
+    orderId: string,
+    step: VerificationStep,
+    cargoPhotoUrl: string,
+  ): Promise<OrderVerification> {
     const verification = await this.verificationRepository.findOne({
       where: { orderId, step },
       order: { createdAt: 'DESC' },
     });
 
     if (!verification) {
-      throw new NotFoundException(`Verification for order ${orderId} at step ${step} not found`);
+      throw new NotFoundException(
+        `Verification for order ${orderId} at step ${step} not found`,
+      );
     }
 
     verification.cargoPhotoUrl = cargoPhotoUrl;
-    
+
     // Also update order photoUrl
-    const order = await this.orderRepository.findOne({ where: { id: orderId } });
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
     if (order) {
       order.photoUrl = cargoPhotoUrl.split(',')[0];
       await this.orderRepository.save(order);
@@ -175,7 +230,8 @@ export class OrderVerificationsService {
     const orderIds = tripOrders.map((to) => to.orderId);
 
     // Find all verifications
-    const verifications = await this.verificationRepository.createQueryBuilder('v')
+    const verifications = await this.verificationRepository
+      .createQueryBuilder('v')
       .where('v.order_id IN (:...orderIds)', { orderIds })
       .leftJoinAndSelect('v.order', 'order')
       .orderBy('v.created_at', 'ASC')
@@ -212,7 +268,9 @@ export class OrderVerificationsService {
     const tripIds = trips.map((t) => t.id);
 
     // Get all orders for these trips
-    const tripOrders = await this.dataSource.getRepository(TripOrder).createQueryBuilder('to')
+    const tripOrders = await this.dataSource
+      .getRepository(TripOrder)
+      .createQueryBuilder('to')
       .where('to.trip_id IN (:...tripIds)', { tripIds })
       .getMany();
 
@@ -223,7 +281,8 @@ export class OrderVerificationsService {
     const orderIds = tripOrders.map((to) => to.orderId);
 
     // Return verifications
-    const verifications = await this.verificationRepository.createQueryBuilder('v')
+    const verifications = await this.verificationRepository
+      .createQueryBuilder('v')
       .where('v.order_id IN (:...orderIds)', { orderIds })
       .leftJoinAndSelect('v.order', 'order')
       .orderBy('v.created_at', 'DESC')

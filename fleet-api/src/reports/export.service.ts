@@ -9,7 +9,11 @@ export class ExportService {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(reportName);
 
-    if (reportName === 'kpi-leaderboard' && Array.isArray(data) && data.length > 0) {
+    if (
+      reportName === 'kpi-leaderboard' &&
+      Array.isArray(data) &&
+      data.length > 0
+    ) {
       // Setup column keys and widths manually to prevent auto-writing headers
       const colConfigs = [
         { col: 1, key: 'driverName', width: 25 },
@@ -36,7 +40,12 @@ export class ExportService {
       worksheet.mergeCells('A2:L2');
       const titleCell = worksheet.getCell('A2');
       titleCell.value = 'BẢNG XẾP HẠNG KPI TÀI XẾ';
-      titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1E3A8A' } };
+      titleCell.font = {
+        name: 'Arial',
+        size: 16,
+        bold: true,
+        color: { argb: 'FF1E3A8A' },
+      };
       titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
       worksheet.getRow(2).height = 30;
 
@@ -51,7 +60,12 @@ export class ExportService {
         minute: '2-digit',
       });
       dateCell.value = `Ngày xuất báo cáo: ${nowStr}`;
-      dateCell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF4B5563' } };
+      dateCell.font = {
+        name: 'Arial',
+        size: 10,
+        italic: true,
+        color: { argb: 'FF4B5563' },
+      };
       dateCell.alignment = { vertical: 'middle', horizontal: 'center' };
       worksheet.getRow(3).height = 20;
 
@@ -72,7 +86,12 @@ export class ExportService {
         'Ngày cập nhật',
       ];
       headerRow.height = 26;
-      headerRow.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.font = {
+        name: 'Arial',
+        size: 11,
+        bold: true,
+        color: { argb: 'FFFFFFFF' },
+      };
       // Style only columns 1 to 12 for the header row to avoid coloring the entire Excel row
       for (let col = 1; col <= 12; col++) {
         const cell = headerRow.getCell(col);
@@ -81,7 +100,11 @@ export class ExportService {
           pattern: 'solid',
           fgColor: { argb: 'FF1E3A8A' }, // Navy Blue
         };
-        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true,
+        };
         cell.border = {
           top: { style: 'thin', color: { argb: 'FF9CA3AF' } },
           left: { style: 'thin', color: { argb: 'FF9CA3AF' } },
@@ -110,25 +133,58 @@ export class ExportService {
         const row = worksheet.addRow(rowData);
         row.height = 20;
 
-        row.getCell('driverName').alignment = { vertical: 'middle', horizontal: 'left' };
-        row.getCell('phone').alignment = { vertical: 'middle', horizontal: 'center' };
-        row.getCell('totalTrips').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('driverName').alignment = {
+          vertical: 'middle',
+          horizontal: 'left',
+        };
+        row.getCell('phone').alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+        };
+        row.getCell('totalTrips').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('totalTrips').numFmt = '#,##0';
-        row.getCell('completedTrips').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('completedTrips').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('completedTrips').numFmt = '#,##0';
-        row.getCell('completionRate').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('completionRate').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('completionRate').numFmt = '0.00%';
-        row.getCell('speedViolations').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('speedViolations').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('speedViolations').numFmt = '#,##0';
-        row.getCell('routeViolations').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('routeViolations').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('routeViolations').numFmt = '#,##0';
-        row.getCell('abnormalStops').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('abnormalStops').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('abnormalStops').numFmt = '#,##0';
-        row.getCell('incidents').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('incidents').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('incidents').numFmt = '#,##0';
-        row.getCell('totalViolations').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('totalViolations').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('totalViolations').numFmt = '#,##0';
-        row.getCell('kpiScore').alignment = { vertical: 'middle', horizontal: 'right' };
+        row.getCell('kpiScore').alignment = {
+          vertical: 'middle',
+          horizontal: 'right',
+        };
         row.getCell('kpiScore').numFmt = '0.00';
 
         const uDateCell = row.getCell('updatedAt');
@@ -170,25 +226,39 @@ export class ExportService {
       completedTripsCell.value = { formula: `SUM(D6:D${lastDataRow})` };
       completedTripsCell.numFmt = '#,##0';
       completedTripsCell.font = { name: 'Arial', size: 10, bold: true };
-      completedTripsCell.alignment = { vertical: 'middle', horizontal: 'right' };
+      completedTripsCell.alignment = {
+        vertical: 'middle',
+        horizontal: 'right',
+      };
 
       const avgCompletionRateCell = worksheet.getCell(`E${summaryRowIndex}`);
-      avgCompletionRateCell.value = { formula: `IF(C${summaryRowIndex}>0, D${summaryRowIndex}/C${summaryRowIndex}, 0)` };
+      avgCompletionRateCell.value = {
+        formula: `IF(C${summaryRowIndex}>0, D${summaryRowIndex}/C${summaryRowIndex}, 0)`,
+      };
       avgCompletionRateCell.numFmt = '0.00%';
       avgCompletionRateCell.font = { name: 'Arial', size: 10, bold: true };
-      avgCompletionRateCell.alignment = { vertical: 'middle', horizontal: 'right' };
+      avgCompletionRateCell.alignment = {
+        vertical: 'middle',
+        horizontal: 'right',
+      };
 
       const speedViolationsCell = worksheet.getCell(`F${summaryRowIndex}`);
       speedViolationsCell.value = { formula: `SUM(F6:F${lastDataRow})` };
       speedViolationsCell.numFmt = '#,##0';
       speedViolationsCell.font = { name: 'Arial', size: 10, bold: true };
-      speedViolationsCell.alignment = { vertical: 'middle', horizontal: 'right' };
+      speedViolationsCell.alignment = {
+        vertical: 'middle',
+        horizontal: 'right',
+      };
 
       const routeViolationsCell = worksheet.getCell(`G${summaryRowIndex}`);
       routeViolationsCell.value = { formula: `SUM(G6:G${lastDataRow})` };
       routeViolationsCell.numFmt = '#,##0';
       routeViolationsCell.font = { name: 'Arial', size: 10, bold: true };
-      routeViolationsCell.alignment = { vertical: 'middle', horizontal: 'right' };
+      routeViolationsCell.alignment = {
+        vertical: 'middle',
+        horizontal: 'right',
+      };
 
       const abnormalStopsCell = worksheet.getCell(`H${summaryRowIndex}`);
       abnormalStopsCell.value = { formula: `SUM(H6:H${lastDataRow})` };
@@ -206,7 +276,10 @@ export class ExportService {
       totalViolationsCell.value = { formula: `SUM(J6:J${lastDataRow})` };
       totalViolationsCell.numFmt = '#,##0';
       totalViolationsCell.font = { name: 'Arial', size: 10, bold: true };
-      totalViolationsCell.alignment = { vertical: 'middle', horizontal: 'right' };
+      totalViolationsCell.alignment = {
+        vertical: 'middle',
+        horizontal: 'right',
+      };
 
       const avgKpiScoreCell = worksheet.getCell(`K${summaryRowIndex}`);
       avgKpiScoreCell.value = { formula: `AVERAGE(K6:K${lastDataRow})` };
@@ -281,22 +354,41 @@ export class ExportService {
       doc.on('error', (err) => reject(err));
 
       // Document Title/Header
-      doc.font('Helvetica-Bold').fontSize(22).fillColor('#0f172a').text(reportTitle.toUpperCase().replace(/-/g, ' '), { align: 'center', underline: true });
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(22)
+        .fillColor('#0f172a')
+        .text(reportTitle.toUpperCase().replace(/-/g, ' '), {
+          align: 'center',
+          underline: true,
+        });
       doc.moveDown(1.5);
 
       // Helper function to format keys
-      const formatKey = (key: string) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase()).trim();
+      const formatKey = (key: string) =>
+        key
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, (str) => str.toUpperCase())
+          .trim();
 
       // Content rendering
       if (Array.isArray(data)) {
         data.forEach((item, index) => {
-          doc.font('Helvetica-Bold').fontSize(12).fillColor('#4f46e5').text(`RECORD ${index + 1}`, { underline: true });
+          doc
+            .font('Helvetica-Bold')
+            .fontSize(12)
+            .fillColor('#4f46e5')
+            .text(`RECORD ${index + 1}`, { underline: true });
           doc.moveDown(0.2);
           doc.font('Helvetica').fillColor('#334155');
 
           Object.entries(item).forEach(([key, value]) => {
             if (typeof value === 'object' && value !== null) {
-              doc.fontSize(9).text(`  ${formatKey(key)}: ${JSON.stringify(value).substring(0, 120)}...`);
+              doc
+                .fontSize(9)
+                .text(
+                  `  ${formatKey(key)}: ${JSON.stringify(value).substring(0, 120)}...`,
+                );
             } else {
               doc.fontSize(9).text(`  ${formatKey(key)}: ${value}`);
             }
@@ -308,20 +400,31 @@ export class ExportService {
         Object.entries(data).forEach(([key, value]) => {
           if (Array.isArray(value)) {
             // Render sub-list of entries (e.g. trends or rankings)
-            doc.font('Helvetica-Bold').fontSize(12).fillColor('#4f46e5').text(`${formatKey(key)}:`);
+            doc
+              .font('Helvetica-Bold')
+              .fontSize(12)
+              .fillColor('#4f46e5')
+              .text(`${formatKey(key)}:`);
             doc.moveDown(0.3);
             doc.font('Helvetica').fillColor('#334155');
 
             value.slice(0, 15).forEach((item, idx) => {
               const formattedItem = Object.entries(item)
-                .map(([k, v]) => `${formatKey(k)}: ${typeof v === 'number' && v > 1000 ? v.toLocaleString() : v}`)
+                .map(
+                  ([k, v]) =>
+                    `${formatKey(k)}: ${typeof v === 'number' && v > 1000 ? v.toLocaleString() : v}`,
+                )
                 .join(' | ');
               doc.fontSize(9).text(`  • ${formattedItem}`);
             });
             doc.moveDown();
           } else if (typeof value === 'object' && value !== null) {
             // Render sub-object
-            doc.font('Helvetica-Bold').fontSize(12).fillColor('#4f46e5').text(`${formatKey(key)}:`);
+            doc
+              .font('Helvetica-Bold')
+              .fontSize(12)
+              .fillColor('#4f46e5')
+              .text(`${formatKey(key)}:`);
             doc.moveDown(0.3);
             doc.font('Helvetica').fillColor('#334155');
 
@@ -331,8 +434,15 @@ export class ExportService {
             doc.moveDown();
           } else {
             // Render standard metric
-            const formattedVal = typeof value === 'number' && value > 1000 ? value.toLocaleString() : value;
-            doc.font('Helvetica').fontSize(11).fillColor('#1e293b').text(`${formatKey(key)}: ${formattedVal}`);
+            const formattedVal =
+              typeof value === 'number' && value > 1000
+                ? value.toLocaleString()
+                : value;
+            doc
+              .font('Helvetica')
+              .fontSize(11)
+              .fillColor('#1e293b')
+              .text(`${formatKey(key)}: ${formattedVal}`);
             doc.moveDown(0.4);
           }
         });

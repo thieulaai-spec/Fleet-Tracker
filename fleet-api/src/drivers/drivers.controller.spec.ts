@@ -86,7 +86,9 @@ describe('DriversController', () => {
 
   describe('getKpi', () => {
     it('should return driver kpis', async () => {
-      expect(await controller.getKpi('d1', {} as any)).toEqual({ tripsCompleted: 10 });
+      expect(await controller.getKpi('d1', {} as any)).toEqual({
+        tripsCompleted: 10,
+      });
       expect(service.getKpi).toHaveBeenCalledWith('d1');
     });
   });

@@ -58,7 +58,9 @@ export class OrdersService {
         type: 'Point',
         coordinates: [deliveryLng, deliveryLat],
       },
-      deliveryDeadline: createOrderDto.deliveryDeadline ? new Date(createOrderDto.deliveryDeadline) : undefined,
+      deliveryDeadline: createOrderDto.deliveryDeadline
+        ? new Date(createOrderDto.deliveryDeadline)
+        : undefined,
     });
 
     return this.ordersRepository.save(order);
@@ -116,15 +118,19 @@ export class OrdersService {
         assignedTrip: {
           id: tripOrder.trip.id,
           status: tripOrder.trip.status,
-          driver: tripOrder.trip.driver ? {
-            id: tripOrder.trip.driver.id,
-            fullName: tripOrder.trip.driver.user?.fullName || null,
-            phone: tripOrder.trip.driver.user?.phone || null,
-          } : null,
-          vehicle: tripOrder.trip.vehicle ? {
-            id: tripOrder.trip.vehicle.id,
-            plateNumber: tripOrder.trip.vehicle.plateNumber || null,
-          } : null,
+          driver: tripOrder.trip.driver
+            ? {
+                id: tripOrder.trip.driver.id,
+                fullName: tripOrder.trip.driver.user?.fullName || null,
+                phone: tripOrder.trip.driver.user?.phone || null,
+              }
+            : null,
+          vehicle: tripOrder.trip.vehicle
+            ? {
+                id: tripOrder.trip.vehicle.id,
+                plateNumber: tripOrder.trip.vehicle.plateNumber || null,
+              }
+            : null,
         },
       };
     }
@@ -139,8 +145,14 @@ export class OrdersService {
       throw new BadRequestException('Can only update orders in PENDING status');
     }
 
-    const { pickupLat, pickupLng, deliveryLat, deliveryLng, deliveryDeadline, ...orderData } =
-      updateOrderDto;
+    const {
+      pickupLat,
+      pickupLng,
+      deliveryLat,
+      deliveryLng,
+      deliveryDeadline,
+      ...orderData
+    } = updateOrderDto;
 
     if (pickupLat !== undefined && pickupLng !== undefined) {
       order.pickupLocation = {
@@ -157,7 +169,9 @@ export class OrdersService {
     }
 
     if (deliveryDeadline !== undefined) {
-      order.deliveryDeadline = deliveryDeadline ? new Date(deliveryDeadline) : null;
+      order.deliveryDeadline = deliveryDeadline
+        ? new Date(deliveryDeadline)
+        : null;
     }
 
     Object.assign(order, orderData);
@@ -218,9 +232,11 @@ export class OrdersService {
     const order = await this.findOne(id);
 
     // Retrieve order verifications to get photo URLs before deletion cascades them away
-    const verifications = await this.dataSource.getRepository(OrderVerification).find({
-      where: { orderId: id },
-    });
+    const verifications = await this.dataSource
+      .getRepository(OrderVerification)
+      .find({
+        where: { orderId: id },
+      });
 
     const urlsToDelete: string[] = [];
     if (order.photoUrl) urlsToDelete.push(order.photoUrl);
@@ -246,9 +262,11 @@ export class OrdersService {
 
       // 3. If trip becomes empty, delete the trip
       if (tripId) {
-        const remainingTripOrders = await manager.getRepository(TripOrder).count({
-          where: { tripId },
-        });
+        const remainingTripOrders = await manager
+          .getRepository(TripOrder)
+          .count({
+            where: { tripId },
+          });
         if (remainingTripOrders === 0) {
           await manager.getRepository(Trip).delete(tripId);
         }
@@ -261,7 +279,10 @@ export class OrdersService {
         await this.kpiService.syncTotalTrips(driverId);
         await this.kpiService.syncViolations(driverId);
       } catch (kpiError) {
-        console.error(`Failed to sync KPI for driver ${driverId} after order deletion:`, kpiError);
+        console.error(
+          `Failed to sync KPI for driver ${driverId} after order deletion:`,
+          kpiError,
+        );
       }
     }
 

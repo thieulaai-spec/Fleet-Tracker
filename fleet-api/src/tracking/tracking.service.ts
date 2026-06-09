@@ -1,4 +1,11 @@
-import { Injectable, Logger, OnModuleDestroy, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Not, IsNull } from 'typeorm';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
@@ -13,7 +20,10 @@ import { ViolationDetectorService } from '../alerts/violation-detector.service';
 import { UploadService } from '../upload/upload.service';
 import { OrderVerificationsService } from '../order-verifications/order-verifications.service';
 import { TripOrder } from '../entities/trip-order.entity';
-import { OrderVerification, VerificationStep } from '../entities/order-verification.entity';
+import {
+  OrderVerification,
+  VerificationStep,
+} from '../entities/order-verification.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
 
 @Injectable()
@@ -71,16 +81,18 @@ export class TrackingService implements OnModuleDestroy {
       this.logger.debug(`Flushed ${batch.length} GPS points to DB`);
     } catch (error) {
       this.logger.error(`Failed to flush GPS buffer: ${error.message}`);
-      
-      const isConstraintError = 
-        error.message.includes('constraint') || 
-        error.message.includes('violates') || 
+
+      const isConstraintError =
+        error.message.includes('constraint') ||
+        error.message.includes('violates') ||
         error.message.includes('foreign key');
 
       if (isConstraintError) {
         // Attempt to save individually to isolate and discard invalid entries (e.g. FK violations)
-        this.logger.warn(`Attempting to save ${batch.length} GPS points individually to isolate errors`);
-        
+        this.logger.warn(
+          `Attempting to save ${batch.length} GPS points individually to isolate errors`,
+        );
+
         for (const point of batch) {
           try {
             await this.gpsRepository.save(point);
@@ -177,7 +189,9 @@ export class TrackingService implements OnModuleDestroy {
     });
 
     if (!vehicle) {
-      this.logger.warn(`[Hardware GPS] Device ID ${deviceId} has no matching vehicle in database`);
+      this.logger.warn(
+        `[Hardware GPS] Device ID ${deviceId} has no matching vehicle in database`,
+      );
       throw new Error(`Vehicle with deviceId ${deviceId} not found`);
     }
 
@@ -322,7 +336,7 @@ export class TrackingService implements OnModuleDestroy {
   }
 
   async getDriverByUserId(userId: string): Promise<Driver | null> {
-    return this.driverRepository.findOne({ 
+    return this.driverRepository.findOne({
       where: { userId },
       relations: ['user'],
     });
@@ -366,28 +380,40 @@ export class TrackingService implements OnModuleDestroy {
     });
 
     if (!vehicle) {
-      this.logger.warn(`[Hardware Biometric] Verification failed: Device ID ${deviceId} not found`);
-      throw new NotFoundException(`Vehicle with deviceId ${deviceId} not found`);
+      this.logger.warn(
+        `[Hardware Biometric] Verification failed: Device ID ${deviceId} not found`,
+      );
+      throw new NotFoundException(
+        `Vehicle with deviceId ${deviceId} not found`,
+      );
     }
 
     // 2. Check for active trip (can be accepted or in_progress)
     const activeTrip = await this.tripRepository.findOne({
       where: [
         { vehicleId: vehicle.id, status: TripStatus.IN_PROGRESS },
-        { vehicleId: vehicle.id, status: TripStatus.ACCEPTED }
+        { vehicleId: vehicle.id, status: TripStatus.ACCEPTED },
       ],
     });
 
     if (!activeTrip) {
-      this.logger.warn(`[Hardware Biometric] Verification failed: No active/accepted trip for vehicle ${vehicle.plateNumber}`);
-      throw new BadRequestException(`No active trip in progress or accepted for vehicle ${vehicle.plateNumber}`);
+      this.logger.warn(
+        `[Hardware Biometric] Verification failed: No active/accepted trip for vehicle ${vehicle.plateNumber}`,
+      );
+      throw new BadRequestException(
+        `No active trip in progress or accepted for vehicle ${vehicle.plateNumber}`,
+      );
     }
 
     // 3. Verify Biometrics: Does fingerprintId match driver's registered fingerprintId?
     const driver = vehicle.driver;
     if (!driver) {
-      this.logger.warn(`[Hardware Biometric] Verification failed: No driver assigned to vehicle ${vehicle.plateNumber}`);
-      throw new BadRequestException(`No driver assigned to vehicle ${vehicle.plateNumber}`);
+      this.logger.warn(
+        `[Hardware Biometric] Verification failed: No driver assigned to vehicle ${vehicle.plateNumber}`,
+      );
+      throw new BadRequestException(
+        `No driver assigned to vehicle ${vehicle.plateNumber}`,
+      );
     }
 
     if (driver.fingerprintId !== fingerprintId) {
@@ -412,7 +438,9 @@ export class TrackingService implements OnModuleDestroy {
     });
 
     if (tripOrders.length === 0) {
-      throw new BadRequestException(`No orders found for active trip ${activeTrip.id}`);
+      throw new BadRequestException(
+        `No orders found for active trip ${activeTrip.id}`,
+      );
     }
 
     // Find the first incomplete order and check its verification status
@@ -420,74 +448,102 @@ export class TrackingService implements OnModuleDestroy {
     let targetStep: VerificationStep | null = null;
 
     for (const to of tripOrders) {
-       const order = to.order;
-       if (!order) continue;
+      const order = to.order;
+      if (!order) continue;
 
-       // Query verifications for this order
-       const verifications = await this.dataSource.getRepository(OrderVerification).find({
-         where: { orderId: order.id },
-         order: { createdAt: 'ASC' },
-       });
+      // Query verifications for this order
+      const verifications = await this.dataSource
+        .getRepository(OrderVerification)
+        .find({
+          where: { orderId: order.id },
+          order: { createdAt: 'ASC' },
+        });
 
-       const hasPickup = verifications.some((v) => v.step === VerificationStep.PICKUP);
-       const hasDelivery = verifications.some((v) => v.step === VerificationStep.DELIVERY);
+      const hasPickup = verifications.some(
+        (v) => v.step === VerificationStep.PICKUP,
+      );
+      const hasDelivery = verifications.some(
+        (v) => v.step === VerificationStep.DELIVERY,
+      );
 
-       if (!hasPickup) {
-         activeOrder = order;
-         targetStep = VerificationStep.PICKUP;
-         break;
-       } else if (!hasDelivery) {
-         activeOrder = order;
-         targetStep = VerificationStep.DELIVERY;
-         break;
-       }
-       // If all steps (including delivery) are verified, this order is fully completed. Go to next order.
+      if (!hasPickup) {
+        activeOrder = order;
+        targetStep = VerificationStep.PICKUP;
+        break;
+      } else if (!hasDelivery) {
+        activeOrder = order;
+        targetStep = VerificationStep.DELIVERY;
+        break;
+      }
+      // If all steps (including delivery) are verified, this order is fully completed. Go to next order.
     }
 
     if (!activeOrder || !targetStep) {
-       throw new BadRequestException('All orders for this trip are already fully verified and delivered.');
+      throw new BadRequestException(
+        'All orders for this trip are already fully verified and delivered.',
+      );
     }
 
     // 5. Upload Face Photo from ESP32 to Supabase Storage
-    this.logger.log(`[Hardware Biometric] Uploading ESP32 selfie snapshot (${file?.size || 0} bytes) to storage...`);
-    const facePhotoUrl = await this.uploadService.uploadFile(file, 'verifications');
-    this.logger.log(`[Hardware Biometric] Snapshot uploaded successfully: ${facePhotoUrl}`);
+    this.logger.log(
+      `[Hardware Biometric] Uploading ESP32 selfie snapshot (${file?.size || 0} bytes) to storage...`,
+    );
+    const facePhotoUrl = await this.uploadService.uploadFile(
+      file,
+      'verifications',
+    );
+    this.logger.log(
+      `[Hardware Biometric] Snapshot uploaded successfully: ${facePhotoUrl}`,
+    );
 
     // Get vehicle last known location coordinates
     let latitude: number | undefined = undefined;
     let longitude: number | undefined = undefined;
     if (vehicle.lastKnownLocation && vehicle.lastKnownLocation.coordinates) {
-       longitude = vehicle.lastKnownLocation.coordinates[0];
-       latitude = vehicle.lastKnownLocation.coordinates[1];
+      longitude = vehicle.lastKnownLocation.coordinates[0];
+      latitude = vehicle.lastKnownLocation.coordinates[1];
     }
 
     // Validate Geofencing for PICKUP and DELIVERY steps
-    if (targetStep === VerificationStep.PICKUP || targetStep === VerificationStep.DELIVERY) {
-      const targetLocation = targetStep === VerificationStep.PICKUP 
-        ? activeOrder.pickupLocation 
-        : activeOrder.deliveryLocation;
+    if (
+      targetStep === VerificationStep.PICKUP ||
+      targetStep === VerificationStep.DELIVERY
+    ) {
+      const targetLocation =
+        targetStep === VerificationStep.PICKUP
+          ? activeOrder.pickupLocation
+          : activeOrder.deliveryLocation;
 
       if (!targetLocation || !targetLocation.coordinates) {
-        throw new BadRequestException(`Target location for order step ${targetStep} is not configured.`);
+        throw new BadRequestException(
+          `Target location for order step ${targetStep} is not configured.`,
+        );
       }
 
-      if (latitude === undefined || latitude === null || longitude === undefined || longitude === null) {
-        throw new BadRequestException(`Tọa độ GPS của xe hiện chưa sẵn sàng. Không thể xác thực phạm vi.`);
+      if (
+        latitude === undefined ||
+        latitude === null ||
+        longitude === undefined ||
+        longitude === null
+      ) {
+        throw new BadRequestException(
+          `Tọa độ GPS của xe hiện chưa sẵn sàng. Không thể xác thực phạm vi.`,
+        );
       }
 
       const distance = this.calculateDistance(
         latitude,
         longitude,
         targetLocation.coordinates[1],
-        targetLocation.coordinates[0]
+        targetLocation.coordinates[0],
       );
 
       if (distance > 200) {
         this.logger.error(
-          `[Hardware Biometric] FAILED! Vehicle is ${Math.round(distance)}m away from target. Geofencing limit is 200m.`
+          `[Hardware Biometric] FAILED! Vehicle is ${Math.round(distance)}m away from target. Geofencing limit is 200m.`,
         );
         throw new BadRequestException(
-          `Khoảng cách quá xa. Xe cách điểm ${targetStep === VerificationStep.PICKUP ? 'lấy hàng' : 'giao hàng'} ${Math.round(distance)}m (yêu cầu dưới 200m).`
+          `Khoảng cách quá xa. Xe cách điểm ${targetStep === VerificationStep.PICKUP ? 'lấy hàng' : 'giao hàng'} ${Math.round(distance)}m (yêu cầu dưới 200m).`,
         );
       }
     }
@@ -496,21 +552,24 @@ export class TrackingService implements OnModuleDestroy {
     this.logger.log(
       `[Hardware Biometric] Registering verification: Order ${activeOrder.id}, Step ${targetStep}, Face URL: ${facePhotoUrl}, Location: [${latitude || 'N/A'}, ${longitude || 'N/A'}]`,
     );
-    const verification = await this.orderVerificationsService.create(activeOrder.id, {
-      step: targetStep,
-      fingerprintStatus: true,
-      facePhotoUrl,
-      cargoPhotoUrl: facePhotoUrl, // ESP32 Camera selfie as both face and cargo photo
-      latitude,
-      longitude,
-    });
+    const verification = await this.orderVerificationsService.create(
+      activeOrder.id,
+      {
+        step: targetStep,
+        fingerprintStatus: true,
+        facePhotoUrl,
+        cargoPhotoUrl: facePhotoUrl, // ESP32 Camera selfie as both face and cargo photo
+        latitude,
+        longitude,
+      },
+    );
 
     // 7. Auto-advance statuses if step is PICKUP
     if (targetStep === VerificationStep.PICKUP) {
       this.logger.log(
         `[Hardware Biometric] Auto-advancing order ${activeOrder.id} status to DELIVERING and trip ${activeTrip.id} status to IN_PROGRESS`,
       );
-      
+
       activeOrder.status = OrderStatus.DELIVERING;
       await this.dataSource.getRepository(Order).save(activeOrder);
 
@@ -551,13 +610,17 @@ export class TrackingService implements OnModuleDestroy {
 
   requestEnrollment(deviceId: string, fingerprintId: number) {
     this.pendingEnrollments.set(deviceId, fingerprintId);
-    this.logger.log(`[Hardware Biometric] Command: Requested remote fingerprint enrollment for device ${deviceId} at slot #${fingerprintId}`);
+    this.logger.log(
+      `[Hardware Biometric] Command: Requested remote fingerprint enrollment for device ${deviceId} at slot #${fingerprintId}`,
+    );
   }
 
   getPendingEnrollment(deviceId: string): number | null {
     const enrollId = this.pendingEnrollments.get(deviceId) || null;
     if (enrollId) {
-      this.logger.log(`[Hardware Biometric] Polled: Device ${deviceId} fetched pending enrollment slot #${enrollId}`);
+      this.logger.log(
+        `[Hardware Biometric] Polled: Device ${deviceId} fetched pending enrollment slot #${enrollId}`,
+      );
       this.pendingEnrollments.delete(deviceId); // Consume immediately to prevent infinite loop on device
     }
     return enrollId;
@@ -566,7 +629,9 @@ export class TrackingService implements OnModuleDestroy {
   getPendingDeletion(deviceId: string): number | null {
     const deleteId = this.pendingDeletions.get(deviceId) || null;
     if (deleteId) {
-      this.logger.log(`[Hardware Biometric] Polled: Device ${deviceId} fetched pending deletion slot #${deleteId}`);
+      this.logger.log(
+        `[Hardware Biometric] Polled: Device ${deviceId} fetched pending deletion slot #${deleteId}`,
+      );
       this.pendingDeletions.delete(deviceId); // Consume immediately to prevent infinite loop on device
     }
     return deleteId;
@@ -575,13 +640,19 @@ export class TrackingService implements OnModuleDestroy {
   getPendingClearAll(deviceId: string): boolean | null {
     const clearAll = this.pendingClearAll.get(deviceId) || null;
     if (clearAll) {
-      this.logger.log(`[Hardware Biometric] Polled: Device ${deviceId} fetched pending clear_all command`);
+      this.logger.log(
+        `[Hardware Biometric] Polled: Device ${deviceId} fetched pending clear_all command`,
+      );
       this.pendingClearAll.delete(deviceId); // Consume immediately to prevent infinite loop on device
     }
     return clearAll;
   }
 
-  async saveEnrollmentResult(deviceId: string, fingerprintId: number, success: boolean) {
+  async saveEnrollmentResult(
+    deviceId: string,
+    fingerprintId: number,
+    success: boolean,
+  ) {
     this.logger.log(
       `[Hardware Biometric] Result: Received enrollment callback from device ${deviceId}, slot #${fingerprintId}: Status=${success ? 'SUCCESS' : 'FAILED'}`,
     );
@@ -596,28 +667,39 @@ export class TrackingService implements OnModuleDestroy {
     });
 
     if (!vehicle) {
-      this.logger.warn(`[Hardware Biometric] Enrollment save failed: Device ${deviceId} not matched with any vehicle`);
-      throw new NotFoundException(`Vehicle with deviceId ${deviceId} not found`);
+      this.logger.warn(
+        `[Hardware Biometric] Enrollment save failed: Device ${deviceId} not matched with any vehicle`,
+      );
+      throw new NotFoundException(
+        `Vehicle with deviceId ${deviceId} not found`,
+      );
     }
 
     if (!vehicle.driver) {
-      this.logger.warn(`[Hardware Biometric] Enrollment save failed: Vehicle ${vehicle.plateNumber} has no assigned driver`);
-      throw new NotFoundException(`No driver assigned to vehicle ${vehicle.plateNumber}`);
+      this.logger.warn(
+        `[Hardware Biometric] Enrollment save failed: Vehicle ${vehicle.plateNumber} has no assigned driver`,
+      );
+      throw new NotFoundException(
+        `No driver assigned to vehicle ${vehicle.plateNumber}`,
+      );
     }
 
     if (!success) {
-      this.logger.warn(`[Hardware Biometric] Enrollment failed on device ${deviceId} for slot #${fingerprintId}`);
-      
+      this.logger.warn(
+        `[Hardware Biometric] Enrollment failed on device ${deviceId} for slot #${fingerprintId}`,
+      );
+
       // Re-queue the remote enrollment request in memory so the vehicle will retry on next poll!
       this.requestEnrollment(deviceId, fingerprintId);
-      
+
       // Emit socket event for failure
       this.eventEmitter.emit('enroll.result', {
         driverId: vehicle.driver.id,
         deviceId,
         fingerprintId,
         success: false,
-        message: 'Đăng ký vân tay thất bại! Vui lòng đặt ngón tay lên cảm biến để thử lại.',
+        message:
+          'Đăng ký vân tay thất bại! Vui lòng đặt ngón tay lên cảm biến để thử lại.',
       });
       return { success: false, message: 'Enrollment failed on device' };
     }
@@ -635,13 +717,18 @@ export class TrackingService implements OnModuleDestroy {
       deviceId,
       fingerprintId,
       success: true,
-      message: 'Đăng ký vân tay thành công! Vân tay của bạn đã được liên kết với thiết bị trên xe.',
+      message:
+        'Đăng ký vân tay thành công! Vân tay của bạn đã được liên kết với thiết bị trên xe.',
     });
 
     return { success: true, driverId: vehicle.driver.id, fingerprintId };
   }
 
-  async saveDeletionResult(deviceId: string, fingerprintId: number, success: boolean) {
+  async saveDeletionResult(
+    deviceId: string,
+    fingerprintId: number,
+    success: boolean,
+  ) {
     this.logger.log(
       `[Hardware Biometric] Result: Received deletion callback from device ${deviceId}, slot #${fingerprintId}: Status=${success ? 'SUCCESS' : 'FAILED'}`,
     );
@@ -656,13 +743,21 @@ export class TrackingService implements OnModuleDestroy {
     });
 
     if (!vehicle) {
-      this.logger.warn(`[Hardware Biometric] Deletion save failed: Device ${deviceId} not matched with any vehicle`);
-      throw new NotFoundException(`Vehicle with deviceId ${deviceId} not found`);
+      this.logger.warn(
+        `[Hardware Biometric] Deletion save failed: Device ${deviceId} not matched with any vehicle`,
+      );
+      throw new NotFoundException(
+        `Vehicle with deviceId ${deviceId} not found`,
+      );
     }
 
     if (!vehicle.driver) {
-      this.logger.warn(`[Hardware Biometric] Deletion save failed: Vehicle ${vehicle.plateNumber} has no assigned driver`);
-      throw new NotFoundException(`No driver assigned to vehicle ${vehicle.plateNumber}`);
+      this.logger.warn(
+        `[Hardware Biometric] Deletion save failed: Vehicle ${vehicle.plateNumber} has no assigned driver`,
+      );
+      throw new NotFoundException(
+        `No driver assigned to vehicle ${vehicle.plateNumber}`,
+      );
     }
 
     // Emit socket event for success/failure
@@ -694,8 +789,12 @@ export class TrackingService implements OnModuleDestroy {
     });
 
     if (!vehicle) {
-      this.logger.warn(`[Hardware Biometric] Clear-all save failed: Device ${deviceId} not matched with any vehicle`);
-      throw new NotFoundException(`Vehicle with deviceId ${deviceId} not found`);
+      this.logger.warn(
+        `[Hardware Biometric] Clear-all save failed: Device ${deviceId} not matched with any vehicle`,
+      );
+      throw new NotFoundException(
+        `Vehicle with deviceId ${deviceId} not found`,
+      );
     }
 
     // Emit socket event for success/failure
@@ -711,7 +810,12 @@ export class TrackingService implements OnModuleDestroy {
   }
 
   @OnEvent('trip.status_changed')
-  async handleTripStatusChangedForEnroll(payload: { id: string; status: string; vehicleId: string; driverId: string }) {
+  async handleTripStatusChangedForEnroll(payload: {
+    id: string;
+    status: string;
+    vehicleId: string;
+    driverId: string;
+  }) {
     if (payload.status !== TripStatus.ACCEPTED) return;
 
     // Check if the driver already has a fingerprintId
@@ -726,7 +830,9 @@ export class TrackingService implements OnModuleDestroy {
       });
 
       if (!vehicle || !vehicle.deviceId) {
-        this.logger.warn(`No vehicle/deviceId found for ID ${payload.vehicleId} to auto-enroll`);
+        this.logger.warn(
+          `No vehicle/deviceId found for ID ${payload.vehicleId} to auto-enroll`,
+        );
         return;
       }
 
@@ -737,7 +843,7 @@ export class TrackingService implements OnModuleDestroy {
 
       const usedIds = new Set(
         allDrivers
-          .map((d) => d.fingerprintId ? Number(d.fingerprintId) : null)
+          .map((d) => (d.fingerprintId ? Number(d.fingerprintId) : null))
           .filter((id) => id !== null && !isNaN(id)),
       );
 
@@ -767,14 +873,20 @@ export class TrackingService implements OnModuleDestroy {
         driverId: driver.id,
         deviceId: vehicle.deviceId,
         fingerprintId: autoId,
-        message: 'Tài xế mới! Hãy đặt ngón tay lên cảm biến trên xe để đăng ký vân tay.',
+        message:
+          'Tài xế mới! Hãy đặt ngón tay lên cảm biến trên xe để đăng ký vân tay.',
       });
     }
   }
 
   @OnEvent('fingerprint.cleared')
-  async handleFingerprintCleared(payload: { driverId: string; fingerprintId: string }) {
-    this.logger.log(`[Hardware Biometric] handleFingerprintCleared payload: ${JSON.stringify(payload)}`);
+  async handleFingerprintCleared(payload: {
+    driverId: string;
+    fingerprintId: string;
+  }) {
+    this.logger.log(
+      `[Hardware Biometric] handleFingerprintCleared payload: ${JSON.stringify(payload)}`,
+    );
 
     // 1. Check if driver currently has an active trip (ACCEPTED or IN_PROGRESS)
     const activeTrip = await this.tripRepository.findOne({
@@ -786,15 +898,21 @@ export class TrackingService implements OnModuleDestroy {
     });
 
     // 2. Find vehicle: Use active trip's vehicle first, or fallback to permanently assigned vehicle
-    const vehicle = activeTrip?.vehicle || await this.vehicleRepository.findOne({
-      where: { driverId: payload.driverId },
-      relations: ['driver'],
-    });
+    const vehicle =
+      activeTrip?.vehicle ||
+      (await this.vehicleRepository.findOne({
+        where: { driverId: payload.driverId },
+        relations: ['driver'],
+      }));
 
     if (vehicle) {
-      this.logger.log(`[Hardware Biometric] Found vehicle ${vehicle.plateNumber} for driver ${payload.driverId}. DeviceId: ${vehicle.deviceId}`);
+      this.logger.log(
+        `[Hardware Biometric] Found vehicle ${vehicle.plateNumber} for driver ${payload.driverId}. DeviceId: ${vehicle.deviceId}`,
+      );
     } else {
-      this.logger.warn(`[Hardware Biometric] No vehicle found for driver ${payload.driverId} to sync fingerprint deletion!`);
+      this.logger.warn(
+        `[Hardware Biometric] No vehicle found for driver ${payload.driverId} to sync fingerprint deletion!`,
+      );
     }
 
     if (vehicle && vehicle.deviceId) {
@@ -817,7 +935,7 @@ export class TrackingService implements OnModuleDestroy {
 
           const usedIds = new Set(
             allDrivers
-              .map((d) => d.fingerprintId ? Number(d.fingerprintId) : null)
+              .map((d) => (d.fingerprintId ? Number(d.fingerprintId) : null))
               .filter((id) => id !== null && !isNaN(id)),
           );
 
@@ -852,7 +970,8 @@ export class TrackingService implements OnModuleDestroy {
               driverId: driverEntity.id,
               deviceId: vehicle.deviceId,
               fingerprintId: autoId,
-              message: 'Đăng ký lại vân tay! Vui lòng đặt ngón tay lên cảm biến trên xe để đăng ký vân tay mới cho chuyến đi hiện tại.',
+              message:
+                'Đăng ký lại vân tay! Vui lòng đặt ngón tay lên cảm biến trên xe để đăng ký vân tay mới cho chuyến đi hiện tại.',
             });
           }
         }
@@ -862,17 +981,21 @@ export class TrackingService implements OnModuleDestroy {
 
   @OnEvent('fingerprint.cleared_all')
   async handleFingerprintClearedAll() {
-    this.logger.log(`[Hardware Biometric] handleFingerprintClearedAll triggered`);
+    this.logger.log(
+      `[Hardware Biometric] handleFingerprintClearedAll triggered`,
+    );
 
     // Get all vehicles with deviceId
     const vehicles = await this.vehicleRepository.find({
-      where: { deviceId: Not(IsNull()) }
+      where: { deviceId: Not(IsNull()) },
     });
 
     for (const vehicle of vehicles) {
       if (vehicle.deviceId) {
         this.pendingClearAll.set(vehicle.deviceId, true);
-        this.logger.log(`[Hardware Biometric] Queued full flash clear for device ${vehicle.deviceId}`);
+        this.logger.log(
+          `[Hardware Biometric] Queued full flash clear for device ${vehicle.deviceId}`,
+        );
       }
     }
   }
@@ -894,7 +1017,7 @@ export class TrackingService implements OnModuleDestroy {
 
       if (activeTrip && activeTrip.vehicle && activeTrip.vehicle.deviceId) {
         const deviceId = activeTrip.vehicle.deviceId;
-        
+
         // Find if an enrollment is already queued for this device
         let enrollId = this.pendingEnrollments.get(deviceId) || null;
 
@@ -906,7 +1029,7 @@ export class TrackingService implements OnModuleDestroy {
 
           const usedIds = new Set(
             allDrivers
-              .map((d) => d.fingerprintId ? Number(d.fingerprintId) : null)
+              .map((d) => (d.fingerprintId ? Number(d.fingerprintId) : null))
               .filter((id) => id !== null && !isNaN(id)),
           );
 
@@ -934,7 +1057,8 @@ export class TrackingService implements OnModuleDestroy {
           driverId,
           deviceId,
           fingerprintId: enrollId,
-          message: 'Chuyến đi đang hoạt động! Vui lòng đặt ngón tay lên cảm biến trên xe để đăng ký vân tay để xác thực chặng.',
+          message:
+            'Chuyến đi đang hoạt động! Vui lòng đặt ngón tay lên cảm biến trên xe để đăng ký vân tay để xác thực chặng.',
         });
       }
     }

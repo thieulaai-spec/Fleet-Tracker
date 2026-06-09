@@ -70,7 +70,9 @@ export class TrackingController {
     }
 
     // Check if there is a pending remote clear_all request for this device
-    const pendingClearAll = this.trackingService.getPendingClearAll(data.deviceId);
+    const pendingClearAll = this.trackingService.getPendingClearAll(
+      data.deviceId,
+    );
     if (pendingClearAll) {
       return {
         status: 'ok',
@@ -80,7 +82,9 @@ export class TrackingController {
     }
 
     // Check if there is a pending remote deletion request for this device
-    const pendingDelete = this.trackingService.getPendingDeletion(data.deviceId);
+    const pendingDelete = this.trackingService.getPendingDeletion(
+      data.deviceId,
+    );
     if (pendingDelete) {
       return {
         status: 'ok',
@@ -91,7 +95,9 @@ export class TrackingController {
     }
 
     // Check if there is a pending remote enrollment request for this device
-    const pendingEnroll = this.trackingService.getPendingEnrollment(data.deviceId);
+    const pendingEnroll = this.trackingService.getPendingEnrollment(
+      data.deviceId,
+    );
     if (pendingEnroll) {
       return {
         status: 'ok',
@@ -124,7 +130,11 @@ export class TrackingController {
     if (!configuredApiKey || headerApiKey !== configuredApiKey) {
       throw new UnauthorizedException('Invalid or missing Device API Key');
     }
-    return this.trackingService.saveEnrollmentResult(body.deviceId, body.fingerprintId, body.success);
+    return this.trackingService.saveEnrollmentResult(
+      body.deviceId,
+      body.fingerprintId,
+      body.success,
+    );
   }
 
   @Post('device/delete-result')
@@ -136,7 +146,11 @@ export class TrackingController {
     if (!configuredApiKey || headerApiKey !== configuredApiKey) {
       throw new UnauthorizedException('Invalid or missing Device API Key');
     }
-    return this.trackingService.saveDeletionResult(body.deviceId, body.fingerprintId, body.success);
+    return this.trackingService.saveDeletionResult(
+      body.deviceId,
+      body.fingerprintId,
+      body.success,
+    );
   }
 
   @Post('device/clear-all-result')

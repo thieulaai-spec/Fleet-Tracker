@@ -83,6 +83,9 @@ import { OrderVerificationsModule } from './order-verifications/order-verificati
             ? true
             : configService.get<string>('DB_SSL') === 'true',
         extra: {
+          max: 10,
+          idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 5000,
           ssl:
             configService.get<string>('NODE_ENV') === 'production' ||
             configService.get<string>('DB_SSL') === 'true'

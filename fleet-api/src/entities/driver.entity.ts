@@ -40,7 +40,12 @@ export class Driver {
   @Column({ name: 'license_expiry', type: 'date', nullable: true })
   licenseExpiry: Date;
 
-  @Column({ name: 'fingerprint_id', type: 'varchar', nullable: true, unique: true })
+  @Column({
+    name: 'fingerprint_id',
+    type: 'varchar',
+    nullable: true,
+    unique: true,
+  })
   fingerprintId: string | null;
 
   @Column({

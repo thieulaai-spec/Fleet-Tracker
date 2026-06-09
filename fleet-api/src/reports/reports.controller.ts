@@ -54,7 +54,10 @@ export class ReportsController {
   @Get('driver-kpi/:driverId')
   @Roles(UserRole.ADMIN, UserRole.DISPATCHER, UserRole.DRIVER)
   @ApiOperation({ summary: 'Get KPI details for a specific driver' })
-  async getDriverKpi(@Param('driverId') driverId: string, @GetUser() user: any) {
+  async getDriverKpi(
+    @Param('driverId') driverId: string,
+    @GetUser() user: any,
+  ) {
     if (user.role === UserRole.DRIVER && user.driver?.id !== driverId) {
       throw new ForbiddenException('You can only view your own KPI');
     }

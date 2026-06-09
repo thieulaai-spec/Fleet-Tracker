@@ -5,7 +5,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, In, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import {
+  Repository,
+  DataSource,
+  In,
+  Between,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+} from 'typeorm';
 import { Trip, TripStatus } from '../entities/trip.entity';
 import { TripOrder } from '../entities/trip-order.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
@@ -60,7 +67,13 @@ export class TripsService {
 
     return this.tripRepository.find({
       where: whereClause,
-      relations: ['vehicle', 'driver', 'driver.user', 'tripOrders', 'tripOrders.order'],
+      relations: [
+        'vehicle',
+        'driver',
+        'driver.user',
+        'tripOrders',
+        'tripOrders.order',
+      ],
       order: { createdAt: 'DESC' },
     });
   }
@@ -73,7 +86,13 @@ export class TripsService {
         vehicleId,
         status,
       },
-      relations: ['vehicle', 'driver', 'driver.user', 'tripOrders', 'tripOrders.order'],
+      relations: [
+        'vehicle',
+        'driver',
+        'driver.user',
+        'tripOrders',
+        'tripOrders.order',
+      ],
       order: { createdAt: 'DESC' },
     });
   }
@@ -81,7 +100,13 @@ export class TripsService {
   async findOne(id: string) {
     const trip = await this.tripRepository.findOne({
       where: { id },
-      relations: ['vehicle', 'driver', 'driver.user', 'tripOrders', 'tripOrders.order'],
+      relations: [
+        'vehicle',
+        'driver',
+        'driver.user',
+        'tripOrders',
+        'tripOrders.order',
+      ],
     });
     if (!trip) {
       throw new NotFoundException(`Trip with ID ${id} not found`);
@@ -114,7 +139,13 @@ export class TripsService {
       // but we do need the data.
       const fullTrip = await queryRunner.manager.findOne(Trip, {
         where: { id },
-        relations: ['driver', 'driver.user', 'vehicle', 'tripOrders', 'tripOrders.order'],
+        relations: [
+          'driver',
+          'driver.user',
+          'vehicle',
+          'tripOrders',
+          'tripOrders.order',
+        ],
       });
 
       if (!fullTrip) {
@@ -164,14 +195,20 @@ export class TripsService {
 
           if (runningTrip) {
             // Merge this accepted trip's orders into the runningTrip!
-            const pendingTripOrders = await queryRunner.manager.find(TripOrder, {
-              where: { tripId: trip.id },
-              relations: ['order'],
-            });
+            const pendingTripOrders = await queryRunner.manager.find(
+              TripOrder,
+              {
+                where: { tripId: trip.id },
+                relations: ['order'],
+              },
+            );
 
-            const runningTripOrders = await queryRunner.manager.find(TripOrder, {
-              where: { tripId: runningTrip.id },
-            });
+            const runningTripOrders = await queryRunner.manager.find(
+              TripOrder,
+              {
+                where: { tripId: runningTrip.id },
+              },
+            );
 
             const maxSequence = runningTripOrders.reduce(
               (max, to) => Math.max(max, to.sequence),
@@ -201,7 +238,10 @@ export class TripsService {
             try {
               await this.optimizationService.optimizeTripRoute(runningTrip.id);
             } catch (optErr) {
-              console.error('Failed to optimize trip route after merge:', optErr);
+              console.error(
+                'Failed to optimize trip route after merge:',
+                optErr,
+              );
             }
 
             // Emit event for deleted pending trip (merged into active trip)
@@ -214,10 +254,13 @@ export class TripsService {
 
             // Get running trip driver user full name for notification
             let driverName = 'Driver';
-            const driverWithUser = await this.tripRepository.manager.findOne(Driver, {
-              where: { id: runningTrip.driverId! },
-              relations: ['user'],
-            });
+            const driverWithUser = await this.tripRepository.manager.findOne(
+              Driver,
+              {
+                where: { id: runningTrip.driverId! },
+                relations: ['user'],
+              },
+            );
             if (driverWithUser && driverWithUser.user) {
               driverName = driverWithUser.user.fullName;
             }
@@ -342,10 +385,13 @@ export class TripsService {
       // Retrieve driver's full name for operational logs
       let driverName = 'Driver';
       if (savedTrip.driverId) {
-        const driverWithUser = await this.tripRepository.manager.findOne(Driver, {
-          where: { id: savedTrip.driverId },
-          relations: ['user'],
-        });
+        const driverWithUser = await this.tripRepository.manager.findOne(
+          Driver,
+          {
+            where: { id: savedTrip.driverId },
+            relations: ['user'],
+          },
+        );
         if (driverWithUser && driverWithUser.user) {
           driverName = driverWithUser.user.fullName;
         }

@@ -1,12 +1,72 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Image, Linking } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { MapPin, Navigation, Camera, Package, Truck, CheckCircle2, ChevronDown, ChevronUp, Fingerprint, FileText, UserCheck, Check } from 'lucide-react-native';
+import { MapPin, Navigation, Camera, Package, Truck, CheckCircle2, ChevronDown, ChevronUp, Fingerprint, FileText, UserCheck, Check, Phone, User, Timer, Scale, AlertTriangle, Clock } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { Order, OrderStatus } from '@/types/trip';
 import { calculateDistance } from '@/utils/geo';
 import { useGeofencing } from '@/hooks/useGeofencing';
 import { LightboxModal } from '../admin/tracking/LightboxModal';
+
+const getCategoryLabel = (category?: string) => {
+  switch (category) {
+    case 'bulk': return 'Dạng thô (Bulk)';
+    case 'fragile': return 'Dễ vỡ (Fragile)';
+    case 'bulky': return 'Hàng cồng kềnh (Bulky)';
+    case 'dangerous': return 'Hàng nguy hiểm (Dangerous)';
+    case 'other': return 'Khác';
+    default: return 'Khác';
+  }
+};
+
+const getPriorityLabel = (priority?: string) => {
+  switch (priority) {
+    case 'high': return 'Cao';
+    case 'medium': return 'Trung bình';
+    case 'low': return 'Thấp';
+    default: return 'Trung bình';
+  }
+};
+
+const getPriorityColor = (priority?: string) => {
+  switch (priority) {
+    case 'high': return '#ef4444';
+    case 'medium': return '#f59e0b';
+    case 'low': return '#10b981';
+    default: return '#f59e0b';
+  }
+};
+
+function useCountdown(deadline?: string) {
+  const [remaining, setRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!deadline) { setRemaining(null); return; }
+    const calc = () => {
+      const diff = new Date(deadline).getTime() - Date.now();
+      setRemaining(diff);
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, [deadline]);
+
+  return remaining;
+}
+
+function formatCountdown(ms: number | null): { text: string; color: string } {
+  if (ms === null) return { text: '', color: '#64748b' };
+  if (ms <= 0) return { text: 'Quá hạn (Overdue)', color: '#ef4444' };
+  const totalSec = Math.floor(ms / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const color = ms < 3600000 ? '#ef4444' : ms < 7200000 ? '#f59e0b' : '#10b981';
+  if (d > 0) return { text: `${d}d ${h}h ${m}m`, color };
+  if (h > 0) return { text: `${h}h ${m}m ${s}s`, color };
+  return { text: `${m}m ${s}s`, color };
+}
 
 interface OrderCardProps {
   order: Order;
@@ -100,6 +160,127 @@ export const OrderCard: React.FC<OrderCardProps> = ({
     if (!coords) return;
 
     onProof(order.id);
+  };
+
+  const handleCall = (phone?: string) => {
+    if (!phone) {
+      Alert.alert('Lỗi', 'Không có số điện thoại.');
+      return;
+    }
+    Linking.openURL(`tel:${phone}`).catch(() => {
+      Alert.alert('Lỗi', 'Không thể thực hiện cuộc gọi.');
+    });
+  };
+
+  const renderOrderDetails = () => {
+    const remaining = useCountdown(order.deliveryDeadline);
+    const countdown = formatCountdown(remaining);
+    const isActiveOrder = !['delivered', 'failed', 'cancelled'].includes(order.status);
+    const phone = order.recipientPhone || order.customerPhone;
+
+    return (
+      <View className="mt-4 pt-4 border-t border-white/5 gap-4">
+        {/* Recipient Details */}
+        <View className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 gap-2.5">
+          <View className="flex-row items-center gap-2 mb-1">
+            <UserCheck size={14} color="#818cf8" />
+            <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Thông tin người nhận</Text>
+          </View>
+
+          <View className="flex-row items-center justify-between py-1 border-b border-white/5">
+            <View className="flex-row items-center gap-2">
+              <User size={14} color="#94a3b8" />
+              <Text className="text-slate-400 text-xs font-semibold">Người nhận</Text>
+            </View>
+            <Text className="text-slate-200 text-xs font-bold">{order.recipientName || order.customerName || 'N/A'}</Text>
+          </View>
+
+          <View className="flex-row items-center justify-between py-1">
+            <View className="flex-row items-center gap-2">
+              <Phone size={14} color="#94a3b8" />
+              <Text className="text-slate-400 text-xs font-semibold">Số điện thoại</Text>
+            </View>
+            {phone ? (
+              <TouchableOpacity 
+                onPress={() => handleCall(phone)}
+                className="bg-indigo-500/20 px-2.5 py-1 rounded-lg border border-indigo-500/30 flex-row items-center gap-1"
+              >
+                <Text className="text-indigo-300 text-xs font-bold">{phone}</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text className="text-slate-500 text-xs font-medium">N/A</Text>
+            )}
+          </View>
+        </View>
+
+        {/* Order Specs */}
+        <View className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 gap-2.5">
+          <View className="flex-row items-center gap-2 mb-1">
+            <Package size={14} color="#818cf8" />
+            <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Chi tiết hàng hóa</Text>
+          </View>
+
+          <View className="flex-row items-center justify-between py-1 border-b border-white/5">
+            <Text className="text-slate-400 text-xs font-semibold">Phân loại</Text>
+            <Text className="text-slate-200 text-xs font-bold">{getCategoryLabel(order.category)}</Text>
+          </View>
+
+          <View className="flex-row items-center justify-between py-1 border-b border-white/5">
+            <Text className="text-slate-400 text-xs font-semibold">Độ ưu tiên</Text>
+            <View className="px-2 py-0.5 rounded" style={{ backgroundColor: getPriorityColor(order.priority) + '20' }}>
+              <Text className="text-[10px] font-bold" style={{ color: getPriorityColor(order.priority) }}>
+                {getPriorityLabel(order.priority)}
+              </Text>
+            </View>
+          </View>
+
+          <View className="flex-row items-center justify-between py-1">
+            <View className="flex-row items-center gap-2">
+              <Scale size={14} color="#94a3b8" />
+              <Text className="text-slate-400 text-xs font-semibold">Khối lượng</Text>
+            </View>
+            <Text className="text-slate-200 text-xs font-bold">{order.weightKg ? `${order.weightKg} kg` : 'N/A'}</Text>
+          </View>
+        </View>
+
+        {/* Delivery Constraint (Deadline) */}
+        {order.deliveryDeadline && (
+          <View className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 gap-2.5">
+            <View className="flex-row items-center gap-2 mb-1">
+              <Clock size={14} color="#818cf8" />
+              <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Hạn giao hàng</Text>
+            </View>
+
+            <View className="flex-row justify-between items-center">
+              <View className="flex-1 mr-4">
+                <Text className="text-slate-300 text-xs font-bold leading-5">
+                  {new Date(order.deliveryDeadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} {new Date(order.deliveryDeadline).toLocaleDateString('vi-VN')}
+                </Text>
+              </View>
+              {isActiveOrder && remaining !== null && (
+                <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-lg" style={{ backgroundColor: countdown.color + '20' }}>
+                  <Timer size={10} color={countdown.color} />
+                  <Text className="text-[10px] font-bold" style={{ color: countdown.color }}>
+                    {countdown.text}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Instructions */}
+        {order.description && (
+          <View className="bg-white/[0.02] border border-white/5 rounded-2xl p-4">
+            <View className="flex-row items-center gap-2 mb-2">
+              <FileText size={14} color="#818cf8" />
+              <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Chỉ dẫn giao hàng</Text>
+            </View>
+            <Text className="text-slate-400 text-xs leading-5">{order.description}</Text>
+          </View>
+        )}
+      </View>
+    );
   };
 
   const renderProofDetails = () => {
@@ -267,6 +448,30 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         </View>
       </TouchableOpacity>
 
+      {/* Quick alert badges if fragile or dangerous or high priority */}
+      {(order.category === 'fragile' || order.category === 'dangerous' || order.priority === 'high') && (
+        <View className="flex-row flex-wrap gap-2 mb-3">
+          {order.category === 'fragile' && (
+            <View className="flex-row items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl">
+              <AlertTriangle size={12} color="#f59e0b" />
+              <Text className="text-amber-400 text-[10px] font-black uppercase">Hàng dễ vỡ</Text>
+            </View>
+          )}
+          {order.category === 'dangerous' && (
+            <View className="flex-row items-center gap-1 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-xl">
+              <AlertTriangle size={12} color="#ef4444" />
+              <Text className="text-rose-400 text-[10px] font-black uppercase">Nguy hiểm</Text>
+            </View>
+          )}
+          {order.priority === 'high' && (
+            <View className="flex-row items-center gap-1 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-xl">
+              <AlertTriangle size={12} color="#ef4444" />
+              <Text className="text-rose-400 text-[10px] font-black uppercase">Ưu tiên cao</Text>
+            </View>
+          )}
+        </View>
+      )}
+
       <View className="flex-row items-start gap-3 mb-6 bg-white/5 p-4 rounded-2xl border border-white/5">
         <View className="mt-1">
           {isPickupPhase ? (
@@ -353,8 +558,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         )}
       </View>
 
-      {/* Render Proof Details Dynamically if expanded */}
-      {expanded && renderProofDetails()}
+      {/* Render Details & Proof if expanded */}
+      {expanded && (
+        <>
+          {renderOrderDetails()}
+          {renderProofDetails()}
+        </>
+      )}
 
       {lightboxUrl && (
         <LightboxModal imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />

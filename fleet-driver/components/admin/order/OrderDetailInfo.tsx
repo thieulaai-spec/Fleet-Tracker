@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image } from 'react-native';
-import { MapPin, Scale, Calendar, Package, Clock, Fingerprint, CheckCircle2, Check, UserCheck } from 'lucide-react-native';
+import { MapPin, Scale, Calendar, Package, Clock, Fingerprint, CheckCircle2, Check, UserCheck, Phone, User, Timer } from 'lucide-react-native';
 import { Order } from '../../../store/useOrderStore';
 
 interface OrderDetailInfoProps {
@@ -8,7 +8,71 @@ interface OrderDetailInfoProps {
   verifications?: any[];
 }
 
+const getCategoryLabel = (category?: string) => {
+  switch (category) {
+    case 'bulk': return 'Dạng thô (Bulk)';
+    case 'fragile': return 'Dễ vỡ (Fragile)';
+    case 'bulky': return 'Hàng cồng kềnh (Bulky)';
+    case 'dangerous': return 'Hàng nguy hiểm (Dangerous)';
+    case 'other': return 'Khác';
+    default: return 'Khác';
+  }
+};
+
+const getPriorityLabel = (priority?: string) => {
+  switch (priority) {
+    case 'high': return 'Cao';
+    case 'medium': return 'Trung bình';
+    case 'low': return 'Thấp';
+    default: return 'Trung bình';
+  }
+};
+
+const getPriorityColor = (priority?: string) => {
+  switch (priority) {
+    case 'high': return '#ef4444';
+    case 'medium': return '#f59e0b';
+    case 'low': return '#10b981';
+    default: return '#f59e0b';
+  }
+};
+
+function useCountdown(deadline?: string) {
+  const [remaining, setRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!deadline) { setRemaining(null); return; }
+    const calc = () => {
+      const diff = new Date(deadline).getTime() - Date.now();
+      setRemaining(diff);
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, [deadline]);
+
+  return remaining;
+}
+
+function formatCountdown(ms: number | null): { text: string; color: string } {
+  if (ms === null) return { text: '', color: '#64748b' };
+  if (ms <= 0) return { text: 'Quá hạn (Overdue)', color: '#ef4444' };
+  const totalSec = Math.floor(ms / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const color = ms < 3600000 ? '#ef4444' : ms < 7200000 ? '#f59e0b' : '#10b981';
+  if (d > 0) return { text: `${d}d ${h}h ${m}m`, color };
+  if (h > 0) return { text: `${h}h ${m}m ${s}s`, color };
+  return { text: `${m}m ${s}s`, color };
+}
+
 export const OrderDetailInfo: React.FC<OrderDetailInfoProps> = ({ order, verifications = [] }) => {
+  const remaining = useCountdown(order.deliveryDeadline);
+  const countdown = formatCountdown(remaining);
+  const isActive = !['delivered', 'failed', 'cancelled'].includes(order.status);
+
   return (
     <View className="gap-5">
       {/* Route Details */}
@@ -39,6 +103,79 @@ export const OrderDetailInfo: React.FC<OrderDetailInfoProps> = ({ order, verific
           </View>
         </View>
       </View>
+
+      {/* Recipient Details */}
+      <View className="bg-slate-900 rounded-3xl p-5 border border-white/5">
+        <View className="flex-row items-center gap-2.5 mb-4">
+          <UserCheck size={20} color="#6366f1" />
+          <Text className="text-lg font-bold text-slate-100">Recipient Details</Text>
+        </View>
+        
+        <View className="flex-row items-center gap-3 py-2 border-b border-white/5">
+          <User size={16} color="#94a3b8" />
+          <View className="flex-1">
+            <Text className="text-slate-500 text-[10px] font-semibold">Recipient Name</Text>
+            <Text className="text-slate-300 text-sm font-semibold">{order.recipientName || 'N/A'}</Text>
+          </View>
+        </View>
+        
+        <View className="flex-row items-center gap-3 py-2">
+          <Phone size={16} color="#94a3b8" />
+          <View className="flex-1">
+            <Text className="text-slate-500 text-[10px] font-semibold">Recipient Phone</Text>
+            <Text className="text-slate-300 text-sm font-semibold">{order.recipientPhone || 'N/A'}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Order Specifications */}
+      <View className="bg-slate-900 rounded-3xl p-5 border border-white/5">
+        <View className="flex-row items-center gap-2.5 mb-4">
+          <Package size={20} color="#6366f1" />
+          <Text className="text-lg font-bold text-slate-100">Order Specifications</Text>
+        </View>
+        
+        <View className="flex-row justify-between items-center py-2.5 border-b border-white/5">
+          <Text className="text-slate-400 text-xs font-semibold">Phân loại</Text>
+          <Text className="text-slate-200 text-sm font-bold">{getCategoryLabel(order.category)}</Text>
+        </View>
+        
+        <View className="flex-row justify-between items-center py-2.5">
+          <Text className="text-slate-400 text-xs font-semibold">Mức độ ưu tiên</Text>
+          <View className="px-2.5 py-0.5 rounded-lg" style={{ backgroundColor: getPriorityColor(order.priority) + '20' }}>
+            <Text className="text-xs font-bold" style={{ color: getPriorityColor(order.priority) }}>
+              {getPriorityLabel(order.priority)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Delivery Constraint */}
+      {order.deliveryDeadline && (
+        <View className="bg-slate-900 rounded-3xl p-5 border border-white/5">
+          <View className="flex-row items-center gap-2.5 mb-4">
+            <Clock size={20} color="#6366f1" />
+            <Text className="text-lg font-bold text-slate-100">Delivery Constraint</Text>
+          </View>
+          
+          <View className="flex-row justify-between items-center">
+            <View className="flex-1 mr-4">
+              <Text className="text-slate-500 text-[10px] font-semibold mb-1">Deadline</Text>
+              <Text className="text-slate-300 text-xs font-bold leading-5">
+                {new Date(order.deliveryDeadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} {new Date(order.deliveryDeadline).toLocaleDateString('vi-VN')}
+              </Text>
+            </View>
+            {isActive && remaining !== null && (
+              <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-xl" style={{ backgroundColor: countdown.color + '20' }}>
+                <Timer size={12} color={countdown.color} />
+                <Text className="text-[11px] font-bold" style={{ color: countdown.color }}>
+                  {countdown.text}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
 
       {/* Weight & Date */}
       <View className="flex-row gap-4">

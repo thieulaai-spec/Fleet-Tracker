@@ -27,6 +27,13 @@ export interface Order {
   pickupAddress: string;
   pickupLocation?: { latitude: number; longitude: number };
   deliveryLocation?: { latitude: number; longitude: number };
+  category?: 'bulk' | 'fragile' | 'bulky' | 'dangerous' | 'other';
+  priority?: 'low' | 'medium' | 'high';
+  deliveryDeadline?: string;
+  weightKg?: number;
+  description?: string;
+  recipientName?: string;
+  recipientPhone?: string;
 }
 
 export interface Trip {

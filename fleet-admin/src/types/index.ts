@@ -65,6 +65,11 @@ export interface Order {
   deliveryLocation: GeoPoint;
   weightKg: number;
   description?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  category?: 'bulk' | 'fragile' | 'bulky' | 'dangerous' | 'other';
+  priority?: 'low' | 'medium' | 'high';
+  deliveryDeadline?: string;
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;

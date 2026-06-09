@@ -38,6 +38,11 @@ const transformTripData = (t: any): Trip | null => {
         customerPhone: to.order.recipientPhone || to.order.customerPhone,
         photoUrl: to.order.photoUrl,
         signatureUrl: to.order.signatureUrl,
+        category: to.order.category,
+        priority: to.order.priority,
+        deliveryDeadline: to.order.deliveryDeadline,
+        weightKg: to.order.weightKg,
+        description: to.order.description,
       };
     }).filter(Boolean) || []
   } as Trip;

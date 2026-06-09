@@ -1,183 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Image, Linking } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Linking } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { MapPin, Navigation, Camera, Package, Truck, CheckCircle2, ChevronDown, ChevronUp, Fingerprint, FileText, UserCheck, Check, Phone, User, Timer, Scale, AlertTriangle, Clock } from 'lucide-react-native';
-import * as Location from 'expo-location';
+import { MapPin, Navigation, Camera, Package, Truck, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react-native';
 import { Order, OrderStatus } from '@/types/trip';
-import { calculateDistance } from '@/utils/geo';
 import { useGeofencing } from '@/hooks/useGeofencing';
-import { LightboxModal } from '../admin/tracking/LightboxModal';
-
-const getCategoryLabel = (category?: string) => {
-  switch (category) {
-    case 'bulk': return 'Dạng thô (Bulk)';
-    case 'fragile': return 'Dễ vỡ (Fragile)';
-    case 'bulky': return 'Hàng cồng kềnh (Bulky)';
-    case 'dangerous': return 'Hàng nguy hiểm (Dangerous)';
-    case 'other': return 'Khác';
-    default: return 'Khác';
-  }
-};
-
-const getPriorityLabel = (priority?: string) => {
-  switch (priority) {
-    case 'high': return 'Cao';
-    case 'medium': return 'Trung bình';
-    case 'low': return 'Thấp';
-    default: return 'Trung bình';
-  }
-};
-
-const getPriorityColor = (priority?: string) => {
-  switch (priority) {
-    case 'high': return '#ef4444';
-    case 'medium': return '#f59e0b';
-    case 'low': return '#10b981';
-    default: return '#f59e0b';
-  }
-};
-
-function useCountdown(deadline?: string) {
-  const [remaining, setRemaining] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!deadline) { setRemaining(null); return; }
-    const calc = () => {
-      const diff = new Date(deadline).getTime() - Date.now();
-      setRemaining(diff);
-    };
-    calc();
-    const id = setInterval(calc, 1000);
-    return () => clearInterval(id);
-  }, [deadline]);
-
-  return remaining;
-}
-
-function formatCountdown(ms: number | null): { text: string; color: string } {
-  if (ms === null) return { text: '', color: '#64748b' };
-  if (ms <= 0) return { text: 'Quá hạn (Overdue)', color: '#ef4444' };
-  const totalSec = Math.floor(ms / 1000);
-  const d = Math.floor(totalSec / 86400);
-  const h = Math.floor((totalSec % 86400) / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  const color = ms < 3600000 ? '#ef4444' : ms < 7200000 ? '#f59e0b' : '#10b981';
-  if (d > 0) return { text: `${d}d ${h}h ${m}m`, color };
-  if (h > 0) return { text: `${h}h ${m}m ${s}s`, color };
-  return { text: `${m}m ${s}s`, color };
-}
-
-const OrderDetails: React.FC<{ order: Order; handleCall: (phone?: string) => void }> = ({ order, handleCall }) => {
-  const remaining = useCountdown(order.deliveryDeadline);
-  const countdown = formatCountdown(remaining);
-  const isActiveOrder = !['delivered', 'failed', 'cancelled'].includes(order.status);
-  const phone = order.recipientPhone || order.customerPhone;
-
-  return (
-    <View className="mt-4 pt-4 border-t border-white/5 gap-4">
-      {/* Recipient Details */}
-      <View className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 gap-2.5">
-        <View className="flex-row items-center gap-2 mb-1">
-          <UserCheck size={14} color="#818cf8" />
-          <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Thông tin người nhận</Text>
-        </View>
-
-        <View className="flex-row items-center justify-between py-1 border-b border-white/5">
-          <View className="flex-row items-center gap-2">
-            <User size={14} color="#94a3b8" />
-            <Text className="text-slate-400 text-xs font-semibold">Người nhận</Text>
-          </View>
-          <Text className="text-slate-200 text-xs font-bold">{order.recipientName || order.customerName || 'N/A'}</Text>
-        </View>
-
-        <View className="flex-row items-center justify-between py-1">
-          <View className="flex-row items-center gap-2">
-            <Phone size={14} color="#94a3b8" />
-            <Text className="text-slate-400 text-xs font-semibold">Số điện thoại</Text>
-          </View>
-          {phone ? (
-            <TouchableOpacity 
-              onPress={() => handleCall(phone)}
-              className="bg-indigo-500/20 px-2.5 py-1 rounded-lg border border-indigo-500/30 flex-row items-center gap-1"
-            >
-              <Text className="text-indigo-300 text-xs font-bold">{phone}</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text className="text-slate-500 text-xs font-medium">N/A</Text>
-          )}
-        </View>
-      </View>
-
-      {/* Order Specs */}
-      <View className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 gap-2.5">
-        <View className="flex-row items-center gap-2 mb-1">
-          <Package size={14} color="#818cf8" />
-          <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Chi tiết hàng hóa</Text>
-        </View>
-
-        <View className="flex-row items-center justify-between py-1 border-b border-white/5">
-          <Text className="text-slate-400 text-xs font-semibold">Phân loại</Text>
-          <Text className="text-slate-200 text-xs font-bold">{getCategoryLabel(order.category)}</Text>
-        </View>
-
-        <View className="flex-row items-center justify-between py-1 border-b border-white/5">
-          <Text className="text-slate-400 text-xs font-semibold">Độ ưu tiên</Text>
-          <View className="px-2 py-0.5 rounded" style={{ backgroundColor: getPriorityColor(order.priority) + '20' }}>
-            <Text className="text-[10px] font-bold" style={{ color: getPriorityColor(order.priority) }}>
-              {getPriorityLabel(order.priority)}
-            </Text>
-          </View>
-        </View>
-
-        <View className="flex-row items-center justify-between py-1">
-          <View className="flex-row items-center gap-2">
-            <Scale size={14} color="#94a3b8" />
-            <Text className="text-slate-400 text-xs font-semibold">Khối lượng</Text>
-          </View>
-          <Text className="text-slate-200 text-xs font-bold">{order.weightKg ? `${order.weightKg} kg` : 'N/A'}</Text>
-        </View>
-      </View>
-
-      {/* Delivery Constraint (Deadline) */}
-      {order.deliveryDeadline && (
-        <View className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 gap-2.5">
-          <View className="flex-row items-center gap-2 mb-1">
-            <Clock size={14} color="#818cf8" />
-            <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Hạn giao hàng</Text>
-          </View>
-
-          <View className="flex-row justify-between items-center">
-            <View className="flex-1 mr-4">
-              <Text className="text-slate-300 text-xs font-bold leading-5">
-                {new Date(order.deliveryDeadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} {new Date(order.deliveryDeadline).toLocaleDateString('vi-VN')}
-              </Text>
-            </View>
-            {isActiveOrder && remaining !== null && (
-              <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-lg" style={{ backgroundColor: countdown.color + '20' }}>
-                <Timer size={10} color={countdown.color} />
-                <Text className="text-[10px] font-bold" style={{ color: countdown.color }}>
-                  {countdown.text}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-      )}
-
-      {/* Instructions */}
-      {order.description && (
-        <View className="bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-          <View className="flex-row items-center gap-2 mb-2">
-            <FileText size={14} color="#818cf8" />
-            <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Chỉ dẫn giao hàng</Text>
-          </View>
-          <Text className="text-slate-400 text-xs leading-5">{order.description}</Text>
-        </View>
-      )}
-    </View>
-  );
-};
+import { OrderDetails } from './OrderDetails';
+import { OrderProofDetails } from './OrderProofDetails';
 
 interface OrderCardProps {
   order: Order;
@@ -188,8 +16,6 @@ interface OrderCardProps {
   canSubmitProof?: boolean;
   verifications?: any[];
 }
-
-const GEOFENCE_RADIUS = 200; // meters
 
 export const OrderCard: React.FC<OrderCardProps> = ({ 
   order, 
@@ -202,7 +28,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const { checkProximity, getCurrentLocation, isLoading: isCheckingLocation } = useGeofencing();
 
   const isDelivered = order.status === OrderStatus.DELIVERED;
@@ -281,144 +106,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
     Linking.openURL(`tel:${phone}`).catch(() => {
       Alert.alert('Lỗi', 'Không thể thực hiện cuộc gọi.');
     });
-  };
-
-
-
-  const renderProofDetails = () => {
-    const orderVers = verifications.filter(v => v.orderId === order.id);
-    
-    // Filter verifications based on current order status
-    let visibleVers = orderVers;
-    if (order.status === OrderStatus.PICKED_UP || order.status === OrderStatus.DELIVERING) {
-      // Show accept, pickup, checkpoint steps
-      visibleVers = orderVers.filter(v => v.step === 'accept' || v.step === 'pickup' || v.step === 'checkpoint');
-    } else if (order.status === OrderStatus.ASSIGNED) {
-      // Show accept step
-      visibleVers = orderVers.filter(v => v.step === 'accept');
-    }
-
-    if (visibleVers.length === 0) {
-      return (
-        <View className="mt-4 pt-4 border-t border-white/5">
-          <Text className="text-slate-500 text-xs italic text-center">Chưa có minh chứng xác thực nào được ghi nhận.</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View className="mt-4 pt-4 border-t border-white/5 gap-4">
-        <View className="flex-row items-center gap-2 mb-1">
-          <FileText size={12} color="#818cf8" />
-          <Text className="text-indigo-400 text-xs font-black uppercase tracking-wider">Chi tiết minh chứng xác thực</Text>
-        </View>
-        
-        <View className="gap-4">
-          {visibleVers.map((ver, idx) => {
-            const isPickupStep = ver.step === 'pickup';
-            const isDeliveryStep = ver.step === 'delivery';
-            const isAcceptStep = ver.step === 'accept';
-            const isCheckpointStep = ver.step === 'checkpoint';
-            
-            let stepTitle = 'Xác thực';
-            if (isAcceptStep) stepTitle = 'Chấp nhận đơn';
-            else if (isPickupStep) stepTitle = 'Lấy hàng thành công (Đã đến lấy)';
-            else if (isDeliveryStep) stepTitle = 'Bàn giao hàng thành công (Đã giao)';
-            else if (isCheckpointStep) stepTitle = 'Mốc lộ trình';
-
-            const cargoPhotos = ver.cargoPhotoUrl ? ver.cargoPhotoUrl.split(',').filter(Boolean) : [];
-
-            return (
-              <View key={ver.id || idx} className="flex-row gap-3">
-                {/* Node Line */}
-                <View className="items-center">
-                  <View className="w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/30 items-center justify-center">
-                    <Check size={10} color="#818cf8" />
-                  </View>
-                  {idx !== visibleVers.length - 1 && (
-                    <View className="w-px flex-1 bg-white/10 my-1" />
-                  )}
-                </View>
-
-                {/* Node Content */}
-                <View className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                  <View className="flex-row justify-between items-center mb-2.5">
-                    <Text className="text-white text-xs font-black tracking-wide">{stepTitle}</Text>
-                    <Text className="text-slate-500 text-[9px] font-black uppercase tracking-wider">
-                      {new Date(ver.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-
-                  {/* Fingerprint proof */}
-                  {ver.fingerprintStatus && (
-                    <View className="flex-row items-center gap-1.5 mb-3 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg self-start">
-                      <Fingerprint size={10} color="#10b981" />
-                      <Text className="text-emerald-400 text-[8px] font-black uppercase tracking-wider">Vân tay đã xác minh</Text>
-                    </View>
-                  )}
-
-                  {/* Photos Row */}
-                  {(ver.facePhotoUrl || cargoPhotos.length > 0) && (
-                    <View className="flex-row gap-3 mt-1.5">
-                      {/* Face Photo */}
-                      {ver.facePhotoUrl && (
-                        <View className="flex-1">
-                          <Text className="text-slate-500 text-[8px] font-black uppercase tracking-wider mb-1">Xác thực tài xế (Face ID)</Text>
-                          <TouchableOpacity 
-                            activeOpacity={0.9} 
-                            onPress={() => setLightboxUrl(ver.facePhotoUrl)}
-                            className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950"
-                          >
-                            <Image 
-                              source={{ uri: ver.facePhotoUrl }} 
-                              className="w-full h-full"
-                              resizeMode="cover"
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      )}
-
-                      {/* Cargo Photos */}
-                      {cargoPhotos.length > 0 && (
-                        <View className="flex-1">
-                          <Text className="text-slate-500 text-[8px] font-black uppercase tracking-wider mb-1">Ảnh thực tế hàng hóa</Text>
-                          <View className="flex-row flex-wrap gap-1.5">
-                            {cargoPhotos.map((photoUrl: string, pIdx: number) => (
-                              <TouchableOpacity 
-                                key={pIdx}
-                                activeOpacity={0.9} 
-                                onPress={() => setLightboxUrl(photoUrl)}
-                                className={cargoPhotos.length === 1 ? "w-full aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950" : "w-[47%] aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-950"}
-                              >
-                                <Image 
-                                  source={{ uri: photoUrl }} 
-                                  className="w-full h-full"
-                                  resizeMode="cover"
-                                />
-                              </TouchableOpacity>
-                            ))}
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                  )}
-
-                  {/* GPS Location Details */}
-                  {ver.location && ver.location.coordinates && (
-                    <View className="flex-row items-center gap-1.5 mt-3 bg-white/[0.03] p-2 rounded-lg border border-white/5">
-                      <MapPin size={10} color="#a78bfa" />
-                      <Text className="text-slate-400 text-[9px] font-bold" numberOfLines={1}>
-                        GPS: {ver.location.coordinates[1].toFixed(5)}, {ver.location.coordinates[0].toFixed(5)}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            );
-          })}
-        </View>
-      </View>
-    );
   };
 
   return (
@@ -564,12 +251,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       {expanded && (
         <>
           <OrderDetails order={order} handleCall={handleCall} />
-          {renderProofDetails()}
+          <OrderProofDetails order={order} verifications={verifications} />
         </>
-      )}
-
-      {lightboxUrl && (
-        <LightboxModal imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
     </BlurView>
   );

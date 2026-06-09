@@ -68,6 +68,13 @@ export function useVerification({
 
       if ((step === 'pickup' || step === 'delivery') && hasHardware) {
         setIsWaitingHardware(true);
+        authFetch('/tracking/active-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId }),
+        }).catch((err) =>
+          console.error('[useVerification] Failed to set active order:', err),
+        );
       } else {
         setIsWaitingHardware(false);
       }
@@ -77,7 +84,7 @@ export function useVerification({
         clearInterval(scanIntervalRef.current);
       }
     };
-  }, [visible, step, hasHardware]);
+  }, [visible, step, hasHardware, orderId]);
 
   useEffect(() => {
     let pollingInterval: any = null;

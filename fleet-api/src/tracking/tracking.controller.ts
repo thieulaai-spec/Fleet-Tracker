@@ -10,6 +10,8 @@ import {
   Headers,
   UploadedFile,
   UseInterceptors,
+  Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TrackingService } from './tracking.service';
@@ -44,6 +46,19 @@ export class TrackingController {
     }
 
     return this.trackingService.processHardwareVerification(file, body);
+  }
+
+  @Post('active-order')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.DRIVER)
+  async setActiveOrder(
+    @Request() req,
+    @Body('orderId') orderId: string,
+  ) {
+    if (!orderId) {
+      throw new BadRequestException('orderId is required');
+    }
+    return this.trackingService.setActiveOrderForDriver(req.user.id, orderId);
   }
 
   @Post('device')

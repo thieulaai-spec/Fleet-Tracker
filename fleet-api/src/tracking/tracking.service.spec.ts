@@ -52,6 +52,7 @@ describe('TrackingService', () => {
     tripRepo = {
       findOne: jest.fn(),
       find: jest.fn().mockResolvedValue([]),
+      save: jest.fn().mockResolvedValue({}),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -89,6 +90,7 @@ describe('TrackingService', () => {
           provide: OrderVerificationsService,
           useValue: {
             verifyStep: jest.fn(),
+            create: jest.fn(),
           },
         },
         {
@@ -277,6 +279,161 @@ describe('TrackingService', () => {
       expect(loggerSpy).toHaveBeenCalledWith(
         expect.stringContaining('Violation check failed: Detector Error'),
       );
+    });
+  });
+
+  describe('Hardware Active Order Verification', () => {
+    let mockTripOrderRepo: any;
+    let mockOrderVerificationRepo: any;
+    let mockOrderRepo: any;
+    let mockUploadService: any;
+    let mockOrderVerificationsService: any;
+
+    beforeEach(() => {
+      mockTripOrderRepo = {
+        find: jest.fn(),
+        findOne: jest.fn(),
+      };
+      mockOrderVerificationRepo = {
+        find: jest.fn(),
+        save: jest.fn(),
+      };
+      mockOrderRepo = {
+        save: jest.fn(),
+      };
+
+      const dataSource = (service as any).dataSource;
+      dataSource.getRepository.mockImplementation((entity: any) => {
+        if (entity.name === 'TripOrder') return mockTripOrderRepo;
+        if (entity.name === 'OrderVerification') return mockOrderVerificationRepo;
+        if (entity.name === 'Order') return mockOrderRepo;
+        return null;
+      });
+
+      mockUploadService = (service as any).uploadService;
+      mockUploadService.uploadFile.mockResolvedValue('https://example.com/face.jpg');
+
+      mockOrderVerificationsService = (service as any).orderVerificationsService;
+      mockOrderVerificationsService.create.mockResolvedValue({ id: 'v_ok' });
+    });
+
+    it('should set active order for driver successfully', async () => {
+      const driver = { id: 'd1', user: { fullName: 'Driver A' } };
+      const vehicle = { id: 'v1', plateNumber: '29A-12345' };
+      const trip = { id: 't1', status: 'accepted' };
+      const tripOrder = { tripId: 't1', orderId: 'order_2' };
+
+      driverRepo.findOne.mockResolvedValue(driver);
+      vehicleRepo.findOne.mockResolvedValue(vehicle);
+      tripRepo.findOne.mockResolvedValue(trip);
+      mockTripOrderRepo.findOne.mockResolvedValue(tripOrder);
+
+      const res = await service.setActiveOrderForDriver('u1', 'order_2');
+      expect(res.success).toBe(true);
+      expect((service as any).activeOrdersMap.has('v1')).toBe(true);
+    });
+
+    it('should throw error when setting active order if order does not belong to active trip', async () => {
+      const driver = { id: 'd1', user: { fullName: 'Driver A' } };
+      const vehicle = { id: 'v1', plateNumber: '29A-12345' };
+      const trip = { id: 't1', status: 'accepted' };
+
+      driverRepo.findOne.mockResolvedValue(driver);
+      vehicleRepo.findOne.mockResolvedValue(vehicle);
+      tripRepo.findOne.mockResolvedValue(trip);
+      mockTripOrderRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.setActiveOrderForDriver('u1', 'order_wrong'),
+      ).rejects.toThrow('Selected order order_wrong does not belong to active trip t1');
+    });
+
+    it('should verify correct pre-selected order even if it is second in sequence', async () => {
+      const vehicle = {
+        id: 'v1',
+        plateNumber: '29A-12345',
+        deviceId: 'dev_001',
+        driver: { id: 'd1', fingerprintId: 'fp_123', user: { fullName: 'Driver A' } },
+        lastKnownLocation: { type: 'Point', coordinates: [105.8, 21.0] },
+      };
+      const trip = { id: 't1', status: 'in_progress', vehicleId: 'v1' };
+
+      const order1 = {
+        id: 'order_1',
+        pickupLocation: { type: 'Point', coordinates: [105.8, 21.0] },
+        deliveryLocation: { type: 'Point', coordinates: [105.9, 21.1] },
+      };
+      const order2 = {
+        id: 'order_2',
+        pickupLocation: { type: 'Point', coordinates: [105.8, 21.0] },
+        deliveryLocation: { type: 'Point', coordinates: [105.9, 21.1] },
+      };
+
+      const tripOrders = [
+        { tripId: 't1', orderId: 'order_1', sequence: 1, order: order1 },
+        { tripId: 't1', orderId: 'order_2', sequence: 2, order: order2 },
+      ];
+
+      vehicleRepo.findOne.mockResolvedValue(vehicle);
+      tripRepo.findOne.mockResolvedValue(trip);
+      mockTripOrderRepo.find.mockResolvedValue(tripOrders);
+
+      // mock OrderVerification: order_1 is NOT verified, order_2 is NOT verified
+      mockOrderVerificationRepo.find.mockImplementation((options: any) => {
+        return Promise.resolve([]);
+      });
+
+      // Pre-select order_2
+      (service as any).activeOrdersMap.set('v1', {
+        orderId: 'order_2',
+        expiry: Date.now() + 100000,
+      });
+
+      const body = { fingerprintId: 'fp_123', deviceId: 'dev_001' };
+      const file = { size: 100 } as any;
+
+      const res = await service.processHardwareVerification(file, body);
+      expect(res.success).toBe(true);
+      expect(res.orderId).toBe('order_2'); // Should pick order_2 because it is pre-selected!
+      expect((service as any).activeOrdersMap.has('v1')).toBe(false); // cleared on success
+    });
+
+    it('should fallback to first incomplete sequence order when no active order pre-selected', async () => {
+      const vehicle = {
+        id: 'v1',
+        plateNumber: '29A-12345',
+        deviceId: 'dev_001',
+        driver: { id: 'd1', fingerprintId: 'fp_123', user: { fullName: 'Driver A' } },
+        lastKnownLocation: { type: 'Point', coordinates: [105.8, 21.0] },
+      };
+      const trip = { id: 't1', status: 'in_progress', vehicleId: 'v1' };
+
+      const order1 = {
+        id: 'order_1',
+        pickupLocation: { type: 'Point', coordinates: [105.8, 21.0] },
+      };
+      const order2 = {
+        id: 'order_2',
+        pickupLocation: { type: 'Point', coordinates: [105.8, 21.0] },
+      };
+
+      const tripOrders = [
+        { tripId: 't1', orderId: 'order_1', sequence: 1, order: order1 },
+        { tripId: 't1', orderId: 'order_2', sequence: 2, order: order2 },
+      ];
+
+      vehicleRepo.findOne.mockResolvedValue(vehicle);
+      tripRepo.findOne.mockResolvedValue(trip);
+      mockTripOrderRepo.find.mockResolvedValue(tripOrders);
+
+      mockOrderVerificationRepo.find.mockResolvedValue([]);
+
+      const body = { fingerprintId: 'fp_123', deviceId: 'dev_001' };
+      const file = { size: 100 } as any;
+
+      const res = await service.processHardwareVerification(file, body);
+      expect(res.success).toBe(true);
+      expect(res.orderId).toBe('order_1'); // Fallback to order_1 because no pre-selection
     });
   });
 

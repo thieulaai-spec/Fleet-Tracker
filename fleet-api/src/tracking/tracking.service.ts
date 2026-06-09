@@ -37,6 +37,10 @@ export class TrackingService implements OnModuleDestroy {
   private pendingDeletions = new Map<string, number>();
   private pendingClearAll = new Map<string, boolean>();
   private readonly lastHardwareGpsMap = new Map<string, number>();
+  private readonly activeOrdersMap = new Map<
+    string,
+    { orderId: string; expiry: number }
+  >();
 
   constructor(
     @InjectRepository(GpsLocation)
@@ -342,6 +346,58 @@ export class TrackingService implements OnModuleDestroy {
     });
   }
 
+  async setActiveOrderForDriver(
+    userId: string,
+    orderId: string,
+  ): Promise<{ success: boolean }> {
+    const driver = await this.getDriverByUserId(userId);
+    if (!driver) {
+      throw new NotFoundException('Driver not found');
+    }
+
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { driverId: driver.id },
+    });
+    if (!vehicle) {
+      throw new BadRequestException('No vehicle assigned to this driver');
+    }
+
+    const activeTrip = await this.tripRepository.findOne({
+      where: [
+        { vehicleId: vehicle.id, status: TripStatus.IN_PROGRESS },
+        { vehicleId: vehicle.id, status: TripStatus.ACCEPTED },
+      ],
+    });
+
+    if (!activeTrip) {
+      throw new BadRequestException(
+        `No active or accepted trip for vehicle ${vehicle.plateNumber}`,
+      );
+    }
+
+    const tripOrder = await this.dataSource.getRepository(TripOrder).findOne({
+      where: { tripId: activeTrip.id, orderId },
+    });
+
+    if (!tripOrder) {
+      throw new BadRequestException(
+        `Selected order ${orderId} does not belong to active trip ${activeTrip.id}`,
+      );
+    }
+
+    // Set with 10 minutes TTL
+    this.activeOrdersMap.set(vehicle.id, {
+      orderId,
+      expiry: Date.now() + 10 * 60 * 1000,
+    });
+
+    this.logger.log(
+      `[Hardware Biometric] Driver ${driver.user?.fullName || 'Unknown'} selected active order ${orderId} for vehicle ${vehicle.plateNumber}`,
+    );
+
+    return { success: true };
+  }
+
   async getTripById(tripId: string): Promise<Trip | null> {
     return this.tripRepository.findOne({ where: { id: tripId } });
   }
@@ -443,39 +499,81 @@ export class TrackingService implements OnModuleDestroy {
       );
     }
 
-    // Find the first incomplete order and check its verification status
     let activeOrder: Order | null = null;
     let targetStep: VerificationStep | null = null;
 
-    for (const to of tripOrders) {
-      const order = to.order;
-      if (!order) continue;
-
-      // Query verifications for this order
-      const verifications = await this.dataSource
-        .getRepository(OrderVerification)
-        .find({
-          where: { orderId: order.id },
-          order: { createdAt: 'ASC' },
-        });
-
-      const hasPickup = verifications.some(
-        (v) => v.step === VerificationStep.PICKUP,
-      );
-      const hasDelivery = verifications.some(
-        (v) => v.step === VerificationStep.DELIVERY,
-      );
-
-      if (!hasPickup) {
-        activeOrder = order;
-        targetStep = VerificationStep.PICKUP;
-        break;
-      } else if (!hasDelivery) {
-        activeOrder = order;
-        targetStep = VerificationStep.DELIVERY;
-        break;
+    // Check if driver pre-selected an active order on phone app
+    let activeOrderId: string | null = null;
+    const entry = this.activeOrdersMap.get(vehicle.id);
+    if (entry) {
+      if (Date.now() > entry.expiry) {
+        this.activeOrdersMap.delete(vehicle.id);
+      } else {
+        activeOrderId = entry.orderId;
       }
-      // If all steps (including delivery) are verified, this order is fully completed. Go to next order.
+    }
+
+    if (activeOrderId) {
+      const targetTripOrder = tripOrders.find(
+        (to) => to.orderId === activeOrderId,
+      );
+      if (targetTripOrder && targetTripOrder.order) {
+        const order = targetTripOrder.order;
+        const verifications = await this.dataSource
+          .getRepository(OrderVerification)
+          .find({
+            where: { orderId: order.id },
+            order: { createdAt: 'ASC' },
+          });
+
+        const hasPickup = verifications.some(
+          (v) => v.step === VerificationStep.PICKUP,
+        );
+        const hasDelivery = verifications.some(
+          (v) => v.step === VerificationStep.DELIVERY,
+        );
+
+        if (!hasPickup) {
+          activeOrder = order;
+          targetStep = VerificationStep.PICKUP;
+        } else if (!hasDelivery) {
+          activeOrder = order;
+          targetStep = VerificationStep.DELIVERY;
+        }
+      }
+    }
+
+    // Fallback: Find the first incomplete order by sequence if no active selection or selected order is completed
+    if (!activeOrder || !targetStep) {
+      for (const to of tripOrders) {
+        const order = to.order;
+        if (!order) continue;
+
+        // Query verifications for this order
+        const verifications = await this.dataSource
+          .getRepository(OrderVerification)
+          .find({
+            where: { orderId: order.id },
+            order: { createdAt: 'ASC' },
+          });
+
+        const hasPickup = verifications.some(
+          (v) => v.step === VerificationStep.PICKUP,
+        );
+        const hasDelivery = verifications.some(
+          (v) => v.step === VerificationStep.DELIVERY,
+        );
+
+        if (!hasPickup) {
+          activeOrder = order;
+          targetStep = VerificationStep.PICKUP;
+          break;
+        } else if (!hasDelivery) {
+          activeOrder = order;
+          targetStep = VerificationStep.DELIVERY;
+          break;
+        }
+      }
     }
 
     if (!activeOrder || !targetStep) {
@@ -595,6 +693,9 @@ export class TrackingService implements OnModuleDestroy {
       success: true,
       verification,
     });
+
+    // Clear active order from selection map on success
+    this.activeOrdersMap.delete(vehicle.id);
 
     return {
       success: true,

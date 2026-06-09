@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
-import { MapPin, User, ShieldCheck, Navigation, Phone, Truck, CheckCircle2, Eye, ChevronUp, ChevronDown } from 'lucide-react-native';
+import { MapPin, User, ShieldCheck, Navigation, Phone, Truck, CheckCircle2, Eye, ChevronUp, ChevronDown, AlertTriangle } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Trip, TripStatus, OrderStatus } from '@/types/trip';
@@ -292,9 +292,31 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({
                 </LinearGradient>
               </View>
               <View className="flex-1 min-w-0 ml-4">
-                <Text className="text-indigo-400 text-[9px] font-black uppercase tracking-[2px] mb-1">
-                  {currentOrder?.status === OrderStatus.PICKED_UP || currentOrder?.status === OrderStatus.DELIVERING ? 'Delivery Point' : 'Pickup Point'}
-                </Text>
+                <View className="flex-row items-center justify-between mb-1">
+                  <Text className="text-indigo-400 text-[9px] font-black uppercase tracking-[2px]">
+                    {currentOrder?.status === OrderStatus.PICKED_UP || currentOrder?.status === OrderStatus.DELIVERING ? 'Delivery Point' : 'Pickup Point'}
+                  </Text>
+                  {currentOrder && (currentOrder.category === 'fragile' || currentOrder.category === 'dangerous' || currentOrder.priority === 'high') && (
+                    <View className={`px-2 py-0.5 rounded-md flex-row items-center gap-1 ${
+                      currentOrder.category === 'fragile' 
+                        ? 'bg-amber-500/10 border border-amber-500/20' 
+                        : 'bg-rose-500/10 border border-rose-500/20'
+                    }`}>
+                      <AlertTriangle size={10} color={
+                        currentOrder.category === 'fragile' ? '#f59e0b' : '#ef4444'
+                      } />
+                      <Text className={`text-[8px] font-black uppercase ${
+                        currentOrder.category === 'fragile' ? 'text-amber-500' : 'text-rose-500'
+                      }`}>
+                        {currentOrder.category === 'fragile' 
+                          ? 'Dễ vỡ' 
+                          : currentOrder.category === 'dangerous' 
+                            ? 'Nguy hiểm' 
+                            : 'Ưu tiên cao'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <Text className="text-white text-lg font-black tracking-tight" numberOfLines={1} ellipsizeMode="tail">
                   {currentOrder
                     ? (currentOrder.status === OrderStatus.PICKED_UP || currentOrder.status === OrderStatus.DELIVERING

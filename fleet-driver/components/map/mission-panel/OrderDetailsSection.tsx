@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
 import { User, ShieldCheck, Phone, AlertTriangle } from 'lucide-react-native';
 import { Trip, OrderStatus } from '@/types/trip';
+import { OrderSelectModal } from './OrderSelectModal';
 
 interface OrderDetailsSectionProps {
   activeTrip: Trip;
@@ -16,28 +17,18 @@ export const OrderDetailsSection: React.FC<OrderDetailsSectionProps> = ({
   isCollapsed,
   onSelectOrder,
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const handleSelectOrderPrompt = () => {
     const undeliveredOrders = activeTrip.orders.filter(o => o.status !== OrderStatus.DELIVERED);
     if (undeliveredOrders.length <= 1) return;
-
-    Alert.alert(
-      'Chọn nhiệm vụ mục tiêu',
-      'Chọn đơn hàng bạn muốn thực hiện tiếp theo:',
-      [
-        ...undeliveredOrders.map(o => ({
-          text: `Đơn #${o.id.slice(-6).toUpperCase()} (${
-            o.status === OrderStatus.PICKED_UP || o.status === OrderStatus.DELIVERING ? 'Giao hàng' : 'Lấy hàng'
-          })`,
-          onPress: () => onSelectOrder?.(o.id)
-        })),
-        { text: 'Hủy', style: 'cancel' }
-      ]
-    );
+    setIsModalOpen(true);
   };
 
   if (!currentOrder || isCollapsed) return null;
 
-  const undeliveredCount = activeTrip.orders.filter(o => o.status !== OrderStatus.DELIVERED).length;
+  const undeliveredOrders = activeTrip.orders.filter(o => o.status !== OrderStatus.DELIVERED);
+  const undeliveredCount = undeliveredOrders.length;
 
   return (
     <>
@@ -90,6 +81,15 @@ export const OrderDetailsSection: React.FC<OrderDetailsSectionProps> = ({
           </TouchableOpacity>
         )}
       </View>
+
+      <OrderSelectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        orders={undeliveredOrders}
+        currentOrder={currentOrder}
+        onSelectOrder={(orderId) => onSelectOrder?.(orderId)}
+      />
     </>
   );
 };
+

@@ -662,12 +662,12 @@ export class TrackingService implements OnModuleDestroy {
       },
     );
 
-    // 7. Auto-advance statuses if step is PICKUP
+    // 7. Auto-advance statuses based on verification step
     if (targetStep === VerificationStep.PICKUP) {
+      // Advance order to DELIVERING and trip to IN_PROGRESS
       this.logger.log(
         `[Hardware Biometric] Auto-advancing order ${activeOrder.id} status to DELIVERING and trip ${activeTrip.id} status to IN_PROGRESS`,
       );
-
       activeOrder.status = OrderStatus.DELIVERING;
       await this.dataSource.getRepository(Order).save(activeOrder);
 
@@ -682,6 +682,20 @@ export class TrackingService implements OnModuleDestroy {
         vehicleId: activeTrip.vehicleId,
         driverId: activeTrip.driverId,
       });
+    } else if (targetStep === VerificationStep.DELIVERY) {
+      // Mark order as DELIVERED and reduce vehicle load
+      this.logger.log(
+        `[Hardware Biometric] Delivery verified for order ${activeOrder.id}. Updating load: -${activeOrder.weightKg}kg`,
+      );
+      activeOrder.status = OrderStatus.DELIVERED;
+      await this.dataSource.getRepository(Order).save(activeOrder);
+
+      // Decrease vehicle current load safely
+      vehicle.currentLoadKg = Math.max(
+        0,
+        Number(vehicle.currentLoadKg) - Number(activeOrder.weightKg),
+      );
+      await this.vehicleRepository.save(vehicle);
     }
 
     // 8. Emit order.verified event

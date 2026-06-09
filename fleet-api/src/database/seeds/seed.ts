@@ -1,3 +1,4 @@
+process.env.TZ = 'UTC';
 import { DataSource } from 'typeorm';
 import { User, UserRole } from '../../entities/user.entity';
 import { Driver, DriverStatus } from '../../entities/driver.entity';

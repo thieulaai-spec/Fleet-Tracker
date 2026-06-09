@@ -80,9 +80,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         params,
       });
       
-      // Ensure we handle both wrapped { data, ... } and direct array
-      const orders = response.data.data || response.data;
-      set({ orders, loading: false });
+      // The API returns a paginated object { data: Order[], ... }
+      const ordersArray = response.data?.data ?? response.data;
+      // Merge with existing orders, dedupe by id
+      const existing = get().orders;
+      const combined = [...existing, ...ordersArray];
+      const unique = Array.from(new Map(combined.map((o) => [o.id, o])).values());
+      set({ orders: unique, loading: false });
     } catch (error: any) {
       set({ 
         error: error.response?.data?.message || 'Failed to fetch orders', 

@@ -7,6 +7,7 @@ import {
   Image,
   Linking,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { User, Navigation, Truck, MapPin, Phone, ChevronDown, ChevronUp } from 'lucide-react-native';
@@ -154,26 +155,32 @@ export const SelectedVehicleCard: React.FC<SelectedVehicleCardProps> = ({
               <ChevronDown size={14} color="#047857" />
             )}
           </TouchableOpacity>
-          {isExpanded && activeTrip.tripOrders.map((to: any) => {
-            const order = to.order;
-            if (!order) return null;
-            return (
-              <View key={order.id} className="bg-slate-800 rounded-xl p-2.5 border border-slate-700 gap-1">
-                <View className="flex-row justify-between items-center mb-0.5">
-                  <Text className="text-white text-[11px] font-bold font-mono">Đơn: #{order.id.substring(0, 8)}</Text>
-                  <Text className="text-emerald-700 text-[9px] font-black uppercase px-1.5 py-0.2 bg-emerald-500/10 rounded-full">{order.status}</Text>
-                </View>
-                <View className="gap-0.5">
-                  <Text className="text-slate-300 text-[11px]" numberOfLines={1} ellipsizeMode="tail">
-                    📍 <Text className="font-bold text-indigo-700">Lấy:</Text> {order.pickupAddress}
-                  </Text>
-                  <Text className="text-slate-300 text-[11px]" numberOfLines={1} ellipsizeMode="tail">
-                    🏁 <Text className="font-bold text-emerald-700">Giao:</Text> {order.deliveryAddress}
-                  </Text>
-                </View>
+          {isExpanded && (
+            <ScrollView style={{ maxHeight: 250 }} nestedScrollEnabled={true} showsVerticalScrollIndicator={true}>
+              <View className="gap-1.5">
+                {activeTrip.tripOrders.map((to: any) => {
+                  const order = to.order;
+                  if (!order) return null;
+                  return (
+                    <View key={order.id} className="bg-slate-800 rounded-xl p-2.5 border border-slate-700 gap-1">
+                      <View className="flex-row justify-between items-center mb-0.5">
+                        <Text className="text-white text-[11px] font-bold font-mono">Đơn: #{order.id.substring(0, 8)}</Text>
+                        <Text className="text-emerald-700 text-[9px] font-black uppercase px-1.5 py-0.2 bg-emerald-500/10 rounded-full">{order.status}</Text>
+                      </View>
+                      <View className="gap-0.5">
+                        <Text className="text-slate-300 text-[11px]" numberOfLines={1} ellipsizeMode="tail">
+                          📍 <Text className="font-bold text-indigo-700">Lấy:</Text> {order.pickupAddress}
+                        </Text>
+                        <Text className="text-slate-300 text-[11px]" numberOfLines={1} ellipsizeMode="tail">
+                          🏁 <Text className="font-bold text-emerald-700">Giao:</Text> {order.deliveryAddress}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
-            );
-          })}
+            </ScrollView>
+          )}
         </View>
       )}
 

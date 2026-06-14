@@ -305,15 +305,19 @@ describe('TrackingService', () => {
       const dataSource = (service as any).dataSource;
       dataSource.getRepository.mockImplementation((entity: any) => {
         if (entity.name === 'TripOrder') return mockTripOrderRepo;
-        if (entity.name === 'OrderVerification') return mockOrderVerificationRepo;
+        if (entity.name === 'OrderVerification')
+          return mockOrderVerificationRepo;
         if (entity.name === 'Order') return mockOrderRepo;
         return null;
       });
 
       mockUploadService = (service as any).uploadService;
-      mockUploadService.uploadFile.mockResolvedValue('https://example.com/face.jpg');
+      mockUploadService.uploadFile.mockResolvedValue(
+        'https://example.com/face.jpg',
+      );
 
-      mockOrderVerificationsService = (service as any).orderVerificationsService;
+      mockOrderVerificationsService = (service as any)
+        .orderVerificationsService;
       mockOrderVerificationsService.create.mockResolvedValue({ id: 'v_ok' });
     });
 
@@ -345,7 +349,9 @@ describe('TrackingService', () => {
 
       await expect(
         service.setActiveOrderForDriver('u1', 'order_wrong'),
-      ).rejects.toThrow('Selected order order_wrong does not belong to active trip t1');
+      ).rejects.toThrow(
+        'Selected order order_wrong does not belong to active trip t1',
+      );
     });
 
     it('should verify correct pre-selected order even if it is second in sequence', async () => {
@@ -353,7 +359,11 @@ describe('TrackingService', () => {
         id: 'v1',
         plateNumber: '29A-12345',
         deviceId: 'dev_001',
-        driver: { id: 'd1', fingerprintId: 'fp_123', user: { fullName: 'Driver A' } },
+        driver: {
+          id: 'd1',
+          fingerprintId: 'fp_123',
+          user: { fullName: 'Driver A' },
+        },
         lastKnownLocation: { type: 'Point', coordinates: [105.8, 21.0] },
       };
       const trip = { id: 't1', status: 'in_progress', vehicleId: 'v1' };
@@ -403,7 +413,11 @@ describe('TrackingService', () => {
         id: 'v1',
         plateNumber: '29A-12345',
         deviceId: 'dev_001',
-        driver: { id: 'd1', fingerprintId: 'fp_123', user: { fullName: 'Driver A' } },
+        driver: {
+          id: 'd1',
+          fingerprintId: 'fp_123',
+          user: { fullName: 'Driver A' },
+        },
         lastKnownLocation: { type: 'Point', coordinates: [105.8, 21.0] },
       };
       const trip = { id: 't1', status: 'in_progress', vehicleId: 'v1' };

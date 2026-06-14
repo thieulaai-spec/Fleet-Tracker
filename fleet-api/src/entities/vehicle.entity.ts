@@ -83,4 +83,7 @@ export class Vehicle {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  kmThisMonth?: number;
+  condition?: string;
 }

@@ -62,6 +62,8 @@ export interface Vehicle {
   imageUrl?: string;
   createdAt: string;
   updatedAt: string;
+  kmThisMonth?: number;
+  condition?: string;
 }
 
 export interface DispatchSuggestion {

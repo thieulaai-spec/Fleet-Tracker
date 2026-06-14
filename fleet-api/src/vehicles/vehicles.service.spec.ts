@@ -8,6 +8,7 @@ import {
   VehicleType,
 } from '../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
+import { Trip } from '../entities/trip.entity';
 import { UserRole } from '../entities/user.entity';
 import { UploadService } from '../upload/upload.service';
 import {
@@ -23,6 +24,7 @@ describe('VehiclesService', () => {
   let repository: Repository<Vehicle>;
   let uploadService: UploadService;
   let driverRepository: Repository<Driver>;
+  let tripRepository: Repository<Trip>;
 
   const mockVehicle = {
     id: 'vehicle-1',
@@ -52,6 +54,13 @@ describe('VehiclesService', () => {
   };
 
   beforeEach(async () => {
+    const mockTripQueryBuilder = {
+      select: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getRawOne: jest.fn().mockResolvedValue({ total: '150.5' }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         VehiclesService,
@@ -70,6 +79,12 @@ describe('VehiclesService', () => {
             save: jest.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(Trip),
+          useValue: {
+            createQueryBuilder: jest.fn().mockReturnValue(mockTripQueryBuilder),
+          },
+        },
       ],
     }).compile();
 
@@ -79,6 +94,7 @@ describe('VehiclesService', () => {
     driverRepository = module.get<Repository<Driver>>(
       getRepositoryToken(Driver),
     );
+    tripRepository = module.get<Repository<Trip>>(getRepositoryToken(Trip));
   });
 
   afterEach(() => {
@@ -180,7 +196,7 @@ describe('VehiclesService', () => {
       const query = { page: 1, limit: 10, skip: 0 } as any;
       const result = await service.findAll(query);
 
-      expect(result.data).toEqual([mockVehicle]);
+      expect(result.data).toEqual([expect.objectContaining(mockVehicle)]);
       expect(result.total).toBe(1);
     });
   });
@@ -189,7 +205,7 @@ describe('VehiclesService', () => {
     it('should return vehicle if found', async () => {
       mockRepository.findOne.mockResolvedValue({ ...mockVehicle });
       const result = await service.findOne('vehicle-1');
-      expect(result).toEqual(mockVehicle);
+      expect(result).toEqual(expect.objectContaining(mockVehicle));
     });
 
     it('should throw NotFoundException if not found', async () => {

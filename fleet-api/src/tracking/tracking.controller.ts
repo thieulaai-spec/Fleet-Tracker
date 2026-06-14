@@ -51,10 +51,7 @@ export class TrackingController {
   @Post('active-order')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.DRIVER)
-  async setActiveOrder(
-    @Request() req,
-    @Body('orderId') orderId: string,
-  ) {
+  async setActiveOrder(@Request() req, @Body('orderId') orderId: string) {
     if (!orderId) {
       throw new BadRequestException('orderId is required');
     }

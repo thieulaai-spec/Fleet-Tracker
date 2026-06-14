@@ -181,7 +181,7 @@ export default function VehicleDetailScreen() {
             <View className="p-5 gap-5">
               <VehicleSpecs vehicle={vehicle} />
               <VehicleDriver vehicle={vehicle} onViewProfile={(driverId) => router.push(`/admin/fleet/drivers/${driverId}` as any)} />
-              <VehicleHealth />
+              <VehicleHealth vehicle={vehicle} />
             </View>
           )}
         </ScrollView>

@@ -53,6 +53,8 @@ export interface Vehicle {
   initialLng?: number | null;
   createdAt: string;
   updatedAt: string;
+  kmThisMonth?: number;
+  condition?: string;
 }
 
 export type VehicleType = 'small' | 'medium' | 'large';

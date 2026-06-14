@@ -40,9 +40,7 @@ describe('TripsService', () => {
     manager: {
       findOne: jest.fn(),
       find: jest.fn().mockResolvedValue([]),
-      create: jest
-        .fn()
-        .mockImplementation((entity, data) => ({ ...data })),
+      create: jest.fn().mockImplementation((entity, data) => ({ ...data })),
       save: jest.fn(),
       delete: jest.fn().mockResolvedValue(null),
     },
@@ -361,10 +359,18 @@ describe('TripsService', () => {
 
       mockQueryRunner.manager.find.mockImplementation((entity, criteria) => {
         if (entity === TripOrder) {
-          if (criteria && criteria.where && criteria.where.tripId === 'trip-1') {
+          if (
+            criteria &&
+            criteria.where &&
+            criteria.where.tripId === 'trip-1'
+          ) {
             return Promise.resolve(pendingTripOrders);
           }
-          if (criteria && criteria.where && criteria.where.tripId === 'running-trip-id') {
+          if (
+            criteria &&
+            criteria.where &&
+            criteria.where.tripId === 'running-trip-id'
+          ) {
             return Promise.resolve(runningTripOrders);
           }
         }
@@ -379,7 +385,9 @@ describe('TripsService', () => {
       );
 
       expect(result.id).toBe('running-trip-id');
-      expect(mockQueryRunner.manager.delete).toHaveBeenCalledWith(Trip, { id: 'trip-1' });
+      expect(mockQueryRunner.manager.delete).toHaveBeenCalledWith(Trip, {
+        id: 'trip-1',
+      });
       expect(mockQueryRunner.manager.save).toHaveBeenCalled();
     });
 

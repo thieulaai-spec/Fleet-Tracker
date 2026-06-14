@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
+import { Trip, TripStatus } from '../entities/trip.entity';
 import { UserRole } from '../entities/user.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -22,6 +23,8 @@ export class VehiclesService {
     private vehicleRepository: Repository<Vehicle>,
     @InjectRepository(Driver)
     private driverRepository: Repository<Driver>,
+    @InjectRepository(Trip)
+    private tripRepository: Repository<Trip>,
     private uploadService: UploadService,
   ) {}
 
@@ -35,8 +38,10 @@ export class VehiclesService {
       );
     }
 
-    const { driverId, initialLat, initialLng, ...vehicleData } = createVehicleDto;
+    const { driverId, initialLat, initialLng, ...vehicleData } =
+      createVehicleDto;
 
+    let driverEntity: Driver | null = null;
     if (driverId) {
       const driver = await this.driverRepository.findOne({
         where: { id: driverId },
@@ -48,20 +53,55 @@ export class VehiclesService {
       if (driver.status === DriverStatus.ON_TRIP) {
         throw new ConflictException('Driver is already on another trip');
       }
+      driverEntity = driver;
+      if (driver.user) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        (driverEntity as any).fullName = driver.user.fullName;
+      }
     }
 
     const vehicle = this.vehicleRepository.create({
       ...vehicleData,
       driverId: driverId || null,
+      driver: driverEntity,
       lastKnownLocation: {
         type: 'Point',
-        coordinates: [
-          initialLng ?? 106.6353,
-          initialLat ?? 10.7838,
-        ],
+        coordinates: [initialLng ?? 106.6353, initialLat ?? 10.7838],
       },
     });
     return await this.vehicleRepository.save(vehicle);
+  }
+
+  private async populateVehicleStats(vehicle: Vehicle): Promise<Vehicle> {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const tripDistance = await this.tripRepository
+      .createQueryBuilder('trip')
+      .select('SUM(trip.totalDistanceKm)', 'total')
+      .where('trip.vehicleId = :vehicleId', { vehicleId: vehicle.id })
+      .andWhere('trip.status = :status', { status: TripStatus.COMPLETED })
+      .andWhere('trip.completedAt >= :startOfMonth', { startOfMonth })
+      .getRawOne();
+
+    const kmThisMonth = parseFloat(tripDistance?.total || '0');
+
+    let condition = 'Good';
+    if (vehicle.status === VehicleStatus.MAINTENANCE) {
+      condition = 'Maintenance';
+    } else if (kmThisMonth > 5000) {
+      condition = 'Fair';
+    } else if (kmThisMonth > 0) {
+      condition = 'Good';
+    } else {
+      condition = 'Excellent';
+    }
+
+    vehicle.kmThisMonth = parseFloat(kmThisMonth.toFixed(1));
+    vehicle.condition = condition;
+
+    return vehicle;
   }
 
   async findAll(query: VehicleQueryDto): Promise<PaginatedResponse<Vehicle>> {
@@ -87,6 +127,8 @@ export class VehiclesService {
       }
     });
 
+    await Promise.all(data.map((vehicle) => this.populateVehicleStats(vehicle)));
+
     return {
       data,
       total,
@@ -109,6 +151,8 @@ export class VehiclesService {
     if (vehicle.driver && vehicle.driver.user) {
       (vehicle.driver as any).fullName = vehicle.driver.user.fullName;
     }
+
+    await this.populateVehicleStats(vehicle);
 
     return vehicle;
   }
@@ -158,10 +202,17 @@ export class VehiclesService {
         if (newDriver.status === DriverStatus.ON_TRIP) {
           throw new ConflictException('Driver is already on another trip');
         }
+
+        vehicle.driver = newDriver;
+        if (newDriver.user) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          (vehicle.driver as any).fullName = newDriver.user.fullName;
+        }
+      } else {
+        vehicle.driver = null;
       }
 
       vehicle.driverId = updateVehicleDto.driverId;
-      vehicle.driver = null; // Clear the loaded relation to ensure driverId is used
       delete updateVehicleDto.driverId;
     }
 

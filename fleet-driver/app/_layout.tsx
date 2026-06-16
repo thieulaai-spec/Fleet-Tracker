@@ -56,6 +56,7 @@ import { useRouter, useSegments } from 'expo-router';
 
 import { NetworkBanner } from '../components/ui/NetworkBanner';
 import { socketService } from '../lib/socket';
+import { startBackgroundLocation, stopBackgroundLocation } from '../lib/backgroundTasks';
 
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -191,6 +192,18 @@ function RootLayoutNav() {
       socketService.disconnect();
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'driver') {
+      startBackgroundLocation().catch((error) => {
+        console.warn('[GPS-AID] Background aid could not start:', error);
+      });
+    } else {
+      stopBackgroundLocation().catch((error) => {
+        console.warn('[GPS-AID] Background aid could not stop:', error);
+      });
+    }
+  }, [isAuthenticated, user?.role]);
 
   useEffect(() => {
     const rootSegment = segments[0];

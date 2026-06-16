@@ -1,9 +1,7 @@
 import { Platform } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
-import { socketService } from './socket';
-import { useTripStore } from '../store/useTripStore';
-import { offlineQueue } from './offlineQueue';
+import { sendGpsAidHint } from './gpsAid';
 
 export const LOCATION_TASK_NAME = 'background-location-task';
 
@@ -34,38 +32,13 @@ if (Platform.OS !== 'web') {
         return;
       }
 
-      const activeTrip = useTripStore.getState().activeTrip;
-      
-      if (activeTrip) {
-        // Connect if not connected (background task might run when app is killed)
-        socketService.connect();
-        
-        try {
-          const payload = {
-            tripId: activeTrip.id,
-            vehicleId: activeTrip.vehicleId,
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            heading: location.coords.heading || 0,
-            speed: location.coords.speed || 0,
-            timestamp: new Date(location.timestamp).toISOString(),
-          };
-
-          // Bypassed: Telemetry is strictly driven by vehicle IoT hardware.
-          // Do not send background GPS coordinates to server to conserve battery and cell data.
-          /*
-          if (socketService.getSocket()?.connected) {
-            socketService.emit('gps:update', payload);
-            console.log(`[Background] GPS update sent for trip ${activeTrip.id}`);
-          } else {
-            console.log('[Background] Socket disconnected, queueing GPS point');
-            await offlineQueue.push(payload);
-          }
-          */
-          console.log('[Background] Bypassed background location upload to server (IoT strict mode active)');
-        } catch (emitError) {
-          console.error('[Background] Failed to handle GPS update:', emitError);
-        }
+      try {
+        await sendGpsAidHint(location);
+        // Bypassed: Telemetry is strictly driven by vehicle IoT hardware.
+        // Background phone GPS is used only as a hidden cold-start aid for the ESP GPS.
+        console.log('[Background] GPS aid hint handled; hardware telemetry remains IoT-only');
+      } catch (emitError) {
+        console.error('[Background] Failed to handle GPS aid hint:', emitError);
       }
     }
   });

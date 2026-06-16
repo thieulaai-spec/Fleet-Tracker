@@ -20,6 +20,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
 import { DeviceGpsUpdateDto } from './dto/device-gps-update.dto';
+import { GpsAidHintDto } from './dto/gps-aid-hint.dto';
 import { VerifyHardwareDto } from './dto/verify-hardware.dto';
 import { TrackingGateway } from './tracking.gateway';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -56,6 +57,13 @@ export class TrackingController {
       throw new BadRequestException('orderId is required');
     }
     return this.trackingService.setActiveOrderForDriver(req.user.id, orderId);
+  }
+
+  @Post('gps-aid')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.DRIVER)
+  async submitGpsAid(@Request() req, @Body() body: GpsAidHintDto) {
+    return this.trackingService.submitDriverGpsAid(req.user, body);
   }
 
   @Post('device')
@@ -116,6 +124,23 @@ export class TrackingController {
         timestamp: new Date().toISOString(),
         action: 'enroll',
         enrollId: pendingEnroll,
+      };
+    }
+
+    const pendingGpsAid = this.trackingService.getPendingGpsAid(data.deviceId);
+    if (pendingGpsAid) {
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        action: 'gps_aid',
+        unix: pendingGpsAid.unix,
+        lat: pendingGpsAid.latitude,
+        lng: pendingGpsAid.longitude,
+        accuracyM: pendingGpsAid.accuracyM,
+        ageMs: pendingGpsAid.ageMs,
+        speed: pendingGpsAid.speed ?? 0,
+        heading: pendingGpsAid.heading ?? 0,
+        altitudeM: pendingGpsAid.altitudeM ?? 0,
       };
     }
 

@@ -15,6 +15,7 @@ import { Trip, TripStatus } from '../entities/trip.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
 import { GpsUpdateDto } from './dto/gps-update.dto';
 import { DeviceGpsUpdateDto } from './dto/device-gps-update.dto';
+import { GpsAidHintDto } from './dto/gps-aid-hint.dto';
 import { VerifyHardwareDto } from './dto/verify-hardware.dto';
 import { ViolationDetectorService } from '../alerts/violation-detector.service';
 import { UploadService } from '../upload/upload.service';
@@ -26,6 +27,18 @@ import {
 } from '../entities/order-verification.entity';
 import { Order, OrderStatus } from '../entities/order.entity';
 
+type PendingGpsAid = {
+  latitude: number;
+  longitude: number;
+  accuracyM: number;
+  unix: number;
+  ageMs: number;
+  speed?: number;
+  heading?: number;
+  altitudeM?: number;
+  expiresAt: number;
+};
+
 @Injectable()
 export class TrackingService implements OnModuleDestroy {
   private readonly logger = new Logger(TrackingService.name);
@@ -36,6 +49,7 @@ export class TrackingService implements OnModuleDestroy {
   private pendingEnrollments = new Map<string, number>();
   private pendingDeletions = new Map<string, number>();
   private pendingClearAll = new Map<string, boolean>();
+  private pendingGpsAid = new Map<string, PendingGpsAid>();
   private readonly lastHardwareGpsMap = new Map<string, number>();
   private readonly activeOrdersMap = new Map<
     string,
@@ -761,6 +775,72 @@ export class TrackingService implements OnModuleDestroy {
       this.pendingClearAll.delete(deviceId); // Consume immediately to prevent infinite loop on device
     }
     return clearAll;
+  }
+
+  async submitDriverGpsAid(user: any, hint: GpsAidHintDto) {
+    const driverId = user?.driver?.id;
+    if (!driverId) {
+      throw new BadRequestException('Driver profile is required for GPS aid');
+    }
+
+    let deviceId: string | null = user?.driver?.vehicle?.deviceId || null;
+    if (!deviceId) {
+      const vehicle = await this.vehicleRepository.findOne({
+        where: { driverId },
+      });
+      deviceId = vehicle?.deviceId || null;
+    }
+
+    if (!deviceId) {
+      throw new BadRequestException('Assigned vehicle has no deviceId');
+    }
+
+    const nowMs = Date.now();
+    const ageMs =
+      typeof hint.ageMs === 'number'
+        ? hint.ageMs
+        : Math.max(0, nowMs - Math.floor(hint.unix * 1000));
+
+    if (ageMs > 120000) {
+      throw new BadRequestException('GPS aid hint is too old');
+    }
+
+    const pending: PendingGpsAid = {
+      latitude: hint.latitude,
+      longitude: hint.longitude,
+      accuracyM: hint.accuracyM,
+      unix: Math.floor(hint.unix),
+      ageMs,
+      speed: hint.speed,
+      heading: hint.heading,
+      altitudeM: hint.altitudeM,
+      expiresAt: nowMs + 60000,
+    };
+
+    this.pendingGpsAid.set(deviceId, pending);
+    this.logger.log(
+      `[GPS Aid] Queued phone hint for device ${deviceId}: lat=${hint.latitude}, lng=${hint.longitude}, acc=${hint.accuracyM}m, age=${ageMs}ms`,
+    );
+
+    return { status: 'queued', deviceId };
+  }
+
+  getPendingGpsAid(deviceId: string): PendingGpsAid | null {
+    const hint = this.pendingGpsAid.get(deviceId) || null;
+    if (!hint) return null;
+
+    this.pendingGpsAid.delete(deviceId);
+    if (Date.now() > hint.expiresAt) {
+      this.logger.warn(`[GPS Aid] Expired phone hint discarded for ${deviceId}`);
+      return null;
+    }
+
+    hint.ageMs = Math.max(
+      hint.ageMs,
+      Date.now() - Math.floor(hint.unix * 1000),
+    );
+    this.logger.log(`[GPS Aid] Device ${deviceId} fetched phone GPS aid hint`);
+    return hint;
   }
 
   async saveEnrollmentResult(

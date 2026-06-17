@@ -57,6 +57,7 @@ import { useRouter, useSegments } from 'expo-router';
 import { NetworkBanner } from '../components/ui/NetworkBanner';
 import { socketService } from '../lib/socket';
 import { startBackgroundLocation, stopBackgroundLocation } from '../lib/backgroundTasks';
+import { startAmmControlSync, stopAmmControlSync } from '../lib/ammControl';
 
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -195,10 +196,12 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'driver') {
+      startAmmControlSync();
       startBackgroundLocation().catch((error) => {
         console.warn('[GPS-AID] Background aid could not start:', error);
       });
     } else {
+      stopAmmControlSync();
       stopBackgroundLocation().catch((error) => {
         console.warn('[GPS-AID] Background aid could not stop:', error);
       });

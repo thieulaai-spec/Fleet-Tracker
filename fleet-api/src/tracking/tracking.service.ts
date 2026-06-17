@@ -16,6 +16,7 @@ import { Driver, DriverStatus } from '../entities/driver.entity';
 import { GpsUpdateDto } from './dto/gps-update.dto';
 import { DeviceGpsUpdateDto } from './dto/device-gps-update.dto';
 import { GpsAidHintDto } from './dto/gps-aid-hint.dto';
+import { PhoneLocationDto } from './dto/phone-location.dto';
 import { VerifyHardwareDto } from './dto/verify-hardware.dto';
 import { ViolationDetectorService } from '../alerts/violation-detector.service';
 import { UploadService } from '../upload/upload.service';
@@ -39,6 +40,29 @@ type PendingGpsAid = {
   expiresAt: number;
 };
 
+type DeviceRuntimeStatus = {
+  lastPostAt: number;
+  lastRealHardwareAt?: number;
+  lastLatitude: number;
+  lastLongitude: number;
+  lastSpeed: number;
+  lastHeading: number;
+  lastIsFallback: boolean;
+};
+
+type AmmState = {
+  enabled: boolean;
+  forceUntil: number;
+  updatedAt: number;
+  lastPhoneAt?: number;
+  lastPhoneUsedAt?: number;
+  lastPhoneLatitude?: number;
+  lastPhoneLongitude?: number;
+  lastPhoneAccuracyM?: number;
+  lastPhoneSpeed?: number;
+  lastPhoneHeading?: number;
+};
+
 @Injectable()
 export class TrackingService implements OnModuleDestroy {
   private readonly logger = new Logger(TrackingService.name);
@@ -50,7 +74,16 @@ export class TrackingService implements OnModuleDestroy {
   private pendingDeletions = new Map<string, number>();
   private pendingClearAll = new Map<string, boolean>();
   private pendingGpsAid = new Map<string, PendingGpsAid>();
+  private deviceRuntime = new Map<string, DeviceRuntimeStatus>();
+  private ammState = new Map<string, AmmState>();
   private readonly lastHardwareGpsMap = new Map<string, number>();
+  private readonly HARDWARE_REAL_STALE_MS = 45000;
+  private readonly DEVICE_POST_STALE_MS = 90000;
+  private readonly PHONE_FALLBACK_MIN_INTERVAL_MS = 10000;
+  private readonly PHONE_FALLBACK_MAX_ACCURACY_M = 100;
+  private readonly PHONE_FALLBACK_TTL_MS = 120000;
+  private readonly LEGACY_FALLBACK_LAT = 20.979174;
+  private readonly LEGACY_FALLBACK_LNG = 105.786234;
   private readonly activeOrdersMap = new Map<
     string,
     { orderId: string; expiry: number }
@@ -84,6 +117,83 @@ export class TrackingService implements OnModuleDestroy {
     if (this.flushInterval) {
       clearInterval(this.flushInterval);
     }
+  }
+
+  private isLegacyFallbackLocation(latitude: number, longitude: number) {
+    return (
+      Math.abs(latitude - this.LEGACY_FALLBACK_LAT) < 0.0001 &&
+      Math.abs(longitude - this.LEGACY_FALLBACK_LNG) < 0.0001
+    );
+  }
+
+  private getOrCreateAmmState(deviceId: string): AmmState {
+    const existing = this.ammState.get(deviceId);
+    if (existing) return existing;
+
+    const state: AmmState = {
+      enabled: false,
+      forceUntil: 0,
+      updatedAt: Date.now(),
+    };
+    this.ammState.set(deviceId, state);
+    return state;
+  }
+
+  private getVehiclePoint(vehicle: Vehicle): {
+    latitude: number;
+    longitude: number;
+  } | null {
+    const location = vehicle.lastKnownLocation;
+    if (!location) return null;
+
+    if (Array.isArray(location.coordinates) && location.coordinates.length >= 2) {
+      return {
+        latitude: Number(location.coordinates[1]),
+        longitude: Number(location.coordinates[0]),
+      };
+    }
+
+    return null;
+  }
+
+  private buildRealtimePayload(
+    vehicle: Vehicle,
+    activeTrip: Trip | null,
+    latitude: number,
+    longitude: number,
+    speed = 0,
+    heading = 0,
+  ) {
+    return {
+      vehicleId: vehicle.id,
+      tripId: activeTrip?.id || null,
+      latitude,
+      longitude,
+      speed,
+      heading,
+      timestamp: new Date().toISOString(),
+      status: vehicle.status,
+      licensePlate: vehicle.plateNumber,
+      driverName: vehicle.driver?.user?.fullName || 'Unknown Driver',
+      driverId: vehicle.driver?.id || null,
+      driverPhone: vehicle.driver?.user?.phone || null,
+    };
+  }
+
+  private async updateVehiclePoint(
+    vehicleId: string,
+    latitude: number,
+    longitude: number,
+  ) {
+    await this.vehicleRepository
+      .createQueryBuilder()
+      .update(Vehicle)
+      .set({
+        lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
+      })
+      .where('id = :vehicleId', { vehicleId })
+      .setParameters({ lng: longitude, lat: latitude })
+      .execute();
   }
 
   private async flushBuffer() {
@@ -217,8 +327,23 @@ export class TrackingService implements OnModuleDestroy {
       `[Hardware GPS] Device ID ${deviceId} matched with Vehicle Plate: ${vehicle.plateNumber} (ID: ${vehicle.id})`,
     );
 
-    // Update last known hardware GPS timestamp
-    this.lastHardwareGpsMap.set(vehicle.id, Date.now());
+    const now = Date.now();
+    const isLegacyFallback = this.isLegacyFallbackLocation(latitude, longitude);
+
+    // Update last known hardware POST status. A legacy fallback coordinate means
+    // the 4G path is alive, but GPS fix is not trustworthy.
+    this.deviceRuntime.set(deviceId, {
+      lastPostAt: now,
+      lastRealHardwareAt: isLegacyFallback
+        ? this.deviceRuntime.get(deviceId)?.lastRealHardwareAt
+        : now,
+      lastLatitude: latitude,
+      lastLongitude: longitude,
+      lastSpeed: speed,
+      lastHeading: heading,
+      lastIsFallback: isLegacyFallback,
+    });
+    this.lastHardwareGpsMap.set(vehicle.id, now);
 
     // 2. Check for active trip to link history (can be ACCEPTED or IN_PROGRESS)
     const activeTrip = await this.tripRepository.findOne({
@@ -236,6 +361,47 @@ export class TrackingService implements OnModuleDestroy {
       this.logger.log(
         `[Hardware GPS] Vehicle ${vehicle.plateNumber} has no active/accepted trip`,
       );
+    }
+
+    const amm = this.getOrCreateAmmState(deviceId);
+    const phoneFresh =
+      amm.lastPhoneUsedAt && now - amm.lastPhoneUsedAt <= this.PHONE_FALLBACK_TTL_MS;
+    if (isLegacyFallback && amm.enabled) {
+      if (
+        phoneFresh &&
+        amm.lastPhoneLatitude !== undefined &&
+        amm.lastPhoneLongitude !== undefined
+      ) {
+        this.logger.log(
+          `[AMM] Hardware fallback ignored for ${deviceId}; keeping phone rescue location`,
+        );
+        return this.buildRealtimePayload(
+          vehicle,
+          activeTrip,
+          amm.lastPhoneLatitude,
+          amm.lastPhoneLongitude,
+          amm.lastPhoneSpeed || 0,
+          amm.lastPhoneHeading || 0,
+        );
+      }
+
+      const lastKnown = this.getVehiclePoint(vehicle);
+      if (
+        lastKnown &&
+        !this.isLegacyFallbackLocation(lastKnown.latitude, lastKnown.longitude)
+      ) {
+        this.logger.log(
+          `[AMM] Hardware fallback ignored for ${deviceId}; keeping last known location`,
+        );
+        return this.buildRealtimePayload(
+          vehicle,
+          activeTrip,
+          lastKnown.latitude,
+          lastKnown.longitude,
+          0,
+          0,
+        );
+      }
     }
 
     // 3. Create PostGIS Point
@@ -273,30 +439,16 @@ export class TrackingService implements OnModuleDestroy {
     }
 
     // 5. Update Vehicle's last known location
-    await this.vehicleRepository
-      .createQueryBuilder()
-      .update(Vehicle)
-      .set({
-        lastKnownLocation: () => `ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)`,
-      })
-      .where('id = :vehicleId', { vehicleId: vehicle.id })
-      .setParameters({ lng: longitude, lat: latitude })
-      .execute();
+    await this.updateVehiclePoint(vehicle.id, latitude, longitude);
 
-    return {
-      vehicleId: vehicle.id,
-      tripId: activeTrip?.id || null,
+    return this.buildRealtimePayload(
+      vehicle,
+      activeTrip,
       latitude,
       longitude,
       speed,
       heading,
-      timestamp: new Date().toISOString(),
-      status: vehicle.status,
-      licensePlate: vehicle.plateNumber,
-      driverName: vehicle.driver?.user?.fullName || 'Unknown Driver',
-      driverId: vehicle.driver?.id || null,
-      driverPhone: vehicle.driver?.user?.phone || null,
-    };
+    );
   }
 
   async getVehicleHistory(vehicleId: string, from?: Date, to?: Date) {
@@ -351,6 +503,242 @@ export class TrackingService implements OnModuleDestroy {
         tripId: trip?.id || null,
       };
     });
+  }
+
+  async setAmmEnabled(deviceId: string, enabled: boolean) {
+    const state = this.getOrCreateAmmState(deviceId);
+    state.enabled = enabled;
+    state.updatedAt = Date.now();
+    state.forceUntil = enabled ? Date.now() + 60000 : 0;
+
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { deviceId },
+      relations: ['driver'],
+    });
+
+    this.logger.log(
+      `[AMM] ${enabled ? 'ON' : 'OFF'} for ${deviceId}${
+        vehicle?.driverId ? ` (driver ${vehicle.driverId})` : ''
+      }`,
+    );
+
+    return {
+      deviceId,
+      enabled,
+      driverId: vehicle?.driverId || null,
+      updatedAt: new Date(state.updatedAt).toISOString(),
+    };
+  }
+
+  async getAmmStatus(deviceId: string) {
+    const now = Date.now();
+    const state = this.getOrCreateAmmState(deviceId);
+    const hardware = this.deviceRuntime.get(deviceId) || null;
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { deviceId },
+      relations: ['driver', 'driver.user'],
+    });
+    const activeTrip = vehicle
+      ? await this.tripRepository.findOne({
+          where: [
+            { vehicleId: vehicle.id, status: TripStatus.IN_PROGRESS },
+            { vehicleId: vehicle.id, status: TripStatus.ACCEPTED },
+          ],
+        })
+      : null;
+
+    const hardwareOnline =
+      !!hardware && now - hardware.lastPostAt <= this.DEVICE_POST_STALE_MS;
+    const hardwareRealFresh =
+      !!hardware?.lastRealHardwareAt &&
+      now - hardware.lastRealHardwareAt <= this.HARDWARE_REAL_STALE_MS;
+    const phoneFresh =
+      !!state.lastPhoneAt && now - state.lastPhoneAt <= this.PHONE_FALLBACK_TTL_MS;
+    const phoneUsedFresh =
+      !!state.lastPhoneUsedAt &&
+      now - state.lastPhoneUsedAt <= this.PHONE_FALLBACK_TTL_MS;
+
+    const effectiveSource =
+      state.enabled && phoneUsedFresh && (!hardwareRealFresh || state.forceUntil > now)
+        ? 'phone_fallback'
+        : hardwareRealFresh
+          ? 'hardware_gps'
+          : hardwareOnline
+            ? 'hardware_waiting_fix'
+            : 'offline';
+
+    return {
+      deviceId,
+      enabled: state.enabled,
+      vehicle: vehicle
+        ? {
+            id: vehicle.id,
+            plateNumber: vehicle.plateNumber,
+            driverId: vehicle.driverId,
+            driverName: vehicle.driver?.user?.fullName || null,
+          }
+        : null,
+      tripId: activeTrip?.id || null,
+      hardware: hardware
+        ? {
+            online: hardwareOnline,
+            gpsFix: !hardware.lastIsFallback,
+            lastPostAt: new Date(hardware.lastPostAt).toISOString(),
+            lastRealHardwareAt: hardware.lastRealHardwareAt
+              ? new Date(hardware.lastRealHardwareAt).toISOString()
+              : null,
+            ageMs: now - hardware.lastPostAt,
+            latitude: hardware.lastLatitude,
+            longitude: hardware.lastLongitude,
+            speed: hardware.lastSpeed,
+            heading: hardware.lastHeading,
+            isLegacyFallback: hardware.lastIsFallback,
+          }
+        : null,
+      phone: {
+        fresh: phoneFresh,
+        usedFresh: phoneUsedFresh,
+        lastPhoneAt: state.lastPhoneAt
+          ? new Date(state.lastPhoneAt).toISOString()
+          : null,
+        lastPhoneUsedAt: state.lastPhoneUsedAt
+          ? new Date(state.lastPhoneUsedAt).toISOString()
+          : null,
+        latitude: state.lastPhoneLatitude ?? null,
+        longitude: state.lastPhoneLongitude ?? null,
+        accuracyM: state.lastPhoneAccuracyM ?? null,
+        speed: state.lastPhoneSpeed ?? null,
+        heading: state.lastPhoneHeading ?? null,
+      },
+      effectiveSource,
+      updatedAt: new Date(state.updatedAt).toISOString(),
+    };
+  }
+
+  async getAmmStateForDriver(user: any) {
+    const driverId = user?.driver?.id;
+    if (!driverId) {
+      throw new BadRequestException('Driver profile is required');
+    }
+
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { driverId },
+    });
+    if (!vehicle?.deviceId) {
+      return { enabled: false, deviceId: null };
+    }
+
+    const state = this.getOrCreateAmmState(vehicle.deviceId);
+    return {
+      enabled: state.enabled,
+      deviceId: vehicle.deviceId,
+      updatedAt: new Date(state.updatedAt).toISOString(),
+    };
+  }
+
+  async processPhoneFallbackLocation(user: any, data: PhoneLocationDto) {
+    const driverId = user?.driver?.id;
+    if (!driverId) {
+      throw new BadRequestException('Driver profile is required for AMM');
+    }
+
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { driverId },
+      relations: ['driver', 'driver.user'],
+    });
+    if (!vehicle?.deviceId) {
+      throw new BadRequestException('Assigned vehicle has no deviceId');
+    }
+
+    const state = this.getOrCreateAmmState(vehicle.deviceId);
+    const now = Date.now();
+    state.lastPhoneAt = now;
+    state.lastPhoneLatitude = data.latitude;
+    state.lastPhoneLongitude = data.longitude;
+    state.lastPhoneAccuracyM = data.accuracyM;
+    state.lastPhoneSpeed = data.speed ?? 0;
+    state.lastPhoneHeading = data.heading ?? 0;
+
+    if (!state.enabled) {
+      return {
+        status: 'ignored',
+        reason: 'amm_off',
+        deviceId: vehicle.deviceId,
+      };
+    }
+
+    if ((data.accuracyM ?? 999999) > this.PHONE_FALLBACK_MAX_ACCURACY_M) {
+      return {
+        status: 'ignored',
+        reason: 'accuracy_too_low',
+        deviceId: vehicle.deviceId,
+      };
+    }
+
+    const activeTrip = await this.tripRepository.findOne({
+      where: [
+        { vehicleId: vehicle.id, status: TripStatus.IN_PROGRESS },
+        { vehicleId: vehicle.id, status: TripStatus.ACCEPTED },
+      ],
+    });
+
+    if (!activeTrip) {
+      return {
+        status: 'ignored',
+        reason: 'no_active_trip',
+        deviceId: vehicle.deviceId,
+      };
+    }
+
+    const hardware = this.deviceRuntime.get(vehicle.deviceId);
+    const hardwareRealFresh =
+      !!hardware?.lastRealHardwareAt &&
+      now - hardware.lastRealHardwareAt <= this.HARDWARE_REAL_STALE_MS;
+    const forced = state.forceUntil > now;
+
+    if (hardwareRealFresh && !forced) {
+      return {
+        status: 'ignored',
+        reason: 'hardware_gps_fresh',
+        deviceId: vehicle.deviceId,
+      };
+    }
+
+    if (
+      state.lastPhoneUsedAt &&
+      now - state.lastPhoneUsedAt < this.PHONE_FALLBACK_MIN_INTERVAL_MS &&
+      !forced
+    ) {
+      return {
+        status: 'ignored',
+        reason: 'throttled_like_hardware',
+        deviceId: vehicle.deviceId,
+      };
+    }
+
+    state.forceUntil = 0;
+    state.lastPhoneUsedAt = now;
+    await this.updateVehiclePoint(vehicle.id, data.latitude, data.longitude);
+
+    const payload = this.buildRealtimePayload(
+      vehicle,
+      activeTrip,
+      data.latitude,
+      data.longitude,
+      data.speed ?? 0,
+      data.heading ?? 0,
+    );
+
+    this.logger.log(
+      `[AMM] Used phone rescue for ${vehicle.deviceId}: lat=${data.latitude}, lng=${data.longitude}, acc=${data.accuracyM ?? 'na'}m`,
+    );
+
+    return {
+      status: 'used',
+      reason: 'phone_fallback',
+      deviceId: vehicle.deviceId,
+      broadcast: payload,
+    };
   }
 
   async getDriverByUserId(userId: string): Promise<Driver | null> {

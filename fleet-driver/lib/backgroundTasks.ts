@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import { sendGpsAidHint } from './gpsAid';
+import { sendAmmPhoneLocation } from './ammControl';
 
 export const LOCATION_TASK_NAME = 'background-location-task';
 
@@ -34,6 +35,7 @@ if (Platform.OS !== 'web') {
 
       try {
         await sendGpsAidHint(location);
+        await sendAmmPhoneLocation(location);
         // Bypassed: Telemetry is strictly driven by vehicle IoT hardware.
         // Background phone GPS is used only as a hidden cold-start aid for the ESP GPS.
         console.log('[Background] GPS aid hint handled; hardware telemetry remains IoT-only');

@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TrackingService } from './tracking.service';
 import { TrackingController } from './tracking.controller';
+import { AmmController } from './amm.controller';
 import { TrackingGateway } from './tracking.gateway';
 import { GpsLocation } from '../entities/gps-location.entity';
 import { Vehicle } from '../entities/vehicle.entity';
@@ -32,7 +33,7 @@ import { UploadModule } from '../upload/upload.module';
     }),
   ],
   providers: [TrackingService, TrackingGateway],
-  controllers: [TrackingController],
+  controllers: [TrackingController, AmmController],
   exports: [TrackingService],
 })
 export class TrackingModule {}

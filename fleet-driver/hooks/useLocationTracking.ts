@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as Location from 'expo-location';
 import { Trip, TripStatus } from '../types/trip';
 import { sendGpsAidHint } from '../lib/gpsAid';
+import { sendAmmPhoneLocation } from '../lib/ammControl';
 
 export const useLocationTracking = (activeTrip: Trip | null) => {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -24,6 +25,7 @@ export const useLocationTracking = (activeTrip: Trip | null) => {
         const currentLocation = await Location.getCurrentPositionAsync({});
         if (isMounted) setLocation(currentLocation);
         await sendGpsAidHint(currentLocation);
+        await sendAmmPhoneLocation(currentLocation);
 
         if (watchSubscriptionRef.current) {
           watchSubscriptionRef.current.remove();
@@ -42,6 +44,7 @@ export const useLocationTracking = (activeTrip: Trip | null) => {
             if (isMounted) {
               setLocation(newLocation);
               sendGpsAidHint(newLocation);
+              sendAmmPhoneLocation(newLocation);
               // Bypassed: Telemetry is now 100% strictly driven by IoT hardware device.
               // Do not upload phone GPS coordinates to server to save battery and cell data.
               /*

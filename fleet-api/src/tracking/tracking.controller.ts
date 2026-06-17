@@ -21,6 +21,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
 import { DeviceGpsUpdateDto } from './dto/device-gps-update.dto';
 import { GpsAidHintDto } from './dto/gps-aid-hint.dto';
+import { PhoneLocationDto } from './dto/phone-location.dto';
 import { VerifyHardwareDto } from './dto/verify-hardware.dto';
 import { TrackingGateway } from './tracking.gateway';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -64,6 +65,38 @@ export class TrackingController {
   @Roles(UserRole.DRIVER)
   async submitGpsAid(@Request() req, @Body() body: GpsAidHintDto) {
     return this.trackingService.submitDriverGpsAid(req.user, body);
+  }
+
+  @Get('amm/state')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.DRIVER)
+  async getAmmState(@Request() req) {
+    return this.trackingService.getAmmStateForDriver(req.user);
+  }
+
+  @Post('phone-location')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.DRIVER)
+  async submitPhoneLocation(
+    @Request() req,
+    @Body() body: PhoneLocationDto,
+  ) {
+    const result = await this.trackingService.processPhoneFallbackLocation(
+      req.user,
+      body,
+    );
+
+    if ((result as any).broadcast) {
+      const payload = (result as any).broadcast;
+      this.trackingGateway.server.to('admin').emit('gps:update', payload);
+      if (payload.tripId) {
+        this.trackingGateway.server
+          .to(`trip:${payload.tripId}`)
+          .emit('trip:location', payload);
+      }
+    }
+
+    return result;
   }
 
   @Post('device')
